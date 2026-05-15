@@ -1,4 +1,4 @@
-type Viewport = {
+export type Viewport = {
   zoom: number
   offsetX: number
   offsetY: number
@@ -12,5 +12,16 @@ export function screenToWorld(
   return {
     x: (x - viewport.offsetX) / viewport.zoom,
     y: (y - viewport.offsetY) / viewport.zoom,
+  }
+}
+
+export function worldToScreen(
+  x: number,
+  y: number,
+  viewport: Viewport
+) {
+  return {
+    x: x * viewport.zoom + viewport.offsetX,
+    y: y * viewport.zoom + viewport.offsetY,
   }
 }
