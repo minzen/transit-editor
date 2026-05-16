@@ -40,6 +40,36 @@ export function EditorCanvas() {
 
     const [selectedColor, setSelectedColor] = useState('#1976d2')
 
+    const colorPalette = [
+        '#e53935',
+        '#ef5350',
+        '#f44336',
+        '#1e88e5',
+        '#42a5f5',
+        '#2196f3',
+        '#43a047',
+        '#66bb6a',
+        '#4caf50',
+        '#fdd835',
+        '#ffee58',
+        '#ffeb3b',
+        '#fb8c00',
+        '#ffa726',
+        '#ff9800',
+        '#8e24aa',
+        '#ab47bc',
+        '#9c27b0',
+        '#d81b60',
+        '#ec407a',
+        '#e91e63',
+        '#00acc1',
+        '#26c6da',
+        '#00bcd4',
+        '#212121',
+        '#424242',
+        '#616161',
+    ]
+
     const [pointerWorldPosition, setPointerWorldPosition] =
         useState<Point | null>(null)
 
@@ -160,12 +190,20 @@ export function EditorCanvas() {
                 {activeTool === 'segment' && (
                     <>
                         <div className="editor-toolbar-separator" />
-                        <input
-                            type="color"
-                            value={selectedColor}
-                            onChange={(e) => setSelectedColor(e.target.value)}
-                            className="editor-color-picker"
-                        />
+                        <div className="editor-color-palette">
+                            {colorPalette.map((color) => (
+                                <button
+                                    key={color}
+                                    type="button"
+                                    className={`editor-color-swatch ${
+                                        selectedColor === color ? 'active' : ''
+                                    }`}
+                                    style={{ backgroundColor: color }}
+                                    onClick={() => setSelectedColor(color)}
+                                    title={color}
+                                />
+                            ))}
+                        </div>
                     </>
                 )}
             </div>
