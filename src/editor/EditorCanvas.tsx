@@ -348,51 +348,69 @@ export function EditorCanvas() {
                             />
                         )}
 
-                    {Object.values(stations).map((s) => (
-                        <circle
-                            key={s.id}
-                            cx={s.x}
-                            cy={s.y}
-                            r={8}
-                            fill="#111"
-                            style={{
-                                cursor: 'pointer',
-                            }}
+                    {Object.values(stations).map((s) => {
+                        const isPendingStation =
+                            activeTool === 'segment' &&
+                            pendingStationId === s.id
 
-                            onPointerDown={(event) => {
-                                event.stopPropagation()
+                        return (
+                            <g key={s.id}>
+                                {isPendingStation && (
+                                    <circle
+                                        cx={s.x}
+                                        cy={s.y}
+                                        r={14}
+                                        fill="none"
+                                        stroke="#1976d2"
+                                        strokeWidth={4}
+                                    />
+                                )}
 
-                                if (activeTool === 'segment') {
-                                    if (pendingStationId) {
-                                        if (pendingStationId !== s.id) {
-                                            addSegment(
-                                                pendingStationId,
-                                                s.id
-                                            )
+                                <circle
+                                    cx={s.x}
+                                    cy={s.y}
+                                    r={8}
+                                    fill="#111"
+                                    style={{
+                                        cursor: 'pointer',
+                                    }}
+
+                                    onPointerDown={(event) => {
+                                        event.stopPropagation()
+
+                                        if (activeTool === 'segment') {
+                                            if (pendingStationId) {
+                                                if (pendingStationId !== s.id) {
+                                                    addSegment(
+                                                        pendingStationId,
+                                                        s.id
+                                                    )
+                                                }
+
+                                                setPendingStationId(null)
+                                                setPointerWorldPosition(null)
+                                            } else {
+                                                setPendingStationId(s.id)
+                                            }
+
+                                            return
                                         }
 
-                                        setPendingStationId(null)
-                                        setPointerWorldPosition(null)
-                                    } else {
-                                        setPendingStationId(s.id)
-                                    }
+                                        if (activeTool !== 'select') {
+                                            return
+                                        }
 
-                                    return
-                                }
+                                        setDraggingStationId(s.id)
+                                        stationDragStartRef.current = {
+                                            x: event.clientX,
+                                            y: event.clientY,
+                                        }
+                                    }}
 
-                                if (activeTool !== 'select') {
-                                    return
-                                }
-
-                                setDraggingStationId(s.id)
-                                stationDragStartRef.current = {
-                                    x: event.clientX,
-                                    y: event.clientY,
-                                }
-                            }}
-
-                        />
-                    ))}
+                                />
+                            </g>
+                        )
+                    })}
                 </g>
             </svg>
         </div>
