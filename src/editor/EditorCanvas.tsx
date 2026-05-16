@@ -100,6 +100,8 @@ export function EditorCanvas() {
 
     const suppressNextClickRef = useRef(false)
 
+    const svgRef = useRef<SVGSVGElement>(null)
+
     const addSegment = useEditorStore(
         (s) => s.addSegment
     )
@@ -116,6 +118,61 @@ export function EditorCanvas() {
     const redo = useEditorStore((s) => s.redo)
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
+
+    const exportAsSVG = () => {
+        if (!svgRef.current) return
+
+        const svgElement = svgRef.current
+        const serializer = new XMLSerializer()
+        const svgString = serializer.serializeToString(svgElement)
+
+        const blob = new Blob([svgString], { type: 'image/svg+xml' })
+        const url = URL.createObjectURL(blob)
+
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'transit-map.svg'
+        link.click()
+
+        URL.revokeObjectURL(url)
+    }
+
+    const exportAsPDF = () => {
+        if (!svgRef.current) return
+
+        const svgElement = svgRef.current
+        const serializer = new XMLSerializer()
+        const svgString = serializer.serializeToString(svgElement)
+
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
+        const svgUrl = URL.createObjectURL(svgBlob)
+
+        const img = new Image()
+        img.onload = () => {
+            const canvas = document.createElement('canvas')
+            const padding = 40
+            const bbox = svgElement.getBoundingClientRect()
+
+            canvas.width = bbox.width + padding * 2
+            canvas.height = bbox.height + padding * 2
+
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+                ctx.fillStyle = '#ffffff'
+                ctx.fillRect(0, 0, canvas.width, canvas.height)
+                ctx.drawImage(img, padding, padding, bbox.width, bbox.height)
+
+                const pdfUrl = canvas.toDataURL('image/png')
+                const link = document.createElement('a')
+                link.href = pdfUrl
+                link.download = 'transit-map.png'
+                link.click()
+            }
+
+            URL.revokeObjectURL(svgUrl)
+        }
+        img.src = svgUrl
+    }
 
     const tools: {
         id: EditorTool
@@ -214,6 +271,26 @@ export function EditorCanvas() {
                     Redo ↷
                 </button>
 
+                <div className="editor-toolbar-separator" />
+
+                <button
+                    type="button"
+                    className="editor-toolbar-button"
+                    onClick={exportAsSVG}
+                    title="Export as SVG"
+                >
+                    Export SVG
+                </button>
+
+                <button
+                    type="button"
+                    className="editor-toolbar-button"
+                    onClick={exportAsPDF}
+                    title="Export as PNG"
+                >
+                    Export PNG
+                </button>
+
                 {activeTool === 'segment' && (
                     <>
                         <div className="editor-toolbar-separator" />
@@ -236,6 +313,7 @@ export function EditorCanvas() {
             </div>
 
             <svg
+                ref={svgRef}
                 width="100%"
                 height="100%"
                 style={{
