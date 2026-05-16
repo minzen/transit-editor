@@ -15,6 +15,7 @@ type EditorState = {
     addStation: (x: number, y: number) => void
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
+    updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
     addSegment: (fromStationId: string, toStationId: string, color: string) => void
 }
 
@@ -62,21 +63,21 @@ export const useEditorStore = create<EditorState>((set) => ({
                             return [segmentId, segment]
                         }
 
-                        const from =
-                            segment.fromStationId === id
-                                ? { ...state.stations[segment.fromStationId], x, y }
-                                : state.stations[segment.fromStationId]
+                        const points = [...segment.points]
 
-                        const to =
-                            segment.toStationId === id
-                                ? { ...state.stations[segment.toStationId], x, y }
-                                : state.stations[segment.toStationId]
+                        if (segment.fromStationId === id) {
+                            points[0] = { x, y }
+                        }
+
+                        if (segment.toStationId === id) {
+                            points[points.length - 1] = { x, y }
+                        }
 
                         return [
                             segmentId,
                             {
                                 ...segment,
-                                points: createOctolinearPath(from, to),
+                                points,
                             },
                         ]
                     }
@@ -110,6 +111,32 @@ export const useEditorStore = create<EditorState>((set) => ({
                     [id]: {
                         ...station,
                         name,
+                    },
+                },
+            }
+        }),
+
+    updateSegmentPoint: (segmentId, pointIndex, x, y) =>
+        set((state) => {
+            const segment = state.segments[segmentId]
+
+            if (!segment) {
+                return state
+            }
+
+            if (pointIndex < 0 || pointIndex >= segment.points.length) {
+                return state
+            }
+
+            const newPoints = [...segment.points]
+            newPoints[pointIndex] = { x, y }
+
+            return {
+                segments: {
+                    ...state.segments,
+                    [segmentId]: {
+                        ...segment,
+                        points: newPoints,
                     },
                 },
             }

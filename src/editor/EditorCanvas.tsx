@@ -46,6 +46,11 @@ export function EditorCanvas() {
     const [draggingStationId, setDraggingStationId] =
         useState<string | null>(null)
 
+    const [draggingBendPoint, setDraggingBendPoint] = useState<{
+        segmentId: string
+        pointIndex: number
+    } | null>(null)
+
     const [isPanning, setIsPanning] =
         useState(false)
 
@@ -71,6 +76,10 @@ export function EditorCanvas() {
 
     const setStationName = useEditorStore(
         (s) => s.setStationName
+    )
+
+    const updateSegmentPoint = useEditorStore(
+        (s) => s.updateSegmentPoint
     )
 
     const tools: {
@@ -259,6 +268,34 @@ export function EditorCanvas() {
 
                     setPointerWorldPosition(point)
 
+                    if (draggingBendPoint) {
+                        const segment = segments[draggingBendPoint.segmentId]
+                        if (segment) {
+                            const fromStation = stations[segment.fromStationId]
+                            const toStation = stations[segment.toStationId]
+
+                            let snappedPoint = point
+
+                            if (fromStation && toStation) {
+                                const fromSnap = snapPointToOctolinear(fromStation, point)
+                                const toSnap = snapPointToOctolinear(toStation, point)
+
+                                const fromDist = Math.hypot(fromSnap.x - point.x, fromSnap.y - point.y)
+                                const toDist = Math.hypot(toSnap.x - point.x, toSnap.y - point.y)
+
+                                snappedPoint = fromDist < toDist ? fromSnap : toSnap
+                            }
+
+                            updateSegmentPoint(
+                                draggingBendPoint.segmentId,
+                                draggingBendPoint.pointIndex,
+                                snappedPoint.x,
+                                snappedPoint.y
+                            )
+                        }
+                        return
+                    }
+
                     if (!draggingStationId) return
 
                     if (stationDragStartRef.current) {
@@ -289,6 +326,7 @@ export function EditorCanvas() {
                 onPointerUp={() => {
                     setDraggingStationId(null)
                     stationDragStartRef.current = null
+                    setDraggingBendPoint(null)
                     setIsPanning(false)
                 }}
                 onClick={(event) => {
@@ -349,6 +387,35 @@ export function EditorCanvas() {
                     <SegmentLayer
                         segments={Object.values(segments)}
                     />
+
+                    {activeTool === 'select' &&
+                        Object.values(segments).map((segment) => {
+                            if (segment.points.length === 3) {
+                                const bendPoint = segment.points[1]
+                                return (
+                                    <circle
+                                        key={`${segment.id}-bend`}
+                                        cx={bendPoint.x}
+                                        cy={bendPoint.y}
+                                        r={6}
+                                        fill="#1976d2"
+                                        stroke="#fff"
+                                        strokeWidth={2}
+                                        style={{
+                                            cursor: 'grab',
+                                        }}
+                                        onPointerDown={(event) => {
+                                            event.stopPropagation()
+                                            setDraggingBendPoint({
+                                                segmentId: segment.id,
+                                                pointIndex: 1,
+                                            })
+                                        }}
+                                    />
+                                )
+                            }
+                            return null
+                        })}
 
                     {activeTool === 'segment' &&
                         pendingStation &&

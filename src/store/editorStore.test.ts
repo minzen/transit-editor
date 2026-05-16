@@ -158,4 +158,57 @@ describe('editor store', () => {
     const updatedState = useEditorStore.getState()
     expect(updatedState).toEqual(initialState)
   })
+
+  it('updates a segment point', () => {
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(320, 250)
+
+    const state = useEditorStore.getState()
+    const stationIds = Object.keys(state.stations)
+
+    useEditorStore
+      .getState()
+      .addSegment(stationIds[0], stationIds[1], '#00ff00')
+
+    const segmentState = useEditorStore.getState()
+    const segmentId = Object.keys(segmentState.segments)[0]
+    const segment = segmentState.segments[segmentId]
+
+    expect(segment.points).toHaveLength(3)
+
+    useEditorStore
+      .getState()
+      .updateSegmentPoint(segmentId, 1, 200, 220)
+
+    const updatedState = useEditorStore.getState()
+    const updatedSegment = updatedState.segments[segmentId]
+
+    expect(updatedSegment.points[1].x).toBe(200)
+    expect(updatedSegment.points[1].y).toBe(220)
+  })
+
+  it('does nothing when updating point with invalid index', () => {
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(320, 250)
+
+    const state = useEditorStore.getState()
+    const stationIds = Object.keys(state.stations)
+
+    useEditorStore
+      .getState()
+      .addSegment(stationIds[0], stationIds[1], '#00ff00')
+
+    const segmentState = useEditorStore.getState()
+    const segmentId = Object.keys(segmentState.segments)[0]
+    const initialState = segmentState.segments[segmentId]
+
+    useEditorStore
+      .getState()
+      .updateSegmentPoint(segmentId, 5, 200, 220)
+
+    const updatedState = useEditorStore.getState()
+    const updatedSegment = updatedState.segments[segmentId]
+
+    expect(updatedSegment).toEqual(initialState)
+  })
 })
