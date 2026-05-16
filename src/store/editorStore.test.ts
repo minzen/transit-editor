@@ -53,7 +53,7 @@ describe('editor store', () => {
 
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1])
+      .addSegment(stationIds[0], stationIds[1], '#ff0000')
 
     const updatedState = useEditorStore.getState()
     const segmentIds = Object.keys(updatedState.segments)
@@ -63,6 +63,7 @@ describe('editor store', () => {
     const segment = updatedState.segments[segmentIds[0]]
     expect(segment.fromStationId).toBe(stationIds[0])
     expect(segment.toStationId).toBe(stationIds[1])
+    expect(segment.color).toBe('#ff0000')
     expect(segment.points).toHaveLength(2)
   })
 
@@ -75,7 +76,7 @@ describe('editor store', () => {
 
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1])
+      .addSegment(stationIds[0], stationIds[1], '#00ff00')
 
     const updatedState = useEditorStore.getState()
     const segmentIds = Object.keys(updatedState.segments)
@@ -85,6 +86,7 @@ describe('editor store', () => {
     const segment = updatedState.segments[segmentIds[0]]
     expect(segment.fromStationId).toBe(stationIds[0])
     expect(segment.toStationId).toBe(stationIds[1])
+    expect(segment.color).toBe('#00ff00')
     expect(segment.points).toHaveLength(3)
   })
 
@@ -97,7 +99,7 @@ describe('editor store', () => {
 
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1])
+      .addSegment(stationIds[0], stationIds[1], '#0000ff')
 
     useEditorStore.getState().moveStation(stationIds[0], 150, 250)
 
@@ -130,7 +132,7 @@ describe('editor store', () => {
 
     useEditorStore
       .getState()
-      .addSegment('non-existent-1', 'non-existent-2')
+      .addSegment('non-existent-1', 'non-existent-2', '#ff0000')
 
     const updatedState = useEditorStore.getState()
     expect(updatedState).toEqual(initialState)

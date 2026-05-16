@@ -38,6 +38,8 @@ export function EditorCanvas() {
 
     const [pendingStationId, setPendingStationId] = useState<string | null>(null)
 
+    const [selectedColor, setSelectedColor] = useState('#1976d2')
+
     const [pointerWorldPosition, setPointerWorldPosition] =
         useState<Point | null>(null)
 
@@ -141,6 +143,18 @@ export function EditorCanvas() {
                         {tool.label}
                     </button>
                 ))}
+
+                {activeTool === 'segment' && (
+                    <>
+                        <div className="editor-toolbar-separator" />
+                        <input
+                            type="color"
+                            value={selectedColor}
+                            onChange={(e) => setSelectedColor(e.target.value)}
+                            className="editor-color-picker"
+                        />
+                    </>
+                )}
             </div>
 
             <svg
@@ -340,7 +354,7 @@ export function EditorCanvas() {
                                 y1={pendingStation.y}
                                 x2={previewEndPoint.x}
                                 y2={previewEndPoint.y}
-                                stroke="#1976d2"
+                                stroke={selectedColor}
                                 strokeWidth={6}
                                 strokeLinecap="round"
                                 strokeDasharray="12 12"
@@ -383,7 +397,8 @@ export function EditorCanvas() {
                                                 if (pendingStationId !== s.id) {
                                                     addSegment(
                                                         pendingStationId,
-                                                        s.id
+                                                        s.id,
+                                                        selectedColor
                                                     )
                                                 }
 

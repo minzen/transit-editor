@@ -22,7 +22,7 @@ export function SegmentLayer({
           <path
             key={segment.id}
             d={d}
-            stroke="#1976d2"
+            stroke={segment.color}
             strokeWidth={10}
             strokeLinecap="round"
             fill="none"
