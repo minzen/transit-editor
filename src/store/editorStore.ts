@@ -3,18 +3,28 @@ import { nanoid } from 'nanoid'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 
+export type EditorTool = 'select' | 'station' | 'segment'
+
 type EditorState = {
+    activeTool: EditorTool
     stations: Record<string, Station>
     segments: Record<string, Segment>
 
+    setActiveTool: (tool: EditorTool) => void
     addStation: (x: number, y: number) => void
     moveStation: (id: string, x: number, y: number) => void
     addSegment: (fromStationId: string, toStationId: string) => void
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
+    activeTool: 'select',
     stations: {},
     segments: {},
+
+    setActiveTool: (tool) =>
+        set({
+            activeTool: tool,
+        }),
 
     addStation: (x, y) =>
         set((state) => {

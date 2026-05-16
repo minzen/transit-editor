@@ -4,6 +4,7 @@ import type {
 } from '../viewport/coordinates'
 import { screenToWorld } from '../viewport/coordinates'
 
+import type { EditorTool } from '../store/editorStore'
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToGrid } from '../geometry/snap'
 
@@ -13,6 +14,8 @@ import { SegmentLayer } from '../renderer/SegmentLayer'
 import './EditorCanvas.css'
 
 export function EditorCanvas() {
+    const activeTool = useEditorStore((s) => s.activeTool)
+    const setActiveTool = useEditorStore((s) => s.setActiveTool)
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
     const addStation = useEditorStore((s) => s.addStation)
@@ -55,6 +58,24 @@ export function EditorCanvas() {
         (s) => s.addSegment
     )
 
+    const tools: {
+        id: EditorTool
+        label: string
+    }[] = [
+            {
+                id: 'select',
+                label: 'Select',
+            },
+            {
+                id: 'station',
+                label: 'Station',
+            },
+            {
+                id: 'segment',
+                label: 'Segment',
+            },
+        ]
+
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
@@ -79,6 +100,26 @@ export function EditorCanvas() {
 
     return (
         <div className="editor-canvas">
+            <div className="editor-toolbar">
+                {tools.map((tool) => (
+                    <button
+                        key={tool.id}
+                        type="button"
+                        className={
+                            activeTool === tool.id
+                                ? 'editor-toolbar-button active'
+                                : 'editor-toolbar-button'
+                        }
+                        onClick={() => {
+                            setActiveTool(tool.id)
+                            setPendingStationId(null)
+                        }}
+                    >
+                        {tool.label}
+                    </button>
+                ))}
+            </div>
+
             <svg
                 width="100%"
                 height="100%"
@@ -209,6 +250,7 @@ export function EditorCanvas() {
                 }}
                 onClick={(event) => {
                     if (spacePressed) return
+                    if (activeTool !== 'station') return
 
                     if (suppressNextClickRef.current) {
                         suppressNextClickRef.current = false
@@ -279,7 +321,7 @@ export function EditorCanvas() {
                             onPointerDown={(event) => {
                                 event.stopPropagation()
 
-                                if (event.shiftKey) {
+                                if (activeTool === 'segment') {
                                     if (pendingStationId) {
                                         if (pendingStationId !== s.id) {
                                             addSegment(
@@ -293,6 +335,10 @@ export function EditorCanvas() {
                                         setPendingStationId(s.id)
                                     }
 
+                                    return
+                                }
+
+                                if (activeTool !== 'select') {
                                     return
                                 }
 

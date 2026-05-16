@@ -2,6 +2,36 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  position: relative;
+}
+
+.editor-toolbar {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.editor-toolbar-button {
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #ffffff;
+  color: #222222;
+  font: inherit;
+  cursor: pointer;
+}
+
+.editor-toolbar-button.active {
+  border-color: #1976d2;
+  background: #1976d2;
+  color: #ffffff;
 }
 
 svg {
