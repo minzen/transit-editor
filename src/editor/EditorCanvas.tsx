@@ -69,6 +69,10 @@ export function EditorCanvas() {
         (s) => s.addSegment
     )
 
+    const setStationName = useEditorStore(
+        (s) => s.setStationName
+    )
+
     const tools: {
         id: EditorTool
         label: string
@@ -422,7 +426,40 @@ export function EditorCanvas() {
                                         }
                                     }}
 
+                                    onDoubleClick={(event) => {
+                                        event.stopPropagation()
+
+                                        if (activeTool !== 'select') {
+                                            return
+                                        }
+
+                                        const newName = window.prompt(
+                                            'Station name:',
+                                            s.name || ''
+                                        )
+
+                                        if (newName !== null) {
+                                            setStationName(s.id, newName)
+                                        }
+                                    }}
+
                                 />
+
+                                {s.name && (
+                                    <text
+                                        x={s.x}
+                                        y={s.y - 12}
+                                        textAnchor="middle"
+                                        fontSize={16}
+                                        fontWeight="bold"
+                                        fill="#111"
+                                        style={{
+                                            pointerEvents: 'none',
+                                        }}
+                                    >
+                                        {s.name}
+                                    </text>
+                                )}
                             </g>
                         )
                     })}

@@ -137,4 +137,25 @@ describe('editor store', () => {
     const updatedState = useEditorStore.getState()
     expect(updatedState).toEqual(initialState)
   })
+
+  it('sets a station name', () => {
+    useEditorStore.getState().addStation(100, 200)
+
+    const state = useEditorStore.getState()
+    const stationId = Object.keys(state.stations)[0]
+
+    useEditorStore.getState().setStationName(stationId, 'Central Station')
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState.stations[stationId].name).toBe('Central Station')
+  })
+
+  it('does nothing when setting name for non-existent station', () => {
+    const initialState = useEditorStore.getState()
+
+    useEditorStore.getState().setStationName('non-existent', 'Test')
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState).toEqual(initialState)
+  })
 })

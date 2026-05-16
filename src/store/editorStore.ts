@@ -14,6 +14,7 @@ type EditorState = {
     setActiveTool: (tool: EditorTool) => void
     addStation: (x: number, y: number) => void
     moveStation: (id: string, x: number, y: number) => void
+    setStationName: (id: string, name: string) => void
     addSegment: (fromStationId: string, toStationId: string, color: string) => void
 }
 
@@ -92,6 +93,25 @@ export const useEditorStore = create<EditorState>((set) => ({
                     },
                 },
                 segments,
+            }
+        }),
+
+    setStationName: (id, name) =>
+        set((state) => {
+            const station = state.stations[id]
+
+            if (!station) {
+                return state
+            }
+
+            return {
+                stations: {
+                    ...state.stations,
+                    [id]: {
+                        ...station,
+                        name,
+                    },
+                },
             }
         }),
 
