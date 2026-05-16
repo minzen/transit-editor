@@ -13,6 +13,11 @@ import { SegmentLayer } from '../renderer/SegmentLayer'
 
 import './EditorCanvas.css'
 
+type Point = {
+    x: number
+    y: number
+}
+
 export function EditorCanvas() {
     const activeTool = useEditorStore((s) => s.activeTool)
     const setActiveTool = useEditorStore((s) => s.setActiveTool)
@@ -31,6 +36,9 @@ export function EditorCanvas() {
         })
 
     const [pendingStationId, setPendingStationId] = useState<string | null>(null)
+
+    const [pointerWorldPosition, setPointerWorldPosition] =
+        useState<Point | null>(null)
 
     const [draggingStationId, setDraggingStationId] =
         useState<string | null>(null)
@@ -76,6 +84,11 @@ export function EditorCanvas() {
             },
         ]
 
+    const pendingStation =
+        pendingStationId
+            ? stations[pendingStationId]
+            : null
+
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
@@ -113,6 +126,7 @@ export function EditorCanvas() {
                         onClick={() => {
                             setActiveTool(tool.id)
                             setPendingStationId(null)
+                            setPointerWorldPosition(null)
                         }}
                     >
                         {tool.label}
@@ -201,20 +215,6 @@ export function EditorCanvas() {
                         return
                     }
 
-                    if (!draggingStationId) return
-
-                    if (stationDragStartRef.current) {
-                        const dx =
-                            event.clientX - stationDragStartRef.current.x
-
-                        const dy =
-                            event.clientY - stationDragStartRef.current.y
-
-                        if (Math.hypot(dx, dy) > 3) {
-                            suppressNextClickRef.current = true
-                        }
-                    }
-
                     const rect =
                         event.currentTarget.getBoundingClientRect()
 
@@ -229,6 +229,22 @@ export function EditorCanvas() {
                         y,
                         viewport
                     )
+
+                    setPointerWorldPosition(point)
+
+                    if (!draggingStationId) return
+
+                    if (stationDragStartRef.current) {
+                        const dx =
+                            event.clientX - stationDragStartRef.current.x
+
+                        const dy =
+                            event.clientY - stationDragStartRef.current.y
+
+                        if (Math.hypot(dx, dy) > 3) {
+                            suppressNextClickRef.current = true
+                        }
+                    }
 
                     const snapped =
                         snapPointToGrid(
@@ -307,6 +323,22 @@ export function EditorCanvas() {
                         segments={Object.values(segments)}
                     />
 
+                    {activeTool === 'segment' &&
+                        pendingStation &&
+                        pointerWorldPosition && (
+                            <line
+                                x1={pendingStation.x}
+                                y1={pendingStation.y}
+                                x2={pointerWorldPosition.x}
+                                y2={pointerWorldPosition.y}
+                                stroke="#1976d2"
+                                strokeWidth={6}
+                                strokeLinecap="round"
+                                strokeDasharray="12 12"
+                                opacity={0.45}
+                            />
+                        )}
+
                     {Object.values(stations).map((s) => (
                         <circle
                             key={s.id}
@@ -331,6 +363,7 @@ export function EditorCanvas() {
                                         }
 
                                         setPendingStationId(null)
+                                        setPointerWorldPosition(null)
                                     } else {
                                         setPendingStationId(s.id)
                                     }
