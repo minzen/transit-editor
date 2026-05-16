@@ -48,6 +48,8 @@ export function EditorCanvas() {
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
     const [showBackground, setShowBackground] = useState(true)
 
+    const [gridSize, setGridSize] = useState(40)
+
     const colorPalette = [
         '#e53935',
         '#ef5350',
@@ -356,6 +358,22 @@ export function EditorCanvas() {
                     </button>
                 )}
 
+                <div className="editor-toolbar-separator" />
+
+                <div className="editor-grid-size-control">
+                    <label htmlFor="gridSize">Grid:</label>
+                    <input
+                        id="gridSize"
+                        type="number"
+                        value={gridSize}
+                        onChange={(e) => setGridSize(Number(e.target.value))}
+                        min="10"
+                        max="100"
+                        step="10"
+                        className="editor-grid-size-input"
+                    />
+                </div>
+
                 {activeTool === 'segment' && (
                     <>
                         <div className="editor-toolbar-separator" />
@@ -578,7 +596,7 @@ export function EditorCanvas() {
                         snapPointToGrid(
                             point.x,
                             point.y,
-                            40
+                            gridSize
                         )
 
                     moveStation(
@@ -621,7 +639,7 @@ export function EditorCanvas() {
                         snapPointToGrid(
                             point.x,
                             point.y,
-                            40
+                            gridSize
                         )
 
                     addStation(
@@ -659,7 +677,7 @@ export function EditorCanvas() {
                     <GridLayer
                         width={4000}
                         height={4000}
-                        gridSize={40}
+                        gridSize={gridSize}
                     />
 
                     <SegmentLayer
