@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { nanoid } from 'nanoid'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
+import type { Line } from '../model/line'
 import { createOctolinearPath } from '../geometry/octolinear'
 
 export type EditorTool = 'select' | 'station' | 'segment'
@@ -9,12 +10,14 @@ export type EditorTool = 'select' | 'station' | 'segment'
 type DataSnapshot = {
     stations: Record<string, Station>
     segments: Record<string, Segment>
+    lines: Record<string, Line>
 }
 
 type EditorState = {
     activeTool: EditorTool
     stations: Record<string, Station>
     segments: Record<string, Segment>
+    lines: Record<string, Line>
 
     pastStates: DataSnapshot[]
     futureStates: DataSnapshot[]
@@ -24,7 +27,10 @@ type EditorState = {
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
-    addSegment: (fromStationId: string, toStationId: string, color: string) => void
+    addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
+    addLine: (name: string, color: string) => void
+    setLineName: (id: string, name: string) => void
+    clear: () => void
     undo: () => void
     redo: () => void
 }
@@ -33,6 +39,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     activeTool: 'select',
     stations: {},
     segments: {},
+    lines: {},
     pastStates: [],
     futureStates: [],
 
@@ -48,6 +55,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentSnapshot: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             return {
@@ -60,6 +68,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                     },
                 },
                 segments: state.segments,
+                lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],
             }
@@ -76,6 +85,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentSnapshot: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             const segments = Object.fromEntries(
@@ -119,6 +129,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                     },
                 },
                 segments,
+                lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],
             }
@@ -135,6 +146,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentSnapshot: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             return {
@@ -146,6 +158,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                     },
                 },
                 segments: state.segments,
+                lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],
             }
@@ -166,6 +179,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentSnapshot: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             const newPoints = [...segment.points]
@@ -180,6 +194,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                         points: newPoints,
                     },
                 },
+                lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],
             }
@@ -188,7 +203,7 @@ export const useEditorStore = create<EditorState>((set) => ({
     addSegment: (
         fromStationId,
         toStationId,
-        color
+        lineId
     ) =>
         set((state) => {
             const from =
@@ -197,7 +212,9 @@ export const useEditorStore = create<EditorState>((set) => ({
             const to =
                 state.stations[toStationId]
 
-            if (!from || !to) {
+            const line = state.lines[lineId]
+
+            if (!from || !to || !line) {
                 return state
             }
 
@@ -207,6 +224,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentSnapshot: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             return {
@@ -220,11 +238,13 @@ export const useEditorStore = create<EditorState>((set) => ({
                         fromStationId,
                         toStationId,
 
-                        color,
+                        lineId,
+                        color: line.color,
 
                         points,
                     },
                 },
+                lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],
             }
@@ -239,6 +259,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentState: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             const previousState = state.pastStates[state.pastStates.length - 1]
@@ -260,6 +281,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const currentState: DataSnapshot = {
                 stations: state.stations,
                 segments: state.segments,
+                lines: state.lines,
             }
 
             const nextState = state.futureStates[0]
@@ -271,5 +293,69 @@ export const useEditorStore = create<EditorState>((set) => ({
                 futureStates: state.futureStates.slice(1),
             }
         }),
+
+    addLine: (name, color) =>
+        set((state) => {
+            const id = nanoid()
+
+            const currentSnapshot: DataSnapshot = {
+                stations: state.stations,
+                segments: state.segments,
+                lines: state.lines,
+            }
+
+            return {
+                stations: state.stations,
+                segments: state.segments,
+                lines: {
+                    ...state.lines,
+                    [id]: {
+                        id,
+                        name,
+                        color,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setLineName: (id, name) =>
+        set((state) => {
+            const line = state.lines[id]
+
+            if (!line) {
+                return state
+            }
+
+            const currentSnapshot: DataSnapshot = {
+                stations: state.stations,
+                segments: state.segments,
+                lines: state.lines,
+            }
+
+            return {
+                stations: state.stations,
+                segments: state.segments,
+                lines: {
+                    ...state.lines,
+                    [id]: {
+                        ...line,
+                        name,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    clear: () =>
+        set(() => ({
+            stations: {},
+            segments: {},
+            lines: {},
+            pastStates: [],
+            futureStates: [],
+        })),
 
 }))

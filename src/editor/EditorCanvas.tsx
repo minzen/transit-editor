@@ -123,6 +123,7 @@ export function EditorCanvas() {
 
     const undo = useEditorStore((s) => s.undo)
     const redo = useEditorStore((s) => s.redo)
+    const clear = useEditorStore((s) => s.clear)
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
 
@@ -296,6 +297,22 @@ export function EditorCanvas() {
                     title="Export as PNG"
                 >
                     Export PNG
+                </button>
+
+                <div className="editor-toolbar-separator" />
+
+                <button
+                    type="button"
+                    className="editor-toolbar-button"
+                    onClick={() => {
+                        if (window.confirm('Are you sure you want to clear all data?')) {
+                            clear()
+                            setSelectedLineId(null)
+                        }
+                    }}
+                    title="Clear all"
+                >
+                    Clear
                 </button>
 
                 {activeTool === 'segment' && (
