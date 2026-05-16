@@ -7,6 +7,7 @@ import { screenToWorld } from '../viewport/coordinates'
 import type { EditorTool } from '../store/editorStore'
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToGrid } from '../geometry/snap'
+import { snapPointToOctolinear } from '../geometry/octolinear'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
@@ -87,6 +88,14 @@ export function EditorCanvas() {
     const pendingStation =
         pendingStationId
             ? stations[pendingStationId]
+            : null
+
+    const previewEndPoint =
+        pendingStation && pointerWorldPosition
+            ? snapPointToOctolinear(
+                pendingStation,
+                pointerWorldPosition
+            )
             : null
 
     useEffect(() => {
@@ -325,12 +334,12 @@ export function EditorCanvas() {
 
                     {activeTool === 'segment' &&
                         pendingStation &&
-                        pointerWorldPosition && (
+                        previewEndPoint && (
                             <line
                                 x1={pendingStation.x}
                                 y1={pendingStation.y}
-                                x2={pointerWorldPosition.x}
-                                y2={pointerWorldPosition.y}
+                                x2={previewEndPoint.x}
+                                y2={previewEndPoint.y}
                                 stroke="#1976d2"
                                 strokeWidth={6}
                                 strokeLinecap="round"
