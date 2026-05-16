@@ -112,6 +112,11 @@ export function EditorCanvas() {
         (s) => s.updateSegmentPoint
     )
 
+    const undo = useEditorStore((s) => s.undo)
+    const redo = useEditorStore((s) => s.redo)
+    const pastStates = useEditorStore((s) => s.pastStates)
+    const futureStates = useEditorStore((s) => s.futureStates)
+
     const tools: {
         id: EditorTool
         label: string
@@ -186,6 +191,28 @@ export function EditorCanvas() {
                         {tool.label}
                     </button>
                 ))}
+
+                <div className="editor-toolbar-separator" />
+
+                <button
+                    type="button"
+                    className="editor-toolbar-button"
+                    disabled={pastStates.length === 0}
+                    onClick={undo}
+                    title="Undo"
+                >
+                    ↶ Undo
+                </button>
+
+                <button
+                    type="button"
+                    className="editor-toolbar-button"
+                    disabled={futureStates.length === 0}
+                    onClick={redo}
+                    title="Redo"
+                >
+                    Redo ↷
+                </button>
 
                 {activeTool === 'segment' && (
                     <>

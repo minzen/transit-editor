@@ -7,6 +7,8 @@ describe('editor store', () => {
       activeTool: 'select',
       stations: {},
       segments: {},
+      pastStates: [],
+      futureStates: [],
     })
   })
 
@@ -210,5 +212,48 @@ describe('editor store', () => {
     const updatedSegment = updatedState.segments[segmentId]
 
     expect(updatedSegment).toEqual(initialState)
+  })
+
+  it('undo restores previous state after adding a station', () => {
+    useEditorStore.getState().addStation(100, 200)
+
+    const state = useEditorStore.getState()
+    const stationId = Object.keys(state.stations)[0]
+
+    useEditorStore.getState().undo()
+
+    const undoneState = useEditorStore.getState()
+
+    expect(Object.keys(undoneState.stations)).toHaveLength(0)
+    expect(undoneState.pastStates).toHaveLength(0)
+    expect(undoneState.futureStates).toHaveLength(1)
+    expect(undoneState.futureStates[0].stations[stationId]).toBeDefined()
+  })
+
+  it('redo restores undone state', () => {
+    useEditorStore.getState().addStation(100, 200)
+
+    const state = useEditorStore.getState()
+    const stationId = Object.keys(state.stations)[0]
+
+    useEditorStore.getState().undo()
+    useEditorStore.getState().redo()
+
+    const redoneState = useEditorStore.getState()
+
+    expect(Object.keys(redoneState.stations)).toHaveLength(1)
+    expect(redoneState.stations[stationId]).toBeDefined()
+    expect(redoneState.futureStates).toHaveLength(0)
+  })
+
+  it('new action clears redo history', () => {
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().undo()
+    useEditorStore.getState().addStation(300, 400)
+
+    const state = useEditorStore.getState()
+
+    expect(state.futureStates).toHaveLength(0)
+    expect(state.pastStates).toHaveLength(1)
   })
 })
