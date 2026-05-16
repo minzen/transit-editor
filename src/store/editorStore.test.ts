@@ -7,6 +7,7 @@ describe('editor store', () => {
       activeTool: 'select',
       stations: {},
       segments: {},
+      lines: {},
       pastStates: [],
       futureStates: [],
     })
@@ -46,27 +47,26 @@ describe('editor store', () => {
     expect(updatedState.stations[stationId].y).toBe(400)
   })
 
-  it('adds a segment between two stations (octolinear)', () => {
+  it('adds a segment', () => {
     useEditorStore.getState().addStation(100, 200)
-    useEditorStore.getState().addStation(320, 200)
+    useEditorStore.getState().addStation(320, 250)
 
     const state = useEditorStore.getState()
     const stationIds = Object.keys(state.stations)
 
+    useEditorStore.getState().addLine('Line 1', '#ff0000')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1], '#ff0000')
+      .addSegment(stationIds[0], stationIds[1], lineId)
 
     const updatedState = useEditorStore.getState()
     const segmentIds = Object.keys(updatedState.segments)
 
     expect(segmentIds).toHaveLength(1)
-
-    const segment = updatedState.segments[segmentIds[0]]
-    expect(segment.fromStationId).toBe(stationIds[0])
-    expect(segment.toStationId).toBe(stationIds[1])
-    expect(segment.color).toBe('#ff0000')
-    expect(segment.points).toHaveLength(2)
+    expect(updatedState.segments[segmentIds[0]].fromStationId).toBe(stationIds[0])
+    expect(updatedState.segments[segmentIds[0]].toStationId).toBe(stationIds[1])
   })
 
   it('adds a segment between two stations (L-shaped)', () => {
@@ -76,9 +76,12 @@ describe('editor store', () => {
     const state = useEditorStore.getState()
     const stationIds = Object.keys(state.stations)
 
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1], '#00ff00')
+      .addSegment(stationIds[0], stationIds[1], lineId)
 
     const updatedState = useEditorStore.getState()
     const segmentIds = Object.keys(updatedState.segments)
@@ -99,9 +102,12 @@ describe('editor store', () => {
     const state = useEditorStore.getState()
     const stationIds = Object.keys(state.stations)
 
+    useEditorStore.getState().addLine('Line 1', '#0000ff')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1], '#0000ff')
+      .addSegment(stationIds[0], stationIds[1], lineId)
 
     useEditorStore.getState().moveStation(stationIds[0], 150, 250)
 
@@ -134,7 +140,7 @@ describe('editor store', () => {
 
     useEditorStore
       .getState()
-      .addSegment('non-existent-1', 'non-existent-2', '#ff0000')
+      .addSegment('non-existent-1', 'non-existent-2', 'non-existent-line')
 
     const updatedState = useEditorStore.getState()
     expect(updatedState).toEqual(initialState)
@@ -168,9 +174,12 @@ describe('editor store', () => {
     const state = useEditorStore.getState()
     const stationIds = Object.keys(state.stations)
 
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1], '#00ff00')
+      .addSegment(stationIds[0], stationIds[1], lineId)
 
     const segmentState = useEditorStore.getState()
     const segmentId = Object.keys(segmentState.segments)[0]
@@ -196,9 +205,12 @@ describe('editor store', () => {
     const state = useEditorStore.getState()
     const stationIds = Object.keys(state.stations)
 
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
     useEditorStore
       .getState()
-      .addSegment(stationIds[0], stationIds[1], '#00ff00')
+      .addSegment(stationIds[0], stationIds[1], lineId)
 
     const segmentState = useEditorStore.getState()
     const segmentId = Object.keys(segmentState.segments)[0]

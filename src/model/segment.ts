@@ -4,6 +4,7 @@ export type Segment = {
   fromStationId: string
   toStationId: string
 
+  lineId: string
   color: string
 
   points: {
