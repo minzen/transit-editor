@@ -71,6 +71,32 @@
   transform: scale(1.1);
 }
 
+.editor-line-selector {
+  padding: 4px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.editor-line-creator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f9f9f9;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+}
+
+.editor-line-name-input {
+  padding: 4px 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 4px;
+  font: inherit;
+  min-width: 120px;
+}
+
 svg {
   touch-action: none;
   user-select: none;

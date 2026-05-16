@@ -24,6 +24,7 @@ export function EditorCanvas() {
     const setActiveTool = useEditorStore((s) => s.setActiveTool)
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
+    const lines = useEditorStore((s) => s.lines)
     const addStation = useEditorStore((s) => s.addStation)
     const moveStation = useEditorStore(
         (s) => s.moveStation
@@ -38,7 +39,11 @@ export function EditorCanvas() {
 
     const [pendingStationId, setPendingStationId] = useState<string | null>(null)
 
-    const [selectedColor, setSelectedColor] = useState('#1976d2')
+    const [selectedLineId, setSelectedLineId] = useState<string | null>(null)
+
+    const [isCreatingLine, setIsCreatingLine] = useState(false)
+    const [newLineName, setNewLineName] = useState('')
+    const [newLineColor, setNewLineColor] = useState('#1976d2')
 
     const colorPalette = [
         '#e53935',
@@ -113,6 +118,8 @@ export function EditorCanvas() {
     const updateSegmentPoint = useEditorStore(
         (s) => s.updateSegmentPoint
     )
+
+    const addLine = useEditorStore((s) => s.addLine)
 
     const undo = useEditorStore((s) => s.undo)
     const redo = useEditorStore((s) => s.redo)
@@ -294,20 +301,76 @@ export function EditorCanvas() {
                 {activeTool === 'segment' && (
                     <>
                         <div className="editor-toolbar-separator" />
-                        <div className="editor-color-palette">
-                            {colorPalette.map((color) => (
-                                <button
-                                    key={color}
-                                    type="button"
-                                    className={`editor-color-swatch ${
-                                        selectedColor === color ? 'active' : ''
-                                    }`}
-                                    style={{ backgroundColor: color }}
-                                    onClick={() => setSelectedColor(color)}
-                                    title={color}
-                                />
+                        <select
+                            value={selectedLineId || ''}
+                            onChange={(e) => setSelectedLineId(e.target.value || null)}
+                            className="editor-line-selector"
+                        >
+                            <option value="">Select line...</option>
+                            {Object.values(lines).map((line) => (
+                                <option key={line.id} value={line.id}>
+                                    {line.name}
+                                </option>
                             ))}
-                        </div>
+                        </select>
+                        <button
+                            type="button"
+                            className="editor-toolbar-button"
+                            onClick={() => setIsCreatingLine(true)}
+                        >
+                            + Line
+                        </button>
+
+                        {isCreatingLine && (
+                            <div className="editor-line-creator">
+                                <input
+                                    type="text"
+                                    value={newLineName}
+                                    onChange={(e) => setNewLineName(e.target.value)}
+                                    placeholder="Line name"
+                                    className="editor-line-name-input"
+                                />
+                                <div className="editor-color-palette">
+                                    {colorPalette.map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            className={`editor-color-swatch ${
+                                                newLineColor === color ? 'active' : ''
+                                            }`}
+                                            style={{ backgroundColor: color }}
+                                            onClick={() => setNewLineColor(color)}
+                                            title={color}
+                                        />
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    className="editor-toolbar-button"
+                                    onClick={() => {
+                                        if (newLineName.trim()) {
+                                            addLine(newLineName.trim(), newLineColor)
+                                            setNewLineName('')
+                                            setNewLineColor('#1976d2')
+                                            setIsCreatingLine(false)
+                                        }
+                                    }}
+                                >
+                                    Create
+                                </button>
+                                <button
+                                    type="button"
+                                    className="editor-toolbar-button"
+                                    onClick={() => {
+                                        setNewLineName('')
+                                        setNewLineColor('#1976d2')
+                                        setIsCreatingLine(false)
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
             </div>
@@ -562,13 +625,14 @@ export function EditorCanvas() {
 
                     {activeTool === 'segment' &&
                         pendingStation &&
-                        previewEndPoint && (
+                        previewEndPoint &&
+                        selectedLineId && (
                             <line
                                 x1={pendingStation.x}
                                 y1={pendingStation.y}
                                 x2={previewEndPoint.x}
                                 y2={previewEndPoint.y}
-                                stroke={selectedColor}
+                                stroke={lines[selectedLineId]?.color || '#1976d2'}
                                 strokeWidth={6}
                                 strokeLinecap="round"
                                 strokeDasharray="12 12"
@@ -609,11 +673,13 @@ export function EditorCanvas() {
                                         if (activeTool === 'segment') {
                                             if (pendingStationId) {
                                                 if (pendingStationId !== s.id) {
-                                                    addSegment(
-                                                        pendingStationId,
-                                                        s.id,
-                                                        selectedColor
-                                                    )
+                                                    if (selectedLineId) {
+                                                        addSegment(
+                                                            pendingStationId,
+                                                            s.id,
+                                                            selectedLineId
+                                                        )
+                                                    }
                                                 }
 
                                                 setPendingStationId(null)
