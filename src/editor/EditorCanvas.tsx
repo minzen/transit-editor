@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type {
-  Viewport,
+    Viewport,
 } from '../viewport/coordinates'
 import { screenToWorld } from '../viewport/coordinates'
 
@@ -8,245 +8,305 @@ import { useEditorStore } from '../store/editorStore'
 import { snapPointToGrid } from '../geometry/snap'
 
 import { GridLayer } from '../renderer/GridLayer'
+import { SegmentLayer } from '../renderer/SegmentLayer'
 
 import './EditorCanvas.css'
 
 export function EditorCanvas() {
-  const stations = useEditorStore((s) => s.stations)
-  const addStation = useEditorStore((s) => s.addStation)
-  const moveStation = useEditorStore(
-    (s) => s.moveStation
-  )
+    const stations = useEditorStore((s) => s.stations)
+    const segments = useEditorStore((s) => s.segments)
+    const addStation = useEditorStore((s) => s.addStation)
+    const moveStation = useEditorStore(
+        (s) => s.moveStation
+    )
 
-  const [viewport, setViewport] =
-    useState<Viewport>({
-      zoom: 1,
-      offsetX: 0,
-      offsetY: 0,
-    })
+    const [viewport, setViewport] =
+        useState<Viewport>({
+            zoom: 1,
+            offsetX: 0,
+            offsetY: 0,
+        })
 
-  const [draggingStationId, setDraggingStationId] =
-    useState<string | null>(null)
+    const [pendingStationId, setPendingStationId] = useState<string | null>(null)
 
-  const [isPanning, setIsPanning] =
-    useState(false)
+    const [draggingStationId, setDraggingStationId] =
+        useState<string | null>(null)
 
-  const [spacePressed, setSpacePressed] =
-    useState(false)
+    const [isPanning, setIsPanning] =
+        useState(false)
 
-  const [lastPointer, setLastPointer] =
-    useState({
-      x: 0,
-      y: 0,
-    })
+    const [spacePressed, setSpacePressed] =
+        useState(false)
 
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        setSpacePressed(true)
-      }
-    }
+    const [lastPointer, setLastPointer] =
+        useState({
+            x: 0,
+            y: 0,
+        })
 
-    const up = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        setSpacePressed(false)
-      }
-    }
+    const stationDragStartRef = useRef<{
+        x: number
+        y: number
+    } | null>(null)
 
-    window.addEventListener('keydown', down)
-    window.addEventListener('keyup', up)
+    const suppressNextClickRef = useRef(false)
 
-    return () => {
-      window.removeEventListener('keydown', down)
-      window.removeEventListener('keyup', up)
-    }
-  }, [])
+    const addSegment = useEditorStore(
+        (s) => s.addSegment
+    )
 
-  return (
-    <div className="editor-canvas">
-      <svg
-        width="100%"
-        height="100%"
-        style={{
-          cursor: isPanning
-            ? 'grabbing'
-            : spacePressed
-            ? 'grab'
-            : 'default',
-        }}
-        onWheel={(event) => {
-          event.preventDefault()
+    useEffect(() => {
+        const down = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                setSpacePressed(true)
+            }
+        }
 
-          const rect =
-            event.currentTarget.getBoundingClientRect()
+        const up = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                setSpacePressed(false)
+            }
+        }
 
-          const mouseX =
-            event.clientX - rect.left
+        window.addEventListener('keydown', down)
+        window.addEventListener('keyup', up)
 
-          const mouseY =
-            event.clientY - rect.top
+        return () => {
+            window.removeEventListener('keydown', down)
+            window.removeEventListener('keyup', up)
+        }
+    }, [])
 
-          const worldBefore =
-            screenToWorld(
-              mouseX,
-              mouseY,
-              viewport
-            )
+    return (
+        <div className="editor-canvas">
+            <svg
+                width="100%"
+                height="100%"
+                style={{
+                    cursor: isPanning
+                        ? 'grabbing'
+                        : spacePressed
+                            ? 'grab'
+                            : 'default',
+                }}
+                onWheel={(event) => {
+                    event.preventDefault()
 
-          const zoomFactor =
-            event.deltaY > 0 ? 0.9 : 1.1
+                    const rect =
+                        event.currentTarget.getBoundingClientRect()
 
-          const newZoom =
-            viewport.zoom * zoomFactor
+                    const mouseX =
+                        event.clientX - rect.left
 
-          const newOffsetX =
-            mouseX -
-            worldBefore.x * newZoom
+                    const mouseY =
+                        event.clientY - rect.top
 
-          const newOffsetY =
-            mouseY -
-            worldBefore.y * newZoom
+                    const worldBefore =
+                        screenToWorld(
+                            mouseX,
+                            mouseY,
+                            viewport
+                        )
 
-          setViewport({
-            zoom: newZoom,
-            offsetX: newOffsetX,
-            offsetY: newOffsetY,
-          })
-        }}
-        onPointerDown={(event) => {
-          if (spacePressed) {
-            setIsPanning(true)
+                    const zoomFactor =
+                        event.deltaY > 0 ? 0.9 : 1.1
 
-            setLastPointer({
-              x: event.clientX,
-              y: event.clientY,
-            })
-          }
-        }}
-        onPointerMove={(event) => {
-          if (isPanning) {
-            const dx =
-              event.clientX - lastPointer.x
+                    const newZoom =
+                        viewport.zoom * zoomFactor
 
-            const dy =
-              event.clientY - lastPointer.y
+                    const newOffsetX =
+                        mouseX -
+                        worldBefore.x * newZoom
 
-            setViewport((v) => ({
-              ...v,
-              offsetX: v.offsetX + dx,
-              offsetY: v.offsetY + dy,
-            }))
+                    const newOffsetY =
+                        mouseY -
+                        worldBefore.y * newZoom
 
-            setLastPointer({
-              x: event.clientX,
-              y: event.clientY,
-            })
+                    setViewport({
+                        zoom: newZoom,
+                        offsetX: newOffsetX,
+                        offsetY: newOffsetY,
+                    })
+                }}
+                onPointerDown={(event) => {
+                    if (spacePressed) {
+                        setIsPanning(true)
 
-            return
-          }
+                        setLastPointer({
+                            x: event.clientX,
+                            y: event.clientY,
+                        })
+                    }
+                }}
+                onPointerMove={(event) => {
+                    if (isPanning) {
+                        const dx =
+                            event.clientX - lastPointer.x
 
-          if (!draggingStationId) return
+                        const dy =
+                            event.clientY - lastPointer.y
 
-          const rect =
-            event.currentTarget.getBoundingClientRect()
+                        setViewport((v) => ({
+                            ...v,
+                            offsetX: v.offsetX + dx,
+                            offsetY: v.offsetY + dy,
+                        }))
 
-          const x =
-            event.clientX - rect.left
+                        setLastPointer({
+                            x: event.clientX,
+                            y: event.clientY,
+                        })
 
-          const y =
-            event.clientY - rect.top
+                        return
+                    }
 
-          const point = screenToWorld(
-            x,
-            y,
-            viewport
-          )
+                    if (!draggingStationId) return
 
-          const snapped =
-            snapPointToGrid(
-              point.x,
-              point.y,
-              40
-            )
+                    if (stationDragStartRef.current) {
+                        const dx =
+                            event.clientX - stationDragStartRef.current.x
 
-          moveStation(
-            draggingStationId,
-            snapped.x,
-            snapped.y
-          )
-        }}
-        onPointerUp={() => {
-          setDraggingStationId(null)
-          setIsPanning(false)
-        }}
-        onClick={(event) => {
-          if (spacePressed) return
+                        const dy =
+                            event.clientY - stationDragStartRef.current.y
 
-          const rect =
-            event.currentTarget.getBoundingClientRect()
+                        if (Math.hypot(dx, dy) > 3) {
+                            suppressNextClickRef.current = true
+                        }
+                    }
 
-          const x =
-            event.clientX - rect.left
+                    const rect =
+                        event.currentTarget.getBoundingClientRect()
 
-          const y =
-            event.clientY - rect.top
+                    const x =
+                        event.clientX - rect.left
 
-          const point = screenToWorld(
-            x,
-            y,
-            viewport
-          )
+                    const y =
+                        event.clientY - rect.top
 
-          const snapped =
-            snapPointToGrid(
-              point.x,
-              point.y,
-              40
-            )
+                    const point = screenToWorld(
+                        x,
+                        y,
+                        viewport
+                    )
 
-          addStation(
-            snapped.x,
-            snapped.y
-          )
-        }}
-      >
-        <rect
-          width="100%"
-          height="100%"
-          fill="#f5f5f5"
-        />
+                    const snapped =
+                        snapPointToGrid(
+                            point.x,
+                            point.y,
+                            40
+                        )
 
-        <g
-          transform={`
+                    moveStation(
+                        draggingStationId,
+                        snapped.x,
+                        snapped.y
+                    )
+                }}
+                onPointerUp={() => {
+                    setDraggingStationId(null)
+                    stationDragStartRef.current = null
+                    setIsPanning(false)
+                }}
+                onClick={(event) => {
+                    if (spacePressed) return
+
+                    if (suppressNextClickRef.current) {
+                        suppressNextClickRef.current = false
+                        return
+                    }
+
+                    const rect =
+                        event.currentTarget.getBoundingClientRect()
+
+                    const x =
+                        event.clientX - rect.left
+
+                    const y =
+                        event.clientY - rect.top
+
+                    const point = screenToWorld(
+                        x,
+                        y,
+                        viewport
+                    )
+
+                    const snapped =
+                        snapPointToGrid(
+                            point.x,
+                            point.y,
+                            40
+                        )
+
+                    addStation(
+                        snapped.x,
+                        snapped.y
+                    )
+                }}
+            >
+                <rect
+                    width="100%"
+                    height="100%"
+                    fill="#f5f5f5"
+                />
+
+                <g
+                    transform={`
             translate(${viewport.offsetX} ${viewport.offsetY})
             scale(${viewport.zoom})
           `}
-        >
-          <GridLayer
-            width={4000}
-            height={4000}
-            gridSize={40}
-          />
+                >
+                    <GridLayer
+                        width={4000}
+                        height={4000}
+                        gridSize={40}
+                    />
 
-          {Object.values(stations).map((s) => (
-            <circle
-              key={s.id}
-              cx={s.x}
-              cy={s.y}
-              r={8}
-              fill="#111"
-              style={{
-                cursor: 'pointer',
-              }}
-              onPointerDown={(event) => {
-                event.stopPropagation()
+                    <SegmentLayer
+                        segments={Object.values(segments)}
+                    />
 
-                setDraggingStationId(s.id)
-              }}
-            />
-          ))}
-        </g>
-      </svg>
-    </div>
-  )
+                    {Object.values(stations).map((s) => (
+                        <circle
+                            key={s.id}
+                            cx={s.x}
+                            cy={s.y}
+                            r={8}
+                            fill="#111"
+                            style={{
+                                cursor: 'pointer',
+                            }}
+
+                            onPointerDown={(event) => {
+                                event.stopPropagation()
+
+                                if (event.shiftKey) {
+                                    if (pendingStationId) {
+                                        if (pendingStationId !== s.id) {
+                                            addSegment(
+                                                pendingStationId,
+                                                s.id
+                                            )
+                                        }
+
+                                        setPendingStationId(null)
+                                    } else {
+                                        setPendingStationId(s.id)
+                                    }
+
+                                    return
+                                }
+
+                                setDraggingStationId(s.id)
+                                stationDragStartRef.current = {
+                                    x: event.clientX,
+                                    y: event.clientY,
+                                }
+                            }}
+
+                        />
+                    ))}
+                </g>
+            </svg>
+        </div>
+    )
 }
