@@ -45,6 +45,9 @@ export function EditorCanvas() {
     const [newLineName, setNewLineName] = useState('')
     const [newLineColor, setNewLineColor] = useState('#1976d2')
 
+    const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
+    const [showBackground, setShowBackground] = useState(true)
+
     const colorPalette = [
         '#e53935',
         '#ef5350',
@@ -308,12 +311,50 @@ export function EditorCanvas() {
                         if (window.confirm('Are you sure you want to clear all data?')) {
                             clear()
                             setSelectedLineId(null)
+                            setBackgroundImage(null)
                         }
                     }}
                     title="Clear all"
                 >
                     Clear
                 </button>
+
+                <div className="editor-toolbar-separator" />
+
+                <button
+                    type="button"
+                    className="editor-toolbar-button"
+                    onClick={() => {
+                        const input = document.createElement('input')
+                        input.type = 'file'
+                        input.accept = 'image/*'
+                        input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0]
+                            if (file) {
+                                const reader = new FileReader()
+                                reader.onload = (event) => {
+                                    setBackgroundImage(event.target?.result as string)
+                                }
+                                reader.readAsDataURL(file)
+                            }
+                        }
+                        input.click()
+                    }}
+                    title="Load background image"
+                >
+                    Load Image
+                </button>
+
+                {backgroundImage && (
+                    <button
+                        type="button"
+                        className="editor-toolbar-button"
+                        onClick={() => setShowBackground(!showBackground)}
+                        title={showBackground ? 'Hide background' : 'Show background'}
+                    >
+                        {showBackground ? 'Hide BG' : 'Show BG'}
+                    </button>
+                )}
 
                 {activeTool === 'segment' && (
                     <>
@@ -601,6 +642,20 @@ export function EditorCanvas() {
             scale(${viewport.zoom})
           `}
                 >
+                    {backgroundImage && showBackground && (
+                        <image
+                            href={backgroundImage}
+                            x={-2000}
+                            y={-2000}
+                            width={4000}
+                            height={4000}
+                            opacity={0.3}
+                            style={{
+                                pointerEvents: 'none',
+                            }}
+                        />
+                    )}
+
                     <GridLayer
                         width={4000}
                         height={4000}
