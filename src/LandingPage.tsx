@@ -197,7 +197,7 @@ export function LandingPage() {
                         Built with React, TypeScript, and Material Design
                     </Typography>
                     <Typography variant="body2" sx={{ mt: 1 }}>
-                        © 2024 Transit Map Editor. Open source and free to use.
+                        © 2026 Transit Map Editor. Open source and free to use.
                     </Typography>
                 </Container>
             </Box>
