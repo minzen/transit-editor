@@ -1,3 +1,5 @@
+import { TextField, Box, Button, IconButton, Stack } from '@mui/material'
+
 type Props = {
     newLineName: string
     setNewLineName: (name: string) => void
@@ -18,53 +20,61 @@ export function LineCreator({
     colorPalette,
 }: Props) {
     return (
-        <div className="editor-line-creator">
-            <input
-                type="text"
+        <Box className="editor-line-creator" sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 1 }}>
+            <TextField
                 value={newLineName}
                 onChange={(e) => setNewLineName(e.target.value)}
                 placeholder="Line name"
-                className="editor-line-name-input"
+                size="small"
+                sx={{ minWidth: 120 }}
             />
-            <div className="editor-color-palette">
+            <Stack direction="row" spacing={0.5} className="editor-color-palette">
                 {colorPalette.map((color) => (
-                    <button
+                    <IconButton
                         key={color}
-                        type="button"
-                        className={`editor-color-swatch ${
-                            newLineColor === color ? 'active' : ''
-                        }`}
-                        style={{ backgroundColor: color }}
+                        sx={{
+                            backgroundColor: color,
+                            width: 24,
+                            height: 24,
+                            border: newLineColor === color ? 2 : 1,
+                            borderColor: newLineColor === color ? 'primary.main' : 'grey.300',
+                            '&:hover': {
+                                backgroundColor: color,
+                                opacity: 0.8,
+                            },
+                        }}
                         onClick={() => setNewLineColor(color)}
                         title={color}
                     />
                 ))}
-            </div>
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                onClick={() => {
-                    if (newLineName.trim()) {
-                        addLine(newLineName.trim(), newLineColor)
+            </Stack>
+            <Stack direction="row" spacing={0.5}>
+                <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => {
+                        if (newLineName.trim()) {
+                            addLine(newLineName.trim(), newLineColor)
+                            setNewLineName('')
+                            setNewLineColor('#1976d2')
+                            setIsCreatingLine(false)
+                        }
+                    }}
+                >
+                    Create
+                </Button>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
                         setNewLineName('')
                         setNewLineColor('#1976d2')
                         setIsCreatingLine(false)
-                    }
-                }}
-            >
-                Create
-            </button>
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                onClick={() => {
-                    setNewLineName('')
-                    setNewLineColor('#1976d2')
-                    setIsCreatingLine(false)
-                }}
-            >
-                Cancel
-            </button>
-        </div>
+                    }}
+                >
+                    Cancel
+                </Button>
+            </Stack>
+        </Box>
     )
 }

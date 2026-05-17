@@ -1,3 +1,5 @@
+import { Button } from '@mui/material'
+
 type Props = {
     backgroundImage: string | null
     showBackground: boolean
@@ -30,24 +32,18 @@ export function BackgroundImageControl({
 
     return (
         <>
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                onClick={handleLoadImage}
-                title="Load background image"
-            >
+            <Button size="small" onClick={handleLoadImage}>
                 Load Image
-            </button>
+            </Button>
 
             {backgroundImage && (
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
+                <Button
+                    size="small"
+                    variant="outlined"
                     onClick={() => setShowBackground(!showBackground)}
-                    title={showBackground ? 'Hide background' : 'Show background'}
                 >
                     {showBackground ? 'Hide BG' : 'Show BG'}
-                </button>
+                </Button>
             )}
         </>
     )

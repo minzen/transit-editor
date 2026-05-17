@@ -5,6 +5,9 @@ import { LineCreator } from './LineCreator'
 import { BackgroundImageControl } from './BackgroundImageControl'
 import { GridSizeControl } from './GridSizeControl'
 
+import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
+import { Undo, Redo } from '@mui/icons-material'
+
 type Props = {
     activeTool: EditorTool
     setActiveTool: (tool: EditorTool) => void
@@ -85,16 +88,11 @@ export function EditorToolbar({
     colorPalette,
 }: Props) {
     return (
-        <div className="editor-toolbar">
+        <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
             {tools.map((tool) => (
-                <button
+                <Button
                     key={tool.id}
-                    type="button"
-                    className={
-                        activeTool === tool.id
-                            ? 'editor-toolbar-button active'
-                            : 'editor-toolbar-button'
-                    }
+                    variant={activeTool === tool.id ? 'contained' : 'outlined'}
                     onClick={() => {
                         setActiveTool(tool.id)
                         setPendingStationId(null)
@@ -102,56 +100,31 @@ export function EditorToolbar({
                     }}
                 >
                     {tool.label}
-                </button>
+                </Button>
             ))}
 
-            <div className="editor-toolbar-separator" />
+            <Divider orientation="vertical" flexItem />
 
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                disabled={!canUndo}
-                onClick={undo}
-                title="Undo"
-            >
-                ↶ Undo
-            </button>
+            <Tooltip title="Undo">
+                <IconButton onClick={undo} disabled={!canUndo}>
+                    <Undo />
+                </IconButton>
+            </Tooltip>
 
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                disabled={!canRedo}
-                onClick={redo}
-                title="Redo"
-            >
-                Redo ↷
-            </button>
+            <Tooltip title="Redo">
+                <IconButton onClick={redo} disabled={!canRedo}>
+                    <Redo />
+                </IconButton>
+            </Tooltip>
 
-            <div className="editor-toolbar-separator" />
+            <Divider orientation="vertical" flexItem />
 
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                onClick={exportAsSVG}
-                title="Export as SVG"
-            >
-                Export SVG
-            </button>
+            <Button onClick={exportAsSVG}>Export SVG</Button>
+            <Button onClick={exportAsPNG}>Export PNG</Button>
 
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                onClick={exportAsPNG}
-                title="Export as PNG"
-            >
-                Export PNG
-            </button>
+            <Divider orientation="vertical" flexItem />
 
-            <div className="editor-toolbar-separator" />
-
-            <button
-                type="button"
-                className="editor-toolbar-button"
+            <Button
                 onClick={() => {
                     if (window.confirm('Are you sure you want to clear all data?')) {
                         clear()
@@ -159,12 +132,11 @@ export function EditorToolbar({
                         setBackgroundImage(null)
                     }
                 }}
-                title="Clear all"
             >
                 Clear
-            </button>
+            </Button>
 
-            <div className="editor-toolbar-separator" />
+            <Divider orientation="vertical" flexItem />
 
             <BackgroundImageControl
                 backgroundImage={backgroundImage}
@@ -173,7 +145,7 @@ export function EditorToolbar({
                 setBackgroundImage={setBackgroundImage}
             />
 
-            <div className="editor-toolbar-separator" />
+            <Divider orientation="vertical" flexItem />
 
             <GridSizeControl
                 gridSize={gridSize}
@@ -182,26 +154,21 @@ export function EditorToolbar({
 
             {activeTool === 'segment' && (
                 <>
-                    <div className="editor-toolbar-separator" />
-                    <select
+                    <Divider orientation="vertical" flexItem />
+                    <Select
                         value={selectedLineId || ''}
                         onChange={(e) => setSelectedLineId(e.target.value || null)}
-                        className="editor-line-selector"
+                        displayEmpty
+                        sx={{ minWidth: 120 }}
                     >
-                        <option value="">Select line...</option>
+                        <MenuItem value="">Select line...</MenuItem>
                         {Object.values(lines).map((line) => (
-                            <option key={line.id} value={line.id}>
+                            <MenuItem key={line.id} value={line.id}>
                                 {line.name}
-                            </option>
+                            </MenuItem>
                         ))}
-                    </select>
-                    <button
-                        type="button"
-                        className="editor-toolbar-button"
-                        onClick={() => setIsCreatingLine(true)}
-                    >
-                        + Line
-                    </button>
+                    </Select>
+                    <Button onClick={() => setIsCreatingLine(true)}>+ Line</Button>
 
                     {isCreatingLine && (
                         <LineCreator
@@ -216,6 +183,6 @@ export function EditorToolbar({
                     )}
                 </>
             )}
-        </div>
+        </Box>
     )
 }
