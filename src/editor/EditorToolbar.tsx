@@ -7,7 +7,7 @@ import { GridSizeControl } from './GridSizeControl'
 import { HelpDialog } from './HelpDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
-import { Undo, Redo, Home, Help } from '@mui/icons-material'
+import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, AspectRatio } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -40,6 +40,9 @@ type Props = {
     setPendingStationId: (id: string | null) => void
     setPointerWorldPosition: (point: { x: number; y: number } | null) => void
     colorPalette: string[]
+    zoomIn: () => void
+    zoomOut: () => void
+    resetViewport: () => void
 }
 
 const tools: {
@@ -89,6 +92,9 @@ export function EditorToolbar({
     setPendingStationId,
     setPointerWorldPosition,
     colorPalette,
+    zoomIn,
+    zoomOut,
+    resetViewport,
 }: Props) {
     const navigate = useNavigate()
     const [helpOpen, setHelpOpen] = useState(false)
@@ -108,6 +114,26 @@ export function EditorToolbar({
             </Tooltip>
 
             <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+
+            <Divider orientation="vertical" flexItem />
+
+            <Tooltip title="Zoom In">
+                <IconButton onClick={zoomIn}>
+                    <ZoomIn />
+                </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Zoom Out">
+                <IconButton onClick={zoomOut}>
+                    <ZoomOut />
+                </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Reset View">
+                <IconButton onClick={resetViewport}>
+                    <AspectRatio />
+                </IconButton>
+            </Tooltip>
 
             <Divider orientation="vertical" flexItem />
 

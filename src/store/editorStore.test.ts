@@ -315,4 +315,53 @@ describe('editor store', () => {
     expect(state.pastStates).toHaveLength(0)
     expect(state.futureStates).toHaveLength(0)
   })
+
+  it('zooms in', () => {
+    const state = useEditorStore.getState()
+    const initialZoom = state.viewport.zoom
+
+    useEditorStore.getState().zoomIn()
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState.viewport.zoom).toBe(initialZoom * 1.2)
+  })
+
+  it('zooms out', () => {
+    const state = useEditorStore.getState()
+    const initialZoom = state.viewport.zoom
+
+    useEditorStore.getState().zoomOut()
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState.viewport.zoom).toBe(initialZoom / 1.2)
+  })
+
+  it('zooms out does not go below 0.1', () => {
+    useEditorStore.getState().setViewport({ zoom: 0.1, offsetX: 0, offsetY: 0 })
+
+    useEditorStore.getState().zoomOut()
+
+    const state = useEditorStore.getState()
+    expect(state.viewport.zoom).toBe(0.1)
+  })
+
+  it('resets viewport to default', () => {
+    useEditorStore.getState().setViewport({ zoom: 2.5, offsetX: 100, offsetY: 200 })
+
+    useEditorStore.getState().resetViewport()
+
+    const state = useEditorStore.getState()
+    expect(state.viewport.zoom).toBe(1)
+    expect(state.viewport.offsetX).toBe(0)
+    expect(state.viewport.offsetY).toBe(0)
+  })
+
+  it('sets viewport', () => {
+    useEditorStore.getState().setViewport({ zoom: 1.5, offsetX: 50, offsetY: 75 })
+
+    const state = useEditorStore.getState()
+    expect(state.viewport.zoom).toBe(1.5)
+    expect(state.viewport.offsetX).toBe(50)
+    expect(state.viewport.offsetY).toBe(75)
+  })
 })

@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
+import type { Viewport } from '../viewport/coordinates'
 import { createOctolinearPath } from '../geometry/octolinear'
 
 export type EditorTool = 'select' | 'station' | 'segment'
@@ -25,6 +26,7 @@ type EditorState = {
     stations: Record<string, Station>
     segments: Record<string, Segment>
     lines: Record<string, Line>
+    viewport: Viewport
 
     pastStates: DataSnapshot[]
     futureStates: DataSnapshot[]
@@ -40,6 +42,10 @@ type EditorState = {
     clear: () => void
     undo: () => void
     redo: () => void
+    setViewport: (viewport: Viewport) => void
+    zoomIn: () => void
+    zoomOut: () => void
+    resetViewport: () => void
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -49,6 +55,7 @@ export const useEditorStore = create<EditorState>()(
     stations: {},
     segments: {},
     lines: {},
+    viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
     pastStates: [],
     futureStates: [],
 
@@ -329,6 +336,30 @@ export const useEditorStore = create<EditorState>()(
             lines: {},
             pastStates: [],
             futureStates: [],
+        })),
+
+    setViewport: (viewport) =>
+        set({ viewport }),
+
+    zoomIn: () =>
+        set((state) => ({
+            viewport: {
+                ...state.viewport,
+                zoom: state.viewport.zoom * 1.2,
+            },
+        })),
+
+    zoomOut: () =>
+        set((state) => ({
+            viewport: {
+                ...state.viewport,
+                zoom: Math.max(0.1, state.viewport.zoom / 1.2),
+            },
+        })),
+
+    resetViewport: () =>
+        set(() => ({
+            viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
         })),
 
 }),

@@ -1,7 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import type {
-    Viewport,
-} from '../viewport/coordinates'
 import { screenToWorld } from '../viewport/coordinates'
 import type { Point } from '../types/geometry'
 
@@ -35,12 +32,11 @@ export function EditorCanvas() {
         (s) => s.moveStation
     )
 
-    const [viewport, setViewport] =
-        useState<Viewport>({
-            zoom: 1,
-            offsetX: 0,
-            offsetY: 0,
-        })
+    const viewport = useEditorStore((s) => s.viewport)
+    const setViewport = useEditorStore((s) => s.setViewport)
+    const zoomIn = useEditorStore((s) => s.zoomIn)
+    const zoomOut = useEditorStore((s) => s.zoomOut)
+    const resetViewport = useEditorStore((s) => s.resetViewport)
 
     const [pendingStationId, setPendingStationId] = useState<string | null>(null)
 
@@ -242,11 +238,11 @@ export function EditorCanvas() {
             const dx = event.clientX - lastPointer.x
             const dy = event.clientY - lastPointer.y
 
-            setViewport((v) => ({
-                ...v,
-                offsetX: v.offsetX + dx,
-                offsetY: v.offsetY + dy,
-            }))
+            setViewport({
+                ...viewport,
+                offsetX: viewport.offsetX + dx,
+                offsetY: viewport.offsetY + dy,
+            })
 
             setLastPointer({
                 x: event.clientX,
@@ -385,6 +381,9 @@ export function EditorCanvas() {
                 setPendingStationId={setPendingStationId}
                 setPointerWorldPosition={setPointerWorldPosition}
                 colorPalette={colorPalette}
+                zoomIn={zoomIn}
+                zoomOut={zoomOut}
+                resetViewport={resetViewport}
             />
 
             <svg
