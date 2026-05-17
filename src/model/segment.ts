@@ -1,3 +1,5 @@
+import type { Point } from '../types/geometry'
+
 export type Segment = {
   id: string
 
@@ -7,8 +9,5 @@ export type Segment = {
   lineId: string
   color: string
 
-  points: {
-    x: number
-    y: number
-  }[]
+  points: Point[]
 }

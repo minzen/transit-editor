@@ -1,7 +1,4 @@
-export type Point = {
-  x: number
-  y: number
-}
+import type { Point } from '../types/geometry'
 
 export function snapPointToOctolinear(
   origin: Point,

@@ -3,6 +3,7 @@ import type {
     Viewport,
 } from '../viewport/coordinates'
 import { screenToWorld } from '../viewport/coordinates'
+import type { Point } from '../types/geometry'
 
 import type { EditorTool } from '../store/editorStore'
 import { useEditorStore } from '../store/editorStore'
@@ -13,11 +14,6 @@ import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
 
 import './EditorCanvas.css'
-
-type Point = {
-    x: number
-    y: number
-}
 
 // Constants for magic numbers
 const EXPORT_PADDING = 40
