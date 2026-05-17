@@ -18,7 +18,13 @@ VPS_PATH="${VPS_PATH:-/opt/transit-editor}"
 # Optional: If you want to build on the VPS
 REMOTE_BUILD=true
 
+# Get version from Git tags or commit hash
+VERSION=$(git describe --tags --always 2>/dev/null || echo "latest")
+BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
 echo "🚀 Starting deployment to $VPS_USER@$VPS_HOST..."
+echo "🏷️  Version: $VERSION"
+echo "📅 Build date: $BUILD_DATE"
 
 if [ "$REMOTE_BUILD" = true ]; then
     echo "📦 Copying files to VPS..."
@@ -26,10 +32,10 @@ if [ "$REMOTE_BUILD" = true ]; then
     scp -r ./ $VPS_USER@$VPS_HOST:$VPS_PATH/
 
     echo "🔨 Building Docker image on VPS..."
-    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && docker compose build"
+    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
 
     echo "🔄 Restarting services on VPS..."
-    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && docker compose up -d --force-recreate"
+    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION docker compose up -d --force-recreate"
 else
     echo "🔨 Building Docker image locally..."
     docker-compose build
@@ -41,10 +47,10 @@ else
     scp -r ./ $VPS_USER@$VPS_HOST:$VPS_PATH/
 
     echo "🔨 Building Docker image on VPS..."
-    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && docker compose build"
+    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
 
     echo "🔄 Restarting services on VPS..."
-    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && docker compose up -d --force-recreate"
+    ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION docker compose up -d --force-recreate"
 fi
 
 echo "✅ Deployment complete!"

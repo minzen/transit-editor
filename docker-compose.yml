@@ -5,6 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION:-latest}
+        BUILD_DATE: ${BUILD_DATE:-$(date -u +'%Y-%m-%dT%H:%M:%SZ')}
     ports:
       - "8086:80"
     restart: unless-stopped
+    labels:
+      - "version=${VERSION:-latest}"
+      - "build-date=${BUILD_DATE:-}"
