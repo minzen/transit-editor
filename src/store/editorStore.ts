@@ -13,6 +13,12 @@ type DataSnapshot = {
     lines: Record<string, Line>
 }
 
+const createSnapshot = (state: EditorState): DataSnapshot => ({
+    stations: state.stations,
+    segments: state.segments,
+    lines: state.lines,
+})
+
 type EditorState = {
     activeTool: EditorTool
     stations: Record<string, Station>
@@ -52,11 +58,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         set((state) => {
             const id = nanoid()
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             return {
                 stations: {
@@ -82,11 +84,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                 return state
             }
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             const segments = Object.fromEntries(
                 Object.entries(state.segments).map(
@@ -143,11 +141,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                 return state
             }
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             return {
                 stations: {
@@ -176,11 +170,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                 return state
             }
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             const newPoints = [...segment.points]
             newPoints[pointIndex] = { x, y }
@@ -221,11 +211,7 @@ export const useEditorStore = create<EditorState>((set) => ({
             const id = nanoid()
             const points = createOctolinearPath(from, to)
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             return {
                 stations: state.stations,
@@ -256,11 +242,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                 return state
             }
 
-            const currentState: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentState = createSnapshot(state)
 
             const previousState = state.pastStates[state.pastStates.length - 1]
 
@@ -278,11 +260,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                 return state
             }
 
-            const currentState: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentState = createSnapshot(state)
 
             const nextState = state.futureStates[0]
 
@@ -298,11 +276,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         set((state) => {
             const id = nanoid()
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             return {
                 stations: state.stations,
@@ -328,11 +302,7 @@ export const useEditorStore = create<EditorState>((set) => ({
                 return state
             }
 
-            const currentSnapshot: DataSnapshot = {
-                stations: state.stations,
-                segments: state.segments,
-                lines: state.lines,
-            }
+            const currentSnapshot = createSnapshot(state)
 
             return {
                 stations: state.stations,
