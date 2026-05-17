@@ -1,6 +1,8 @@
-import { Box, Container, Typography, Button, Card, CardContent, Stack } from '@mui/material'
+import { Box, Container, Typography, Button, Card, CardContent, CardMedia } from '@mui/material'
 import { ArrowForward, Map, Train, Palette, Undo } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
+import editorInterface from './assets/transit-editor-interface.png'
+import editorExample from './assets/transit-editor-example.png'
 
 export function LandingPage() {
     const navigate = useNavigate()
@@ -122,44 +124,34 @@ export function LandingPage() {
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mb: 6 }}>
                         <Box sx={{ flex: '1 1 400px', maxWidth: 'calc(50% - 16px)' }}>
                             <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                                <Box
-                                    sx={{
-                                        aspectRatio: '16/9',
-                                        bgcolor: 'primary.light',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: 'primary.contrastText',
-                                    }}
-                                >
-                                    <Stack spacing={2} sx={{ textAlign: 'center', p: 4 }}>
-                                        <Typography variant="h6">Editor Interface</Typography>
-                                        <Typography variant="body2">
-                                            Clean, modern interface with intuitive controls
-                                        </Typography>
-                                    </Stack>
-                                </Box>
+                                <CardMedia
+                                    component="img"
+                                    image={editorInterface}
+                                    alt="Editor Interface"
+                                    sx={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+                                />
+                                <CardContent sx={{ p: 3 }}>
+                                    <Typography variant="h6" gutterBottom>Editor Interface</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Clean, modern interface with intuitive controls
+                                    </Typography>
+                                </CardContent>
                             </Card>
                         </Box>
                         <Box sx={{ flex: '1 1 400px', maxWidth: 'calc(50% - 16px)' }}>
                             <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                                <Box
-                                    sx={{
-                                        aspectRatio: '16/9',
-                                        bgcolor: 'secondary.light',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        color: 'secondary.contrastText',
-                                    }}
-                                >
-                                    <Stack spacing={2} sx={{ textAlign: 'center', p: 4 }}>
-                                        <Typography variant="h6">Exported Map</Typography>
-                                        <Typography variant="body2">
-                                            Export your maps as SVG or PNG for sharing
-                                        </Typography>
-                                    </Stack>
-                                </Box>
+                                <CardMedia
+                                    component="img"
+                                    image={editorExample}
+                                    alt="Exported Map Example"
+                                    sx={{ width: '100%', height: 'auto', objectFit: 'contain' }}
+                                />
+                                <CardContent sx={{ p: 3 }}>
+                                    <Typography variant="h6" gutterBottom>Exported Map</Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Export your maps as SVG or PNG for sharing
+                                    </Typography>
+                                </CardContent>
                             </Card>
                         </Box>
                     </Box>
