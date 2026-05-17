@@ -19,6 +19,14 @@ type Point = {
     y: number
 }
 
+// Constants for magic numbers
+const EXPORT_PADDING = 40
+const BEND_POINT_RADIUS = 6
+const STATION_RADIUS = 8
+const BACKGROUND_IMAGE_SIZE = 4000
+const BACKGROUND_IMAGE_OFFSET = -2000
+const GRID_SIZE = 4000
+
 export function EditorCanvas() {
     const activeTool = useEditorStore((s) => s.activeTool)
     const setActiveTool = useEditorStore((s) => s.setActiveTool)
@@ -150,7 +158,7 @@ export function EditorCanvas() {
         URL.revokeObjectURL(url)
     }
 
-    const exportAsPDF = () => {
+    const exportAsPNG = () => {
         if (!svgRef.current) return
 
         const svgElement = svgRef.current
@@ -163,21 +171,20 @@ export function EditorCanvas() {
         const img = new Image()
         img.onload = () => {
             const canvas = document.createElement('canvas')
-            const padding = 40
             const bbox = svgElement.getBoundingClientRect()
 
-            canvas.width = bbox.width + padding * 2
-            canvas.height = bbox.height + padding * 2
+            canvas.width = bbox.width + EXPORT_PADDING * 2
+            canvas.height = bbox.height + EXPORT_PADDING * 2
 
             const ctx = canvas.getContext('2d')
             if (ctx) {
                 ctx.fillStyle = '#ffffff'
                 ctx.fillRect(0, 0, canvas.width, canvas.height)
-                ctx.drawImage(img, padding, padding, bbox.width, bbox.height)
+                ctx.drawImage(img, EXPORT_PADDING, EXPORT_PADDING, bbox.width, bbox.height)
 
-                const pdfUrl = canvas.toDataURL('image/png')
+                const pngUrl = canvas.toDataURL('image/png')
                 const link = document.createElement('a')
-                link.href = pdfUrl
+                link.href = pngUrl
                 link.download = 'transit-map.png'
                 link.click()
             }
@@ -298,7 +305,7 @@ export function EditorCanvas() {
                 <button
                     type="button"
                     className="editor-toolbar-button"
-                    onClick={exportAsPDF}
+                    onClick={exportAsPNG}
                     title="Export as PNG"
                 >
                     Export PNG
@@ -663,10 +670,10 @@ export function EditorCanvas() {
                     {backgroundImage && showBackground && (
                         <image
                             href={backgroundImage}
-                            x={-2000}
-                            y={-2000}
-                            width={4000}
-                            height={4000}
+                            x={BACKGROUND_IMAGE_OFFSET}
+                            y={BACKGROUND_IMAGE_OFFSET}
+                            width={BACKGROUND_IMAGE_SIZE}
+                            height={BACKGROUND_IMAGE_SIZE}
                             opacity={0.3}
                             style={{
                                 pointerEvents: 'none',
@@ -675,8 +682,8 @@ export function EditorCanvas() {
                     )}
 
                     <GridLayer
-                        width={4000}
-                        height={4000}
+                        width={GRID_SIZE}
+                        height={GRID_SIZE}
                         gridSize={gridSize}
                     />
 
@@ -693,7 +700,7 @@ export function EditorCanvas() {
                                         key={`${segment.id}-bend`}
                                         cx={bendPoint.x}
                                         cy={bendPoint.y}
-                                        r={6}
+                                        r={BEND_POINT_RADIUS}
                                         fill="#1976d2"
                                         stroke="#fff"
                                         strokeWidth={2}
@@ -741,7 +748,7 @@ export function EditorCanvas() {
                                     <circle
                                         cx={s.x}
                                         cy={s.y}
-                                        r={14}
+                                        r={STATION_RADIUS + 6}
                                         fill="none"
                                         stroke="#1976d2"
                                         strokeWidth={4}
@@ -751,7 +758,7 @@ export function EditorCanvas() {
                                 <circle
                                     cx={s.x}
                                     cy={s.y}
-                                    r={8}
+                                    r={STATION_RADIUS}
                                     fill="#111"
                                     style={{
                                         cursor: 'pointer',
