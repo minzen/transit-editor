@@ -6,6 +6,7 @@ import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import type { Viewport } from '../viewport/coordinates'
 import { createOctolinearPath } from '../geometry/octolinear'
+import { validateLineName, validateStationName } from '../validation/constants'
 
 export type EditorTool = 'select' | 'station' | 'segment'
 
@@ -151,6 +152,11 @@ export const useEditorStore = create<EditorState>()(
                 return state
             }
 
+            const validation = validateStationName(name)
+            if (!validation.valid) {
+                return state
+            }
+
             const currentSnapshot = createSnapshot(state)
 
             return {
@@ -158,7 +164,7 @@ export const useEditorStore = create<EditorState>()(
                     ...state.stations,
                     [id]: {
                         ...station,
-                        name,
+                        name: validation.sanitized ?? name,
                     },
                 },
                 segments: state.segments,
@@ -312,6 +318,11 @@ export const useEditorStore = create<EditorState>()(
                 return state
             }
 
+            const validation = validateLineName(name)
+            if (!validation.valid) {
+                return state
+            }
+
             const currentSnapshot = createSnapshot(state)
 
             return {
@@ -321,7 +332,7 @@ export const useEditorStore = create<EditorState>()(
                     ...state.lines,
                     [id]: {
                         ...line,
-                        name,
+                        name: validation.sanitized ?? name,
                     },
                 },
                 pastStates: [...state.pastStates, currentSnapshot],

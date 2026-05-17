@@ -1,4 +1,5 @@
 import { TextField, Box, Button, IconButton, Stack } from '@mui/material'
+import { validateLineName, VALIDATION } from '../validation/constants'
 
 type Props = {
     newLineName: string
@@ -19,6 +20,17 @@ export function LineCreator({
     setIsCreatingLine,
     colorPalette,
 }: Props) {
+    const validation = validateLineName(newLineName)
+
+    const handleCreate = () => {
+        if (validation.valid) {
+            addLine(validation.sanitized ?? newLineName, newLineColor)
+            setNewLineName('')
+            setNewLineColor('#1976d2')
+            setIsCreatingLine(false)
+        }
+    }
+
     return (
         <Box className="editor-line-creator" sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 1 }}>
             <TextField
@@ -27,6 +39,13 @@ export function LineCreator({
                 placeholder="Line name"
                 size="small"
                 sx={{ minWidth: 120 }}
+                slotProps={{
+                    htmlInput: {
+                        maxLength: VALIDATION.MAX_LINE_NAME_LENGTH,
+                    },
+                }}
+                error={!validation.valid && newLineName.length > 0}
+                helperText={!validation.valid && newLineName.length > 0 ? validation.error : ''}
             />
             <Stack direction="row" spacing={0.5} className="editor-color-palette">
                 {colorPalette.map((color) => (
@@ -52,14 +71,8 @@ export function LineCreator({
                 <Button
                     variant="contained"
                     size="small"
-                    onClick={() => {
-                        if (newLineName.trim()) {
-                            addLine(newLineName.trim(), newLineColor)
-                            setNewLineName('')
-                            setNewLineColor('#1976d2')
-                            setIsCreatingLine(false)
-                        }
-                    }}
+                    onClick={handleCreate}
+                    disabled={!validation.valid}
                 >
                     Create
                 </Button>
