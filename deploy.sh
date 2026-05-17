@@ -42,7 +42,7 @@ if [ "$REMOTE_BUILD" = true ]; then
     ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION docker compose up -d --force-recreate"
 else
     echo "🔨 Building Docker image locally..."
-    docker-compose build
+    docker compose build
 
     echo "📤 Pushing image to VPS..."
     # Note: This requires setting up a registry or using docker save/load
