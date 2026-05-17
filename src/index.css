@@ -1,3 +1,6 @@
+/* Import Roboto font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
 :root {
   /* Material Design 3 Color Palette - Blue */
   --md-sys-color-primary: #1976d2;
@@ -82,9 +85,6 @@
   color: var(--text);
   background: var(--bg);
 }
-
-/* Import Roboto font */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
 /* Base styles */
 * {
