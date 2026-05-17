@@ -5,6 +5,7 @@ import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import type { Viewport } from '../viewport/coordinates'
+import type { Point } from '../types/geometry'
 import { createOctolinearPath } from '../geometry/octolinear'
 import { validateLineName, validateStationName } from '../validation/constants'
 
@@ -21,6 +22,78 @@ const createSnapshot = (state: EditorState): DataSnapshot => ({
     segments: state.segments,
     lines: state.lines,
 })
+
+// Helper function to check if a point is on a segment line
+function isPointOnSegment(
+    point: Point,
+    segment: Segment,
+    stations: Record<string, Station>,
+    threshold: number = 10
+): boolean {
+    const fromStation = stations[segment.fromStationId]
+    const toStation = stations[segment.toStationId]
+    
+    if (!fromStation || !toStation) {
+        return false
+    }
+    
+    // Check if point is close to any segment of the path
+    for (let i = 0; i < segment.points.length - 1; i++) {
+        const p1 = segment.points[i]
+        const p2 = segment.points[i + 1]
+        
+        // Calculate distance from point to line segment
+        const dist = pointToLineDistance(point, p1, p2)
+        
+        if (dist <= threshold) {
+            // Check if point is within the segment bounds
+            const minX = Math.min(p1.x, p2.x) - threshold
+            const maxX = Math.max(p1.x, p2.x) + threshold
+            const minY = Math.min(p1.y, p2.y) - threshold
+            const maxY = Math.max(p1.y, p2.y) + threshold
+            
+            if (point.x >= minX && point.x <= maxX && point.y >= minY && point.y <= maxY) {
+                return true
+            }
+        }
+    }
+    
+    return false
+}
+
+// Helper function to calculate distance from point to line segment
+function pointToLineDistance(point: Point, lineStart: Point, lineEnd: Point): number {
+    const A = point.x - lineStart.x
+    const B = point.y - lineStart.y
+    const C = lineEnd.x - lineStart.x
+    const D = lineEnd.y - lineStart.y
+    
+    const dot = A * C + B * D
+    const lenSq = C * C + D * D
+    
+    let param = -1
+    if (lenSq !== 0) {
+        param = dot / lenSq
+    }
+    
+    let xx, yy
+    
+    if (param < 0) {
+        xx = lineStart.x
+        yy = lineStart.y
+    } else if (param > 1) {
+        xx = lineEnd.x
+        yy = lineEnd.y
+    } else {
+        xx = lineStart.x + param * C
+        yy = lineStart.y + param * D
+    }
+    
+    const dx = point.x - xx
+    const dy = point.y - yy
+    
+    return Math.sqrt(dx * dx + dy * dy)
+}
 
 type EditorState = {
     activeTool: EditorTool
@@ -70,8 +143,79 @@ export const useEditorStore = create<EditorState>()(
     addStation: (x, y) =>
         set((state) => {
             const id = nanoid()
-
             const currentSnapshot = createSnapshot(state)
+
+            // Check if the new station is on any existing segment
+            const pointOnSegment = { x, y }
+            const segmentToSplit = Object.values(state.segments).find(
+                (segment) => isPointOnSegment(pointOnSegment, segment, state.stations)
+            )
+
+            let newSegments = state.segments
+
+            if (segmentToSplit) {
+                // Split the segment into two segments
+                const line = state.lines[segmentToSplit.lineId]
+                if (!line) {
+                    // If line doesn't exist, just add the station without splitting
+                    return {
+                        stations: {
+                            ...state.stations,
+                            [id]: { id, x, y },
+                        },
+                        segments: state.segments,
+                        lines: state.lines,
+                        pastStates: [...state.pastStates, currentSnapshot],
+                        futureStates: [],
+                    }
+                }
+
+                // Create two new segments
+                const segment1Id = nanoid()
+                const segment2Id = nanoid()
+                const fromStation = state.stations[segmentToSplit.fromStationId]
+                const toStation = state.stations[segmentToSplit.toStationId]
+
+                if (!fromStation || !toStation) {
+                    // If stations don't exist, just add the station without splitting
+                    return {
+                        stations: {
+                            ...state.stations,
+                            [id]: { id, x, y },
+                        },
+                        segments: state.segments,
+                        lines: state.lines,
+                        pastStates: [...state.pastStates, currentSnapshot],
+                        futureStates: [],
+                    }
+                }
+
+                const newStation = { id, x, y }
+                const path1 = createOctolinearPath(fromStation, newStation)
+                const path2 = createOctolinearPath(newStation, toStation)
+
+                // Remove the old segment and add two new ones
+                const { [segmentToSplit.id]: _removedSegment, ...remainingSegments } = state.segments
+                newSegments = {
+                    ...remainingSegments,
+                    [segment1Id]: {
+                        id: segment1Id,
+                        fromStationId: segmentToSplit.fromStationId,
+                        toStationId: id,
+                        lineId: segmentToSplit.lineId,
+                        color: segmentToSplit.color,
+                        points: path1,
+                    },
+                    [segment2Id]: {
+                        id: segment2Id,
+                        fromStationId: id,
+                        toStationId: segmentToSplit.toStationId,
+                        lineId: segmentToSplit.lineId,
+                        color: segmentToSplit.color,
+                        points: path2,
+                    },
+                }
+            }
 
             return {
                 stations: {
@@ -82,7 +226,7 @@ export const useEditorStore = create<EditorState>()(
                         y,
                     },
                 },
-                segments: state.segments,
+                segments: newSegments,
                 lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],

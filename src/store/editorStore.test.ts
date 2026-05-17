@@ -453,4 +453,60 @@ describe('editor store', () => {
       expect(updatedState.stations[stationIds[1]]).toBeDefined()
     })
   })
+
+  describe('segment splitting', () => {
+    beforeEach(() => {
+      useEditorStore.getState().clear()
+    })
+
+    it('splits segment when station is added on top of it', () => {
+      useEditorStore.getState().addStation(100, 100)
+      useEditorStore.getState().addStation(300, 300)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineId = Object.keys(state.lines)[0]
+
+      useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+      const segmentId = Object.keys(state.segments)[0]
+
+      // Add a station on top of the segment (midpoint)
+      useEditorStore.getState().addStation(200, 200)
+
+      const updatedState = useEditorStore.getState()
+      // Old segment should be removed
+      expect(updatedState.segments[segmentId]).toBeUndefined()
+      // Two new segments should be created
+      const newSegmentIds = Object.keys(updatedState.segments)
+      expect(newSegmentIds.length).toBe(2)
+      // New station should exist
+      const newStationIds = Object.keys(updatedState.stations)
+      expect(newStationIds.length).toBe(3)
+    })
+
+    it('does not split segment when station is added far from it', () => {
+      useEditorStore.getState().addStation(100, 100)
+      useEditorStore.getState().addStation(300, 300)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineId = Object.keys(state.lines)[0]
+
+      useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+      const segmentsAfterAdd = Object.keys(useEditorStore.getState().segments)
+      
+      // Verify segment was created
+      expect(segmentsAfterAdd.length).toBe(1)
+      const segmentId = segmentsAfterAdd[0]
+
+      // Add a station far from the segment
+      useEditorStore.getState().addStation(1000, 1000)
+
+      const updatedState = useEditorStore.getState()
+      // Original segment should still exist
+      expect(updatedState.segments[segmentId]).toBeDefined()
+      // Only one segment should exist (no splitting occurred)
+      expect(Object.keys(updatedState.segments).length).toBe(1)
+    })
+  })
 })
