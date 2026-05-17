@@ -5,6 +5,7 @@ import type { Point } from '../types/geometry'
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToGrid } from '../geometry/snap'
 import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
+import { processSVGForExport } from '../utils/svgExport'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
@@ -157,7 +158,13 @@ export function EditorCanvas() {
             const serializer = new XMLSerializer()
             const svgString = serializer.serializeToString(svgElement)
 
-            const blob = new Blob([svgString], { type: 'image/svg+xml' })
+            // Get bounding box for viewBox calculation
+            const bbox = svgElement.getBBox()
+
+            // Process SVG for compatibility with external editors
+            const processedSVG = processSVGForExport(svgString, bbox)
+
+            const blob = new Blob([processedSVG], { type: 'image/svg+xml;charset=utf-8' })
             const url = URL.createObjectURL(blob)
 
             const link = document.createElement('a')
