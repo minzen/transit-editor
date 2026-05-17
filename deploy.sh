@@ -28,8 +28,12 @@ echo "📅 Build date: $BUILD_DATE"
 
 if [ "$REMOTE_BUILD" = true ]; then
     echo "📦 Copying files to VPS..."
-    # Use scp instead of rsync for better compatibility
-    scp -r ./ $VPS_USER@$VPS_HOST:$VPS_PATH/
+    # Use tar with exclusions instead of rsync for better compatibility
+    tar --exclude='node_modules' \
+        --exclude='.git' \
+        --exclude='dist' \
+        --exclude='.env' \
+        -czf - . | ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && tar -xzf -"
 
     echo "🔨 Building Docker image on VPS..."
     ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
@@ -44,7 +48,11 @@ else
     # Note: This requires setting up a registry or using docker save/load
     # For simplicity, we'll use the remote build approach
     echo "⚠️  Local build not configured, using remote build instead"
-    scp -r ./ $VPS_USER@$VPS_HOST:$VPS_PATH/
+    tar --exclude='node_modules' \
+        --exclude='.git' \
+        --exclude='dist' \
+        --exclude='.env' \
+        -czf - . | ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && tar -xzf -"
 
     echo "🔨 Building Docker image on VPS..."
     ssh $VPS_USER@$VPS_HOST "cd $VPS_PATH && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
