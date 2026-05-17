@@ -103,6 +103,38 @@ export function HelpDialog({ open, onClose }: Props) {
                 <Divider sx={{ mb: 2 }} />
 
                 <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>View Controls</Typography>
+                    <List dense>
+                        <ListItem>
+                            <ListItemText
+                                primary="Zoom In (+)"
+                                secondary="Click the Zoom In button in the toolbar to zoom in on the canvas"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Zoom Out (-)"
+                                secondary="Click the Zoom Out button in the toolbar to zoom out"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Reset View"
+                                secondary="Click the Reset View button to return to the default zoom level (1:1) and center the canvas"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Mouse Wheel"
+                                secondary="Use the mouse wheel to zoom in and out at the cursor position"
+                            />
+                        </ListItem>
+                    </List>
+                </Box>
+
+                <Divider sx={{ mb: 2 }} />
+
+                <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" gutterBottom>Export</Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
                         Use the 'Export SVG' button to save your map as a vector file, or 'Export PNG' to save as a raster image.
@@ -115,6 +147,18 @@ export function HelpDialog({ open, onClose }: Props) {
                     <Typography variant="h6" gutterBottom>Background Image</Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
                         Load a background image (e.g., a city map) to help with positioning. Toggle visibility with the 'Show/Hide BG' button.
+                    </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 2 }} />
+
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>Auto-save</Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                        The editor automatically saves your work to your browser's local storage. Your stations, segments, lines, and active tool are saved automatically and will be restored when you return to the editor.
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                        Note: The undo/redo history and viewport position are not saved between sessions.
                     </Typography>
                 </Box>
 
