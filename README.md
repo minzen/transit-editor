@@ -1,73 +1,153 @@
-# React + TypeScript + Vite
+# Transit Map Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based reactive editor for schematic transit maps.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Station creation and movement** - Add stations to the map and move them with your mouse
+- **Segment creation** - Create connections between stations in octolinear style (45° and 90° angles)
+- **Multiple lines** - Create multiple lines with different colors
+- **Undo/Redo** - Undo and redo changes
+- **Export** - Export maps in SVG or PNG format
+- **Background image** - Load a background image onto the map (e.g., city map)
+- **Adjustable grid** - Change grid size for more precise placement
 
-## React Compiler
+## Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The project uses the following architecture:
 
-## Expanding the ESLint configuration
+- **React + TypeScript + Vite** - Modern React stack with type safety
+- **Zustand** - State management for editor state (stations, segments, lines, undo/redo)
+- **SVG rendering** - Map is rendered in SVG with viewport transform
+- **World coordinates** - All data is stored in world coordinates, not screen coordinates
+- **Octolinear snapping** - Segment points snap to 45° and 90° angles
+- **Component separation** - UI is split into smaller reusable components
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Data Models
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Station** - `{ id, x, y, name? }`
+- **Segment** - `{ id, fromStationId, toStationId, lineId, color, points[] }`
+- **Line** - `{ id, name, color }`
+- **Point** - `{ x, y }` (shared type)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### File Structure
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── editor/           # Editor UI components
+│   ├── EditorCanvas.tsx
+│   ├── EditorToolbar.tsx
+│   ├── LineCreator.tsx
+│   ├── BackgroundImageControl.tsx
+│   └── GridSizeControl.tsx
+├── store/            # Zustand store
+│   └── editorStore.ts
+├── model/            # Data models
+│   ├── station.ts
+│   ├── segment.ts
+│   └── line.ts
+├── geometry/         # Geometry functions
+│   ├── snap.ts
+│   └── octolinear.ts
+├── viewport/         # Viewport coordinates
+│   └── coordinates.ts
+├── renderer/         # SVG rendering layers
+│   ├── GridLayer.tsx
+│   └── SegmentLayer.tsx
+└── types/            # Shared types
+    └── geometry.ts
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Installation
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+### Build
+
+```bash
+npm run build
+```
+
+### Development Server
+
+```bash
+npm run dev
+```
+
+The editor will be available at `http://localhost:5173`
+
+### Tests
+
+```bash
+npm run test
+```
+
+## Docker Containerization
+
+The project includes Dockerfile and docker-compose.yml for easy containerization.
+
+### Build Docker Image
+
+```bash
+docker-compose build
+```
+
+### Start Containers
+
+```bash
+docker-compose up
+```
+
+The editor will be available at `http://localhost:80`
+
+## Deploy to VPS
+
+The project includes a deploy.sh script for SSH-based deployment.
+
+### Configuration
+
+Edit the `deploy.sh` file and set your VPS details:
+
+```bash
+VPS_USER="your_username"
+VPS_HOST="your_vps_ip_or_domain"
+VPS_PATH="/opt/transit-editor"
+```
+
+### Deploy
+
+```bash
+chmod +x deploy.sh
+./deploy.sh
+```
+
+The script will:
+1. Copy files to VPS (rsync)
+2. Build Docker image on VPS
+3. Restart containers
+
+### Node Version
+
+The project requires Node 24. Ensure the correct version:
+
+```bash
+nvm use  # Reads .nvmrc file
+```
+
+## Technologies
+
+- React 18
+- TypeScript
+- Vite 8
+- Zustand
+- SVG
+- Docker
+- Nginx (in production)
+
+## License
+
+MIT
