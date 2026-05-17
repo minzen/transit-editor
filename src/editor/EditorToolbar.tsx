@@ -3,6 +3,7 @@ import type { Line } from '../model/line'
 
 import { LineCreator } from './LineCreator'
 import { BackgroundImageControl } from './BackgroundImageControl'
+import { GridSizeControl } from './GridSizeControl'
 
 type Props = {
     activeTool: EditorTool
@@ -174,19 +175,10 @@ export function EditorToolbar({
 
             <div className="editor-toolbar-separator" />
 
-            <div className="editor-grid-size-control">
-                <label htmlFor="gridSize">Grid:</label>
-                <input
-                    id="gridSize"
-                    type="number"
-                    value={gridSize}
-                    onChange={(e) => setGridSize(Number(e.target.value))}
-                    min="10"
-                    max="100"
-                    step="10"
-                    className="editor-grid-size-input"
-                />
-            </div>
+            <GridSizeControl
+                gridSize={gridSize}
+                setGridSize={setGridSize}
+            />
 
             {activeTool === 'segment' && (
                 <>
