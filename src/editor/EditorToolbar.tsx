@@ -4,10 +4,12 @@ import type { Line } from '../model/line'
 import { LineCreator } from './LineCreator'
 import { BackgroundImageControl } from './BackgroundImageControl'
 import { GridSizeControl } from './GridSizeControl'
+import { HelpDialog } from './HelpDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
-import { Undo, Redo, Home } from '@mui/icons-material'
+import { Undo, Redo, Home, Help } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 type Props = {
     activeTool: EditorTool
@@ -89,6 +91,7 @@ export function EditorToolbar({
     colorPalette,
 }: Props) {
     const navigate = useNavigate()
+    const [helpOpen, setHelpOpen] = useState(false)
 
     return (
         <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
@@ -97,6 +100,14 @@ export function EditorToolbar({
                     <Home />
                 </IconButton>
             </Tooltip>
+
+            <Tooltip title="Help">
+                <IconButton onClick={() => setHelpOpen(true)}>
+                    <Help />
+                </IconButton>
+            </Tooltip>
+
+            <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
 
             <Divider orientation="vertical" flexItem />
 
