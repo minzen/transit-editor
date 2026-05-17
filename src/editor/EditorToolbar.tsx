@@ -100,7 +100,7 @@ export function EditorToolbar({
     const [helpOpen, setHelpOpen] = useState(false)
 
     return (
-        <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
+        <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, p: 1 }}>
             <Tooltip title="Back to Home">
                 <IconButton onClick={() => void navigate('/')}>
                     <Home />
