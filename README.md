@@ -11,6 +11,9 @@ A browser-based reactive editor for schematic transit maps.
 - **Export** - Export maps in SVG or PNG format
 - **Background image** - Load a background image onto the map (e.g., city map)
 - **Adjustable grid** - Change grid size for more precise placement
+- **Zoom controls** - Zoom in, zoom out, and reset view with toolbar buttons or mouse wheel
+- **Auto-save** - Editor state automatically saved to browser localStorage
+- **Input validation** - Line and station names are validated and sanitized for security
 
 ## Architecture
 
@@ -18,10 +21,14 @@ The project uses the following architecture:
 
 - **React + TypeScript + Vite** - Modern React stack with type safety
 - **Zustand** - State management for editor state (stations, segments, lines, undo/redo)
+- **Zustand persist middleware** - Automatic localStorage persistence for editor state
+- **React Router** - Client-side routing between landing page and editor
 - **SVG rendering** - Map is rendered in SVG with viewport transform
 - **World coordinates** - All data is stored in world coordinates, not screen coordinates
+- **Viewport management** - Zoom and pan functionality with viewport state
 - **Octolinear snapping** - Segment points snap to 45° and 90° angles
 - **Component separation** - UI is split into smaller reusable components
+- **Input validation** - Sanitization and validation for user inputs
 
 ### Data Models
 
@@ -39,23 +46,33 @@ src/
 │   ├── EditorToolbar.tsx
 │   ├── LineCreator.tsx
 │   ├── BackgroundImageControl.tsx
-│   └── GridSizeControl.tsx
+│   ├── GridSizeControl.tsx
+│   └── HelpDialog.tsx
 ├── store/            # Zustand store
-│   └── editorStore.ts
+│   ├── editorStore.ts
+│   └── editorStore.test.ts
 ├── model/            # Data models
 │   ├── station.ts
 │   ├── segment.ts
 │   └── line.ts
 ├── geometry/         # Geometry functions
 │   ├── snap.ts
-│   └── octolinear.ts
+│   ├── snap.test.ts
+│   ├── octolinear.ts
+│   └── octolinear.test.ts
 ├── viewport/         # Viewport coordinates
-│   └── coordinates.ts
+│   ├── coordinates.ts
+│   └── coordinates.test.ts
 ├── renderer/         # SVG rendering layers
 │   ├── GridLayer.tsx
 │   └── SegmentLayer.tsx
-└── types/            # Shared types
-    └── geometry.ts
+├── validation/       # Input validation and sanitization
+│   ├── constants.ts
+│   └── constants.test.ts
+├── types/            # Shared types
+│   └── geometry.ts
+├── App.tsx           # Main app with routing
+└── LandingPage.tsx   # Landing page component
 ```
 
 ## Development
@@ -110,13 +127,15 @@ The project includes a deploy.sh script for SSH-based deployment.
 
 ### Configuration
 
-Edit the `deploy.sh` file and set your VPS details:
+Create a `.env` file in the project root (copy from `.env.example`):
 
 ```bash
-VPS_USER="your_username"
-VPS_HOST="your_vps_ip_or_domain"
-VPS_PATH="/opt/transit-editor"
+VPS_USER=your_username
+VPS_HOST=your_vps_ip_or_domain
+VPS_PATH=/opt/transit-editor
 ```
+
+The `.env` file is included in `.gitignore` to protect sensitive credentials.
 
 ### Deploy
 
@@ -126,9 +145,10 @@ chmod +x deploy.sh
 ```
 
 The script will:
-1. Copy files to VPS (rsync)
-2. Build Docker image on VPS
-3. Restart containers
+1. Load environment variables from `.env` file
+2. Copy files to VPS (rsync)
+3. Build Docker image on VPS
+4. Restart containers
 
 ### Node Version
 
@@ -144,6 +164,9 @@ nvm use  # Reads .nvmrc file
 - TypeScript
 - Vite 8
 - Zustand
+- React Router
+- Vitest
+- React Testing Library
 - SVG
 - Docker
 - Nginx (in production)
