@@ -7,7 +7,7 @@ import { GridSizeControl } from './GridSizeControl'
 import { HelpDialog } from './HelpDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
-import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, AspectRatio } from '@mui/icons-material'
+import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -131,7 +131,7 @@ export function EditorToolbar({
 
             <Tooltip title="Reset View">
                 <IconButton onClick={resetViewport}>
-                    <AspectRatio />
+                    <FitScreen />
                 </IconButton>
             </Tooltip>
 

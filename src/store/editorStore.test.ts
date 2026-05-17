@@ -323,7 +323,7 @@ describe('editor store', () => {
     useEditorStore.getState().zoomIn()
 
     const updatedState = useEditorStore.getState()
-    expect(updatedState.viewport.zoom).toBe(initialZoom * 1.2)
+    expect(updatedState.viewport.zoom).toBe(initialZoom * 1.15)
   })
 
   it('zooms out', () => {
@@ -333,7 +333,7 @@ describe('editor store', () => {
     useEditorStore.getState().zoomOut()
 
     const updatedState = useEditorStore.getState()
-    expect(updatedState.viewport.zoom).toBe(initialZoom / 1.2)
+    expect(updatedState.viewport.zoom).toBe(initialZoom / 1.15)
   })
 
   it('zooms out does not go below 0.1', () => {
@@ -343,6 +343,15 @@ describe('editor store', () => {
 
     const state = useEditorStore.getState()
     expect(state.viewport.zoom).toBe(0.1)
+  })
+
+  it('zooms in does not go above 10', () => {
+    useEditorStore.getState().setViewport({ zoom: 10, offsetX: 0, offsetY: 0 })
+
+    useEditorStore.getState().zoomIn()
+
+    const state = useEditorStore.getState()
+    expect(state.viewport.zoom).toBe(10)
   })
 
   it('resets viewport to default', () => {

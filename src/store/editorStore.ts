@@ -345,7 +345,7 @@ export const useEditorStore = create<EditorState>()(
         set((state) => ({
             viewport: {
                 ...state.viewport,
-                zoom: state.viewport.zoom * 1.2,
+                zoom: Math.min(10, state.viewport.zoom * 1.15),
             },
         })),
 
@@ -353,7 +353,7 @@ export const useEditorStore = create<EditorState>()(
         set((state) => ({
             viewport: {
                 ...state.viewport,
-                zoom: Math.max(0.1, state.viewport.zoom / 1.2),
+                zoom: Math.max(0.1, state.viewport.zoom / 1.15),
             },
         })),
 
