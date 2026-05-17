@@ -204,6 +204,134 @@ export function EditorCanvas() {
             )
             : null
 
+    const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
+        event.preventDefault()
+
+        const rect = event.currentTarget.getBoundingClientRect()
+
+        const mouseX = event.clientX - rect.left
+        const mouseY = event.clientY - rect.top
+
+        const worldBefore = screenToWorld(mouseX, mouseY, viewport)
+
+        const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1
+        const newZoom = viewport.zoom * zoomFactor
+
+        const newOffsetX = mouseX - worldBefore.x * newZoom
+        const newOffsetY = mouseY - worldBefore.y * newZoom
+
+        setViewport({
+            zoom: newZoom,
+            offsetX: newOffsetX,
+            offsetY: newOffsetY,
+        })
+    }
+
+    const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
+        if (spacePressed) {
+            setIsPanning(true)
+            setLastPointer({
+                x: event.clientX,
+                y: event.clientY,
+            })
+        }
+    }
+
+    const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+        if (isPanning) {
+            const dx = event.clientX - lastPointer.x
+            const dy = event.clientY - lastPointer.y
+
+            setViewport((v) => ({
+                ...v,
+                offsetX: v.offsetX + dx,
+                offsetY: v.offsetY + dy,
+            }))
+
+            setLastPointer({
+                x: event.clientX,
+                y: event.clientY,
+            })
+
+            return
+        }
+
+        const rect = event.currentTarget.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
+
+        const point = screenToWorld(x, y, viewport)
+        setPointerWorldPosition(point)
+
+        if (draggingBendPoint) {
+            const segment = segments[draggingBendPoint.segmentId]
+            if (segment) {
+                const fromStation = stations[segment.fromStationId]
+                const toStation = stations[segment.toStationId]
+
+                let snappedPoint = point
+
+                if (fromStation && toStation) {
+                    const fromSnap = snapPointToOctolinear(fromStation, point)
+                    const toSnap = snapPointToOctolinear(toStation, point)
+
+                    const fromDist = Math.hypot(fromSnap.x - point.x, fromSnap.y - point.y)
+                    const toDist = Math.hypot(toSnap.x - point.x, toSnap.y - point.y)
+
+                    snappedPoint = fromDist < toDist ? fromSnap : toSnap
+                }
+
+                updateSegmentPoint(
+                    draggingBendPoint.segmentId,
+                    draggingBendPoint.pointIndex,
+                    snappedPoint.x,
+                    snappedPoint.y
+                )
+            }
+            return
+        }
+
+        if (!draggingStationId) return
+
+        if (stationDragStartRef.current) {
+            const dx = event.clientX - stationDragStartRef.current.x
+            const dy = event.clientY - stationDragStartRef.current.y
+
+            if (Math.hypot(dx, dy) > 3) {
+                suppressNextClickRef.current = true
+            }
+        }
+
+        const snapped = snapPointToGrid(point.x, point.y, gridSize)
+        moveStation(draggingStationId, snapped.x, snapped.y)
+    }
+
+    const handlePointerUp = () => {
+        setDraggingStationId(null)
+        stationDragStartRef.current = null
+        setDraggingBendPoint(null)
+        setIsPanning(false)
+    }
+
+    const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
+        if (spacePressed) return
+        if (activeTool !== 'station') return
+
+        if (suppressNextClickRef.current) {
+            suppressNextClickRef.current = false
+            return
+        }
+
+        const rect = event.currentTarget.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
+
+        const point = screenToWorld(x, y, viewport)
+        const snapped = snapPointToGrid(point.x, point.y, gridSize)
+
+        addStation(snapped.x, snapped.y)
+    }
+
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
@@ -270,191 +398,11 @@ export function EditorCanvas() {
                             ? 'grab'
                             : 'default',
                 }}
-                onWheel={(event) => {
-                    event.preventDefault()
-
-                    const rect =
-                        event.currentTarget.getBoundingClientRect()
-
-                    const mouseX =
-                        event.clientX - rect.left
-
-                    const mouseY =
-                        event.clientY - rect.top
-
-                    const worldBefore =
-                        screenToWorld(
-                            mouseX,
-                            mouseY,
-                            viewport
-                        )
-
-                    const zoomFactor =
-                        event.deltaY > 0 ? 0.9 : 1.1
-
-                    const newZoom =
-                        viewport.zoom * zoomFactor
-
-                    const newOffsetX =
-                        mouseX -
-                        worldBefore.x * newZoom
-
-                    const newOffsetY =
-                        mouseY -
-                        worldBefore.y * newZoom
-
-                    setViewport({
-                        zoom: newZoom,
-                        offsetX: newOffsetX,
-                        offsetY: newOffsetY,
-                    })
-                }}
-                onPointerDown={(event) => {
-                    if (spacePressed) {
-                        setIsPanning(true)
-
-                        setLastPointer({
-                            x: event.clientX,
-                            y: event.clientY,
-                        })
-                    }
-                }}
-                onPointerMove={(event) => {
-                    if (isPanning) {
-                        const dx =
-                            event.clientX - lastPointer.x
-
-                        const dy =
-                            event.clientY - lastPointer.y
-
-                        setViewport((v) => ({
-                            ...v,
-                            offsetX: v.offsetX + dx,
-                            offsetY: v.offsetY + dy,
-                        }))
-
-                        setLastPointer({
-                            x: event.clientX,
-                            y: event.clientY,
-                        })
-
-                        return
-                    }
-
-                    const rect =
-                        event.currentTarget.getBoundingClientRect()
-
-                    const x =
-                        event.clientX - rect.left
-
-                    const y =
-                        event.clientY - rect.top
-
-                    const point = screenToWorld(
-                        x,
-                        y,
-                        viewport
-                    )
-
-                    setPointerWorldPosition(point)
-
-                    if (draggingBendPoint) {
-                        const segment = segments[draggingBendPoint.segmentId]
-                        if (segment) {
-                            const fromStation = stations[segment.fromStationId]
-                            const toStation = stations[segment.toStationId]
-
-                            let snappedPoint = point
-
-                            if (fromStation && toStation) {
-                                const fromSnap = snapPointToOctolinear(fromStation, point)
-                                const toSnap = snapPointToOctolinear(toStation, point)
-
-                                const fromDist = Math.hypot(fromSnap.x - point.x, fromSnap.y - point.y)
-                                const toDist = Math.hypot(toSnap.x - point.x, toSnap.y - point.y)
-
-                                snappedPoint = fromDist < toDist ? fromSnap : toSnap
-                            }
-
-                            updateSegmentPoint(
-                                draggingBendPoint.segmentId,
-                                draggingBendPoint.pointIndex,
-                                snappedPoint.x,
-                                snappedPoint.y
-                            )
-                        }
-                        return
-                    }
-
-                    if (!draggingStationId) return
-
-                    if (stationDragStartRef.current) {
-                        const dx =
-                            event.clientX - stationDragStartRef.current.x
-
-                        const dy =
-                            event.clientY - stationDragStartRef.current.y
-
-                        if (Math.hypot(dx, dy) > 3) {
-                            suppressNextClickRef.current = true
-                        }
-                    }
-
-                    const snapped =
-                        snapPointToGrid(
-                            point.x,
-                            point.y,
-                            gridSize
-                        )
-
-                    moveStation(
-                        draggingStationId,
-                        snapped.x,
-                        snapped.y
-                    )
-                }}
-                onPointerUp={() => {
-                    setDraggingStationId(null)
-                    stationDragStartRef.current = null
-                    setDraggingBendPoint(null)
-                    setIsPanning(false)
-                }}
-                onClick={(event) => {
-                    if (spacePressed) return
-                    if (activeTool !== 'station') return
-
-                    if (suppressNextClickRef.current) {
-                        suppressNextClickRef.current = false
-                        return
-                    }
-
-                    const rect =
-                        event.currentTarget.getBoundingClientRect()
-
-                    const x =
-                        event.clientX - rect.left
-
-                    const y =
-                        event.clientY - rect.top
-
-                    const point = screenToWorld(
-                        x,
-                        y,
-                        viewport
-                    )
-
-                    const snapped =
-                        snapPointToGrid(
-                            point.x,
-                            point.y,
-                            gridSize
-                        )
-
-                    addStation(
-                        snapped.x,
-                        snapped.y
-                    )
-                }}
+                onWheel={handleWheel}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onClick={handleClick}
             >
                 <rect
                     width="100%"
