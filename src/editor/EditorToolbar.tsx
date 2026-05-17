@@ -1,6 +1,8 @@
 import type { EditorTool } from '../store/editorStore'
 import type { Line } from '../model/line'
 
+import { LineCreator } from './LineCreator'
+
 type Props = {
     activeTool: EditorTool
     setActiveTool: (tool: EditorTool) => void
@@ -237,54 +239,15 @@ export function EditorToolbar({
                     </button>
 
                     {isCreatingLine && (
-                        <div className="editor-line-creator">
-                            <input
-                                type="text"
-                                value={newLineName}
-                                onChange={(e) => setNewLineName(e.target.value)}
-                                placeholder="Line name"
-                                className="editor-line-name-input"
-                            />
-                            <div className="editor-color-palette">
-                                {colorPalette.map((color) => (
-                                    <button
-                                        key={color}
-                                        type="button"
-                                        className={`editor-color-swatch ${
-                                            newLineColor === color ? 'active' : ''
-                                        }`}
-                                        style={{ backgroundColor: color }}
-                                        onClick={() => setNewLineColor(color)}
-                                        title={color}
-                                    />
-                                ))}
-                            </div>
-                            <button
-                                type="button"
-                                className="editor-toolbar-button"
-                                onClick={() => {
-                                    if (newLineName.trim()) {
-                                        addLine(newLineName.trim(), newLineColor)
-                                        setNewLineName('')
-                                        setNewLineColor('#1976d2')
-                                        setIsCreatingLine(false)
-                                    }
-                                }}
-                            >
-                                Create
-                            </button>
-                            <button
-                                type="button"
-                                className="editor-toolbar-button"
-                                onClick={() => {
-                                    setNewLineName('')
-                                    setNewLineColor('#1976d2')
-                                    setIsCreatingLine(false)
-                                }}
-                            >
-                                Cancel
-                            </button>
-                        </div>
+                        <LineCreator
+                            newLineName={newLineName}
+                            setNewLineName={setNewLineName}
+                            newLineColor={newLineColor}
+                            setNewLineColor={setNewLineColor}
+                            addLine={addLine}
+                            setIsCreatingLine={setIsCreatingLine}
+                            colorPalette={colorPalette}
+                        />
                     )}
                 </>
             )}
