@@ -2,13 +2,19 @@ type Props = {
   width: number
   height: number
   gridSize: number
+  showGrid?: boolean
 }
 
 export function GridLayer({
   width,
   height,
   gridSize,
+  showGrid = true,
 }: Props) {
+  if (!showGrid) {
+    return null
+  }
+
   const lines = []
 
   for (let x = 0; x < width; x += gridSize) {

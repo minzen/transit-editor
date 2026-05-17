@@ -50,6 +50,7 @@ export function EditorCanvas() {
     const [showBackground, setShowBackground] = useState(true)
 
     const [gridSize, setGridSize] = useState(40)
+    const [showGridForExport, setShowGridForExport] = useState(true)
 
     const colorPalette = [
         '#e53935',
@@ -136,55 +137,83 @@ export function EditorCanvas() {
     const exportAsSVG = () => {
         if (!svgRef.current) return
 
-        const svgElement = svgRef.current
-        const serializer = new XMLSerializer()
-        const svgString = serializer.serializeToString(svgElement)
+        // Hide grid during export
+        setShowGridForExport(false)
 
-        const blob = new Blob([svgString], { type: 'image/svg+xml' })
-        const url = URL.createObjectURL(blob)
+        // Wait for re-render before exporting
+        setTimeout(() => {
+            const svgElement = svgRef.current
+            if (!svgElement) {
+                setShowGridForExport(true)
+                return
+            }
 
-        const link = document.createElement('a')
-        link.href = url
-        link.download = 'transit-map.svg'
-        link.click()
+            const serializer = new XMLSerializer()
+            const svgString = serializer.serializeToString(svgElement)
 
-        URL.revokeObjectURL(url)
+            const blob = new Blob([svgString], { type: 'image/svg+xml' })
+            const url = URL.createObjectURL(blob)
+
+            const link = document.createElement('a')
+            link.href = url
+            link.download = 'transit-map.svg'
+            link.click()
+
+            URL.revokeObjectURL(url)
+
+            // Show grid again after export
+            setShowGridForExport(true)
+        }, 0)
     }
 
     const exportAsPNG = () => {
         if (!svgRef.current) return
 
-        const svgElement = svgRef.current
-        const serializer = new XMLSerializer()
-        const svgString = serializer.serializeToString(svgElement)
+        // Hide grid during export
+        setShowGridForExport(false)
 
-        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-        const svgUrl = URL.createObjectURL(svgBlob)
-
-        const img = new Image()
-        img.onload = () => {
-            const canvas = document.createElement('canvas')
-            const bbox = svgElement.getBoundingClientRect()
-
-            canvas.width = bbox.width + EXPORT_PADDING * 2
-            canvas.height = bbox.height + EXPORT_PADDING * 2
-
-            const ctx = canvas.getContext('2d')
-            if (ctx) {
-                ctx.fillStyle = '#ffffff'
-                ctx.fillRect(0, 0, canvas.width, canvas.height)
-                ctx.drawImage(img, EXPORT_PADDING, EXPORT_PADDING, bbox.width, bbox.height)
-
-                const pngUrl = canvas.toDataURL('image/png')
-                const link = document.createElement('a')
-                link.href = pngUrl
-                link.download = 'transit-map.png'
-                link.click()
+        // Wait for re-render before exporting
+        setTimeout(() => {
+            const svgElement = svgRef.current
+            if (!svgElement) {
+                setShowGridForExport(true)
+                return
             }
 
-            URL.revokeObjectURL(svgUrl)
-        }
-        img.src = svgUrl
+            const serializer = new XMLSerializer()
+            const svgString = serializer.serializeToString(svgElement)
+
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
+            const svgUrl = URL.createObjectURL(svgBlob)
+
+            const img = new Image()
+            img.onload = () => {
+                const canvas = document.createElement('canvas')
+                const bbox = svgElement.getBoundingClientRect()
+
+                canvas.width = bbox.width + EXPORT_PADDING * 2
+                canvas.height = bbox.height + EXPORT_PADDING * 2
+
+                const ctx = canvas.getContext('2d')
+                if (ctx) {
+                    ctx.fillStyle = '#ffffff'
+                    ctx.fillRect(0, 0, canvas.width, canvas.height)
+                    ctx.drawImage(img, EXPORT_PADDING, EXPORT_PADDING, bbox.width, bbox.height)
+
+                    const pngUrl = canvas.toDataURL('image/png')
+                    const link = document.createElement('a')
+                    link.href = pngUrl
+                    link.download = 'transit-map.png'
+                    link.click()
+                }
+
+                URL.revokeObjectURL(svgUrl)
+
+                // Show grid again after export
+                setShowGridForExport(true)
+            }
+            img.src = svgUrl
+        }, 0)
     }
 
     const pendingStation =
@@ -433,6 +462,7 @@ export function EditorCanvas() {
                         width={GRID_SIZE}
                         height={GRID_SIZE}
                         gridSize={gridSize}
+                        showGrid={showGridForExport}
                     />
 
                     <SegmentLayer
