@@ -5,6 +5,7 @@ A browser-based reactive editor for schematic transit maps.
 ## Features
 
 - **Station creation and movement** - Add stations to the map and move them with your mouse
+- **Station deletion** - Select stations and delete them with Delete or Backspace key
 - **Segment creation** - Create connections between stations in octolinear style (45° and 90° angles)
 - **Multiple lines** - Create multiple lines with different colors
 - **Undo/Redo** - Undo and redo changes

@@ -25,7 +25,7 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Select Tool"
-                                secondary="Click and drag to select stations and segments. Drag selected items to move them."
+                                secondary="Click on a station to select it (highlighted with a blue ring). Drag selected stations to move them. Press Delete or Backspace to delete the selected station. Double-click to rename a station."
                             />
                         </ListItem>
                         <ListItem>
