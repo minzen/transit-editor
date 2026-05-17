@@ -18,4 +18,16 @@ describe('snap to grid', () => {
   it('handles negative coordinates', () => {
     expect(snapPointToGrid(-45, -65, 40)).toEqual({ x: -40, y: -80 })
   })
+
+  it('snaps correctly with different grid sizes', () => {
+    expect(snapPointToGrid(25, 35, 10)).toEqual({ x: 30, y: 40 })
+    expect(snapPointToGrid(47, 53, 10)).toEqual({ x: 50, y: 50 })
+    expect(snapPointToGrid(15, 25, 5)).toEqual({ x: 15, y: 25 })
+  })
+
+  it('snaps to exact grid intersections', () => {
+    const gridSize = 20
+    expect(snapPointToGrid(40, 60, gridSize)).toEqual({ x: 40, y: 60 })
+    expect(snapPointToGrid(100, 200, gridSize)).toEqual({ x: 100, y: 200 })
+  })
 })

@@ -294,16 +294,21 @@ export function EditorCanvas() {
                 const fromStation = stations[segment.fromStationId]
                 const toStation = stations[segment.toStationId]
 
-                let snappedPoint = point
+                // First snap to grid, then to octolinear angles
+                const gridSnapped = snapPointToGrid(point.x, point.y, gridSize)
+
+                let snappedPoint: { x: number; y: number }
 
                 if (fromStation && toStation) {
-                    const fromSnap = snapPointToOctolinear(fromStation, point)
-                    const toSnap = snapPointToOctolinear(toStation, point)
+                    const fromSnap = snapPointToOctolinear(fromStation, gridSnapped)
+                    const toSnap = snapPointToOctolinear(toStation, gridSnapped)
 
-                    const fromDist = Math.hypot(fromSnap.x - point.x, fromSnap.y - point.y)
-                    const toDist = Math.hypot(toSnap.x - point.x, toSnap.y - point.y)
+                    const fromDist = Math.hypot(fromSnap.x - gridSnapped.x, fromSnap.y - gridSnapped.y)
+                    const toDist = Math.hypot(toSnap.x - gridSnapped.x, toSnap.y - gridSnapped.y)
 
                     snappedPoint = fromDist < toDist ? fromSnap : toSnap
+                } else {
+                    snappedPoint = gridSnapped
                 }
 
                 updateSegmentPoint(
