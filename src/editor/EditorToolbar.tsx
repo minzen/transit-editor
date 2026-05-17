@@ -6,7 +6,8 @@ import { BackgroundImageControl } from './BackgroundImageControl'
 import { GridSizeControl } from './GridSizeControl'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
-import { Undo, Redo } from '@mui/icons-material'
+import { Undo, Redo, Home } from '@mui/icons-material'
+import { useNavigate } from 'react-router-dom'
 
 type Props = {
     activeTool: EditorTool
@@ -87,8 +88,18 @@ export function EditorToolbar({
     setPointerWorldPosition,
     colorPalette,
 }: Props) {
+    const navigate = useNavigate()
+
     return (
         <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
+            <Tooltip title="Back to Home">
+                <IconButton onClick={() => void navigate('/')}>
+                    <Home />
+                </IconButton>
+            </Tooltip>
+
+            <Divider orientation="vertical" flexItem />
+
             {tools.map((tool) => (
                 <Button
                     key={tool.id}
