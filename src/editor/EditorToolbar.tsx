@@ -2,6 +2,7 @@ import type { EditorTool } from '../store/editorStore'
 import type { Line } from '../model/line'
 
 import { LineCreator } from './LineCreator'
+import { BackgroundImageControl } from './BackgroundImageControl'
 
 type Props = {
     activeTool: EditorTool
@@ -164,40 +165,12 @@ export function EditorToolbar({
 
             <div className="editor-toolbar-separator" />
 
-            <button
-                type="button"
-                className="editor-toolbar-button"
-                onClick={() => {
-                    const input = document.createElement('input')
-                    input.type = 'file'
-                    input.accept = 'image/*'
-                    input.onchange = (e) => {
-                        const file = (e.target as HTMLInputElement).files?.[0]
-                        if (file) {
-                            const reader = new FileReader()
-                            reader.onload = (event) => {
-                                setBackgroundImage(event.target?.result as string)
-                            }
-                            reader.readAsDataURL(file)
-                        }
-                    }
-                    input.click()
-                }}
-                title="Load background image"
-            >
-                Load Image
-            </button>
-
-            {backgroundImage && (
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    onClick={() => setShowBackground(!showBackground)}
-                    title={showBackground ? 'Hide background' : 'Show background'}
-                >
-                    {showBackground ? 'Hide BG' : 'Show BG'}
-                </button>
-            )}
+            <BackgroundImageControl
+                backgroundImage={backgroundImage}
+                showBackground={showBackground}
+                setShowBackground={setShowBackground}
+                setBackgroundImage={setBackgroundImage}
+            />
 
             <div className="editor-toolbar-separator" />
 
