@@ -1,11 +1,16 @@
 #!/bin/bash
 
 # Deployment script for transit-editor
-# Configure these variables for your VPS
+# Load environment variables from .env file if it exists
+if [ -f .env ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+fi
 
-VPS_USER="your_username"
-VPS_HOST="your_vps_ip_or_domain"
-VPS_PATH="/opt/transit-editor"
+# Configure these variables for your VPS
+# These can be set in .env file instead of here
+VPS_USER="${VPS_USER:-your_username}"
+VPS_HOST="${VPS_HOST:-your_vps_ip_or_domain}"
+VPS_PATH="${VPS_PATH:-/opt/transit-editor}"
 
 # Optional: If you want to build locally and push the image
 # LOCAL_BUILD=true
