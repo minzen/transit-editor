@@ -3,6 +3,7 @@ import {
   createOctolinearPath,
   isOctolinear,
   snapPointToOctolinear,
+  findLineIntersection,
 } from './octolinear'
 
 describe('octolinear geometry', () => {
@@ -38,5 +39,68 @@ describe('octolinear geometry', () => {
       { x: 120, y: 0 },
       to,
     ])
+  })
+})
+
+describe('findLineIntersection', () => {
+  it('finds intersection of perpendicular lines', () => {
+    const intersection = findLineIntersection(
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 5, y: -5 },
+      { x: 5, y: 5 }
+    )
+
+    expect(intersection).not.toBeNull()
+    expect(intersection?.x).toBeCloseTo(5)
+    expect(intersection?.y).toBeCloseTo(0)
+  })
+
+  it('finds intersection of diagonal lines', () => {
+    const intersection = findLineIntersection(
+      { x: 0, y: 0 },
+      { x: 10, y: 10 },
+      { x: 0, y: 10 },
+      { x: 10, y: 0 }
+    )
+
+    expect(intersection).not.toBeNull()
+    expect(intersection?.x).toBeCloseTo(5)
+    expect(intersection?.y).toBeCloseTo(5)
+  })
+
+  it('returns null for parallel lines', () => {
+    const intersection = findLineIntersection(
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 0, y: 5 },
+      { x: 10, y: 5 }
+    )
+
+    expect(intersection).toBeNull()
+  })
+
+  it('returns null for nearly parallel lines', () => {
+    const intersection = findLineIntersection(
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 0, y: 0.00001 },
+      { x: 10, y: 0.00001 }
+    )
+
+    expect(intersection).toBeNull()
+  })
+
+  it('finds intersection at origin', () => {
+    const intersection = findLineIntersection(
+      { x: -10, y: 0 },
+      { x: 10, y: 0 },
+      { x: 0, y: -10 },
+      { x: 0, y: 10 }
+    )
+
+    expect(intersection).not.toBeNull()
+    expect(intersection?.x).toBeCloseTo(0)
+    expect(intersection?.y).toBeCloseTo(0)
   })
 })
