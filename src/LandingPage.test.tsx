@@ -70,6 +70,6 @@ describe('LandingPage', () => {
     )
     
     expect(screen.getByText('Built with React, TypeScript, and Material Design')).toBeInTheDocument()
-    expect(screen.getByText('© 2024 Transit Map Editor. Open source and free to use.')).toBeInTheDocument()
+    expect(screen.getByText('© 2026 Transit Map Editor. Open source and free to use.')).toBeInTheDocument()
   })
 })
