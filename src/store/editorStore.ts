@@ -36,8 +36,10 @@ type EditorState = {
     addStation: (x: number, y: number) => void
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
+    deleteStation: (id: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
     addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
+    deleteSegment: (id: string) => void
     addLine: (name: string, color: string) => void
     setLineName: (id: string, name: string) => void
     clear: () => void
@@ -174,6 +176,34 @@ export const useEditorStore = create<EditorState>()(
             }
         }),
 
+    deleteStation: (id) =>
+        set((state) => {
+            const station = state.stations[id]
+
+            if (!station) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            // Remove station and all connected segments
+            const { [id]: _removedStation, ...remainingStations } = state.stations
+            const remainingSegments = Object.fromEntries(
+                Object.entries(state.segments).filter(
+                    ([_, segment]) =>
+                        segment.fromStationId !== id && segment.toStationId !== id
+                )
+            )
+
+            return {
+                stations: remainingStations,
+                segments: remainingSegments,
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
     updateSegmentPoint: (segmentId, pointIndex, x, y) =>
         set((state) => {
             const segment = state.segments[segmentId]
@@ -246,6 +276,27 @@ export const useEditorStore = create<EditorState>()(
                         points,
                     },
                 },
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    deleteSegment: (id) =>
+        set((state) => {
+            const segment = state.segments[id]
+
+            if (!segment) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            const { [id]: _removedSegment, ...remainingSegments } = state.segments
+
+            return {
+                stations: state.stations,
+                segments: remainingSegments,
                 lines: state.lines,
                 pastStates: [...state.pastStates, currentSnapshot],
                 futureStates: [],

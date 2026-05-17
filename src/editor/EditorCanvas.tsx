@@ -85,6 +85,8 @@ export function EditorCanvas() {
     const [pointerWorldPosition, setPointerWorldPosition] =
         useState<Point | null>(null)
 
+    const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
+
     const [draggingStationId, setDraggingStationId] =
         useState<string | null>(null)
 
@@ -116,6 +118,10 @@ export function EditorCanvas() {
 
     const addSegment = useEditorStore(
         (s) => s.addSegment
+    )
+
+    const deleteStation = useEditorStore(
+        (s) => s.deleteStation
     )
 
     const setStationName = useEditorStore(
@@ -367,6 +373,11 @@ export function EditorCanvas() {
             if (e.code === 'Space') {
                 setSpacePressed(true)
             }
+            if ((e.code === 'Delete' || e.code === 'Backspace') && selectedStationId && !spacePressed) {
+                e.preventDefault()
+                deleteStation(selectedStationId)
+                setSelectedStationId(null)
+            }
         }
 
         const up = (e: KeyboardEvent) => {
@@ -382,7 +393,7 @@ export function EditorCanvas() {
             window.removeEventListener('keydown', down)
             window.removeEventListener('keyup', up)
         }
-    }, [])
+    }, [selectedStationId, spacePressed, deleteStation])
 
     return (
         <div className="editor-canvas">
@@ -575,6 +586,7 @@ export function EditorCanvas() {
                                             return
                                         }
 
+                                        setSelectedStationId(s.id)
                                         setDraggingStationId(s.id)
                                         stationDragStartRef.current = {
                                             x: event.clientX,
@@ -598,8 +610,18 @@ export function EditorCanvas() {
                                             setStationName(s.id, newName)
                                         }
                                     }}
-
                                 />
+
+                                {selectedStationId === s.id && (
+                                    <circle
+                                        cx={s.x}
+                                        cy={s.y}
+                                        r={STATION_RADIUS + 4}
+                                        fill="none"
+                                        stroke="#1976d2"
+                                        strokeWidth={3}
+                                    />
+                                )}
 
                                 {s.name && (
                                     <text

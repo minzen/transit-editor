@@ -373,4 +373,84 @@ describe('editor store', () => {
     expect(state.viewport.offsetX).toBe(50)
     expect(state.viewport.offsetY).toBe(75)
   })
+
+  describe('deleteStation', () => {
+    it('deletes a station', () => {
+      useEditorStore.getState().addStation(100, 200)
+      const state = useEditorStore.getState()
+      const stationId = Object.keys(state.stations)[0]
+
+      useEditorStore.getState().deleteStation(stationId)
+
+      const updatedState = useEditorStore.getState()
+      expect(updatedState.stations[stationId]).toBeUndefined()
+    })
+
+    it('deletes connected segments when deleting a station', () => {
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineId = Object.keys(state.lines)[0]
+
+      useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+      const segmentId = Object.keys(state.segments)[0]
+
+      useEditorStore.getState().deleteStation(stationIds[0])
+
+      const updatedState = useEditorStore.getState()
+      expect(updatedState.stations[stationIds[0]]).toBeUndefined()
+      expect(updatedState.segments[segmentId]).toBeUndefined()
+    })
+
+    it('does not delete other stations', () => {
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+
+      useEditorStore.getState().deleteStation(stationIds[0])
+
+      const updatedState = useEditorStore.getState()
+      expect(updatedState.stations[stationIds[1]]).toBeDefined()
+    })
+  })
+
+  describe('deleteSegment', () => {
+    it('deletes a segment', () => {
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineId = Object.keys(state.lines)[0]
+
+      useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+      const segmentId = Object.keys(state.segments)[0]
+
+      useEditorStore.getState().deleteSegment(segmentId)
+
+      const updatedState = useEditorStore.getState()
+      expect(updatedState.segments[segmentId]).toBeUndefined()
+    })
+
+    it('does not delete stations when deleting a segment', () => {
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineId = Object.keys(state.lines)[0]
+
+      useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+      const segmentId = Object.keys(state.segments)[0]
+
+      useEditorStore.getState().deleteSegment(segmentId)
+
+      const updatedState = useEditorStore.getState()
+      expect(updatedState.stations[stationIds[0]]).toBeDefined()
+      expect(updatedState.stations[stationIds[1]]).toBeDefined()
+    })
+  })
 })
