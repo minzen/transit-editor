@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
@@ -41,7 +42,9 @@ type EditorState = {
     redo: () => void
 }
 
-export const useEditorStore = create<EditorState>((set) => ({
+export const useEditorStore = create<EditorState>()(
+    persist(
+        (set) => ({
     activeTool: 'select',
     stations: {},
     segments: {},
@@ -328,4 +331,15 @@ export const useEditorStore = create<EditorState>((set) => ({
             futureStates: [],
         })),
 
-}))
+}),
+        {
+            name: 'transit-editor-storage',
+            partialize: (state) => ({
+                activeTool: state.activeTool,
+                stations: state.stations,
+                segments: state.segments,
+                lines: state.lines,
+            }),
+        },
+    ),
+)

@@ -268,4 +268,51 @@ describe('editor store', () => {
     expect(state.futureStates).toHaveLength(0)
     expect(state.pastStates).toHaveLength(1)
   })
+
+  it('adds a line', () => {
+    useEditorStore.getState().addLine('Red Line', '#ff0000')
+
+    const state = useEditorStore.getState()
+    const lineIds = Object.keys(state.lines)
+
+    expect(lineIds).toHaveLength(1)
+    expect(state.lines[lineIds[0]].name).toBe('Red Line')
+    expect(state.lines[lineIds[0]].color).toBe('#ff0000')
+  })
+
+  it('sets a line name', () => {
+    useEditorStore.getState().addLine('Blue Line', '#0000ff')
+
+    const state = useEditorStore.getState()
+    const lineId = Object.keys(state.lines)[0]
+
+    useEditorStore.getState().setLineName(lineId, 'Blue Line Express')
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState.lines[lineId].name).toBe('Blue Line Express')
+  })
+
+  it('does nothing when setting name for non-existent line', () => {
+    const initialState = useEditorStore.getState()
+
+    useEditorStore.getState().setLineName('non-existent', 'Test')
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState).toEqual(initialState)
+  })
+
+  it('clears all data', () => {
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(300, 400)
+    useEditorStore.getState().addLine('Test Line', '#00ff00')
+
+    useEditorStore.getState().clear()
+
+    const state = useEditorStore.getState()
+    expect(Object.keys(state.stations)).toHaveLength(0)
+    expect(Object.keys(state.segments)).toHaveLength(0)
+    expect(Object.keys(state.lines)).toHaveLength(0)
+    expect(state.pastStates).toHaveLength(0)
+    expect(state.futureStates).toHaveLength(0)
+  })
 })
