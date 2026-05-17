@@ -5,13 +5,14 @@ import type {
 import { screenToWorld } from '../viewport/coordinates'
 import type { Point } from '../types/geometry'
 
-import type { EditorTool } from '../store/editorStore'
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToGrid } from '../geometry/snap'
 import { snapPointToOctolinear } from '../geometry/octolinear'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
+
+import { EditorToolbar } from './EditorToolbar'
 
 import './EditorCanvas.css'
 
@@ -190,24 +191,6 @@ export function EditorCanvas() {
         img.src = svgUrl
     }
 
-    const tools: {
-        id: EditorTool
-        label: string
-    }[] = [
-            {
-                id: 'select',
-                label: 'Select',
-            },
-            {
-                id: 'station',
-                label: 'Station',
-            },
-            {
-                id: 'segment',
-                label: 'Segment',
-            },
-        ]
-
     const pendingStation =
         pendingStationId
             ? stations[pendingStationId]
@@ -245,214 +228,36 @@ export function EditorCanvas() {
 
     return (
         <div className="editor-canvas">
-            <div className="editor-toolbar">
-                {tools.map((tool) => (
-                    <button
-                        key={tool.id}
-                        type="button"
-                        className={
-                            activeTool === tool.id
-                                ? 'editor-toolbar-button active'
-                                : 'editor-toolbar-button'
-                        }
-                        onClick={() => {
-                            setActiveTool(tool.id)
-                            setPendingStationId(null)
-                            setPointerWorldPosition(null)
-                        }}
-                    >
-                        {tool.label}
-                    </button>
-                ))}
-
-                <div className="editor-toolbar-separator" />
-
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    disabled={pastStates.length === 0}
-                    onClick={undo}
-                    title="Undo"
-                >
-                    ↶ Undo
-                </button>
-
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    disabled={futureStates.length === 0}
-                    onClick={redo}
-                    title="Redo"
-                >
-                    Redo ↷
-                </button>
-
-                <div className="editor-toolbar-separator" />
-
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    onClick={exportAsSVG}
-                    title="Export as SVG"
-                >
-                    Export SVG
-                </button>
-
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    onClick={exportAsPNG}
-                    title="Export as PNG"
-                >
-                    Export PNG
-                </button>
-
-                <div className="editor-toolbar-separator" />
-
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    onClick={() => {
-                        if (window.confirm('Are you sure you want to clear all data?')) {
-                            clear()
-                            setSelectedLineId(null)
-                            setBackgroundImage(null)
-                        }
-                    }}
-                    title="Clear all"
-                >
-                    Clear
-                </button>
-
-                <div className="editor-toolbar-separator" />
-
-                <button
-                    type="button"
-                    className="editor-toolbar-button"
-                    onClick={() => {
-                        const input = document.createElement('input')
-                        input.type = 'file'
-                        input.accept = 'image/*'
-                        input.onchange = (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0]
-                            if (file) {
-                                const reader = new FileReader()
-                                reader.onload = (event) => {
-                                    setBackgroundImage(event.target?.result as string)
-                                }
-                                reader.readAsDataURL(file)
-                            }
-                        }
-                        input.click()
-                    }}
-                    title="Load background image"
-                >
-                    Load Image
-                </button>
-
-                {backgroundImage && (
-                    <button
-                        type="button"
-                        className="editor-toolbar-button"
-                        onClick={() => setShowBackground(!showBackground)}
-                        title={showBackground ? 'Hide background' : 'Show background'}
-                    >
-                        {showBackground ? 'Hide BG' : 'Show BG'}
-                    </button>
-                )}
-
-                <div className="editor-toolbar-separator" />
-
-                <div className="editor-grid-size-control">
-                    <label htmlFor="gridSize">Grid:</label>
-                    <input
-                        id="gridSize"
-                        type="number"
-                        value={gridSize}
-                        onChange={(e) => setGridSize(Number(e.target.value))}
-                        min="10"
-                        max="100"
-                        step="10"
-                        className="editor-grid-size-input"
-                    />
-                </div>
-
-                {activeTool === 'segment' && (
-                    <>
-                        <div className="editor-toolbar-separator" />
-                        <select
-                            value={selectedLineId || ''}
-                            onChange={(e) => setSelectedLineId(e.target.value || null)}
-                            className="editor-line-selector"
-                        >
-                            <option value="">Select line...</option>
-                            {Object.values(lines).map((line) => (
-                                <option key={line.id} value={line.id}>
-                                    {line.name}
-                                </option>
-                            ))}
-                        </select>
-                        <button
-                            type="button"
-                            className="editor-toolbar-button"
-                            onClick={() => setIsCreatingLine(true)}
-                        >
-                            + Line
-                        </button>
-
-                        {isCreatingLine && (
-                            <div className="editor-line-creator">
-                                <input
-                                    type="text"
-                                    value={newLineName}
-                                    onChange={(e) => setNewLineName(e.target.value)}
-                                    placeholder="Line name"
-                                    className="editor-line-name-input"
-                                />
-                                <div className="editor-color-palette">
-                                    {colorPalette.map((color) => (
-                                        <button
-                                            key={color}
-                                            type="button"
-                                            className={`editor-color-swatch ${
-                                                newLineColor === color ? 'active' : ''
-                                            }`}
-                                            style={{ backgroundColor: color }}
-                                            onClick={() => setNewLineColor(color)}
-                                            title={color}
-                                        />
-                                    ))}
-                                </div>
-                                <button
-                                    type="button"
-                                    className="editor-toolbar-button"
-                                    onClick={() => {
-                                        if (newLineName.trim()) {
-                                            addLine(newLineName.trim(), newLineColor)
-                                            setNewLineName('')
-                                            setNewLineColor('#1976d2')
-                                            setIsCreatingLine(false)
-                                        }
-                                    }}
-                                >
-                                    Create
-                                </button>
-                                <button
-                                    type="button"
-                                    className="editor-toolbar-button"
-                                    onClick={() => {
-                                        setNewLineName('')
-                                        setNewLineColor('#1976d2')
-                                        setIsCreatingLine(false)
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+            <EditorToolbar
+                activeTool={activeTool}
+                setActiveTool={setActiveTool}
+                undo={undo}
+                redo={redo}
+                canUndo={pastStates.length > 0}
+                canRedo={futureStates.length > 0}
+                exportAsSVG={exportAsSVG}
+                exportAsPNG={exportAsPNG}
+                clear={clear}
+                setSelectedLineId={setSelectedLineId}
+                setBackgroundImage={setBackgroundImage}
+                backgroundImage={backgroundImage}
+                showBackground={showBackground}
+                setShowBackground={setShowBackground}
+                gridSize={gridSize}
+                setGridSize={setGridSize}
+                selectedLineId={selectedLineId}
+                lines={lines}
+                isCreatingLine={isCreatingLine}
+                setIsCreatingLine={setIsCreatingLine}
+                newLineName={newLineName}
+                setNewLineName={setNewLineName}
+                newLineColor={newLineColor}
+                setNewLineColor={setNewLineColor}
+                addLine={addLine}
+                setPendingStationId={setPendingStationId}
+                setPointerWorldPosition={setPointerWorldPosition}
+                colorPalette={colorPalette}
+            />
 
             <svg
                 ref={svgRef}
