@@ -9,6 +9,9 @@ import { processSVGForExport } from '../utils/svgExport'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
+import { BendPointRenderer } from '../renderer/BendPointRenderer'
+import { PreviewLine } from '../renderer/PreviewLine'
+import { StationRenderer } from '../renderer/StationRenderer'
 
 import { EditorToolbar } from './EditorToolbar'
 
@@ -16,8 +19,6 @@ import './EditorCanvas.css'
 
 // Constants for magic numbers
 const EXPORT_PADDING = 40
-const BEND_POINT_RADIUS = 6
-const STATION_RADIUS = 8
 const BACKGROUND_IMAGE_SIZE = 4000
 const BACKGROUND_IMAGE_OFFSET = 0
 const GRID_SIZE = 4000
@@ -566,162 +567,82 @@ export function EditorCanvas() {
                         lineWidth={lineWidth}
                     />
 
-                    {activeTool === 'select' &&
-                        Object.values(segments).map((segment) => {
-                            if (segment.points.length === 3) {
-                                const bendPoint = segment.points[1]
-                                return (
-                                    <circle
-                                        key={`${segment.id}-bend`}
-                                        cx={bendPoint.x}
-                                        cy={bendPoint.y}
-                                        r={BEND_POINT_RADIUS}
-                                        fill="#1976d2"
-                                        stroke="#fff"
-                                        strokeWidth={2}
-                                        style={{
-                                            cursor: 'grab',
-                                        }}
-                                        onPointerDown={(event) => {
-                                            event.stopPropagation()
-                                            setDraggingBendPoint({
-                                                segmentId: segment.id,
-                                                pointIndex: 1,
-                                            })
-                                        }}
-                                    />
-                                )
-                            }
-                            return null
-                        })}
+                    {activeTool === 'select' && (
+                        <BendPointRenderer
+                            segments={Object.values(segments)}
+                            onBendPointDragStart={(segmentId, pointIndex) => {
+                                setDraggingBendPoint({ segmentId, pointIndex })
+                            }}
+                        />
+                    )}
 
                     {activeTool === 'segment' &&
                         pendingStation &&
                         previewEndPoint &&
                         selectedLineId && (
-                            <line
-                                x1={pendingStation.x}
-                                y1={pendingStation.y}
-                                x2={previewEndPoint.x}
-                                y2={previewEndPoint.y}
-                                stroke={lines[selectedLineId]?.color || '#1976d2'}
-                                strokeWidth={6}
-                                strokeLinecap="round"
-                                strokeDasharray="12 12"
-                                opacity={0.45}
+                            <PreviewLine
+                                fromStation={pendingStation}
+                                toPoint={previewEndPoint}
+                                lineColor={lines[selectedLineId]?.color || '#1976d2'}
                             />
                         )}
 
-                    {Object.values(stations).map((s) => {
-                        const isPendingStation =
-                            activeTool === 'segment' &&
-                            pendingStationId === s.id
+                    <StationRenderer
+                        stations={stations}
+                        activeTool={activeTool}
+                        selectedStationId={selectedStationId}
+                        pendingStationId={pendingStationId}
+                        onStationPointerDown={(stationId, event) => {
+                            event.stopPropagation()
 
-                        return (
-                            <g key={s.id}>
-                                {isPendingStation && (
-                                    <circle
-                                        cx={s.x}
-                                        cy={s.y}
-                                        r={STATION_RADIUS + 6}
-                                        fill="none"
-                                        stroke="#1976d2"
-                                        strokeWidth={4}
-                                    />
-                                )}
-
-                                <circle
-                                    cx={s.x}
-                                    cy={s.y}
-                                    r={STATION_RADIUS}
-                                    fill="#111"
-                                    style={{
-                                        cursor: 'pointer',
-                                    }}
-
-                                    onPointerDown={(event) => {
-                                        event.stopPropagation()
-
-                                        if (activeTool === 'segment') {
-                                            if (pendingStationId) {
-                                                if (pendingStationId !== s.id) {
-                                                    if (selectedLineId) {
-                                                        addSegment(
-                                                            pendingStationId,
-                                                            s.id,
-                                                            selectedLineId
-                                                        )
-                                                    }
-                                                }
-
-                                                setPendingStationId(null)
-                                                setPointerWorldPosition(null)
-                                            } else {
-                                                setPendingStationId(s.id)
-                                            }
-
-                                            return
+                            if (activeTool === 'segment') {
+                                if (pendingStationId) {
+                                    if (pendingStationId !== stationId) {
+                                        if (selectedLineId) {
+                                            addSegment(
+                                                pendingStationId,
+                                                stationId,
+                                                selectedLineId
+                                            )
                                         }
+                                    }
 
-                                        if (activeTool !== 'select') {
-                                            return
-                                        }
+                                    setPendingStationId(null)
+                                    setPointerWorldPosition(null)
+                                } else {
+                                    setPendingStationId(stationId)
+                                }
 
-                                        setSelectedStationId(s.id)
-                                        setDraggingStationId(s.id)
-                                        stationDragStartRef.current = {
-                                            x: event.clientX,
-                                            y: event.clientY,
-                                        }
-                                    }}
+                                return
+                            }
 
-                                    onDoubleClick={(event) => {
-                                        event.stopPropagation()
+                            if (activeTool !== 'select') {
+                                return
+                            }
 
-                                        if (activeTool !== 'select') {
-                                            return
-                                        }
+                            setSelectedStationId(stationId)
+                            setDraggingStationId(stationId)
+                            stationDragStartRef.current = {
+                                x: event.clientX,
+                                y: event.clientY,
+                            }
+                        }}
+                        onStationDoubleClick={(stationId) => {
+                            if (activeTool !== 'select') {
+                                return
+                            }
 
-                                        const newName = window.prompt(
-                                            'Station name:',
-                                            s.name || ''
-                                        )
+                            const station = stations[stationId]
+                            const newName = window.prompt(
+                                'Station name:',
+                                station?.name || ''
+                            )
 
-                                        if (newName !== null) {
-                                            setStationName(s.id, newName)
-                                        }
-                                    }}
-                                />
-
-                                {selectedStationId === s.id && (
-                                    <circle
-                                        cx={s.x}
-                                        cy={s.y}
-                                        r={STATION_RADIUS + 4}
-                                        fill="none"
-                                        stroke="#1976d2"
-                                        strokeWidth={3}
-                                    />
-                                )}
-
-                                {s.name && (
-                                    <text
-                                        x={s.x}
-                                        y={s.y - 12}
-                                        textAnchor="middle"
-                                        fontSize={16}
-                                        fontWeight="bold"
-                                        fill="#111"
-                                        style={{
-                                            pointerEvents: 'none',
-                                        }}
-                                    >
-                                        {s.name}
-                                    </text>
-                                )}
-                            </g>
-                        )
-                    })}
+                            if (newName !== null) {
+                                setStationName(stationId, newName)
+                            }
+                        }}
+                    />
                 </g>
             </svg>
         </div>
