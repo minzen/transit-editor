@@ -7,12 +7,14 @@ A browser-based reactive editor for schematic transit maps.
 - **Station creation and movement** - Add stations to the map and move them with your mouse
 - **Station deletion** - Select stations and delete them with Delete or Backspace key
 - **Segment creation** - Create connections between stations in octolinear style (45° and 90° angles)
+- **Octolinear snapping** - Stations and bend points snap to octolinear angles (0°, 45°, 90°, 135°, 180°, etc.)
 - **Multiple lines** - Create multiple lines with different colors
 - **Undo/Redo** - Undo and redo changes
-- **Export** - Export maps in SVG or PNG format
+- **Export** - Export maps in SVG or PNG format (compatible with external editors like Gimp and Inkscape)
 - **Background image** - Load a background image onto the map (e.g., city map)
 - **Adjustable grid** - Change grid size for more precise placement
-- **Zoom controls** - Zoom in, zoom out, and reset view with toolbar buttons or mouse wheel
+- **Adjustable line width** - Customize line thickness (1-20 pixels)
+- **Zoom controls** - Zoom in, zoom out, and reset view with toolbar buttons or mouse wheel (zoom centers on current view)
 - **Auto-save** - Editor state automatically saved to browser localStorage
 - **Input validation** - Line and station names are validated and sanitized for security
 
@@ -48,6 +50,7 @@ src/
 │   ├── LineCreator.tsx
 │   ├── BackgroundImageControl.tsx
 │   ├── GridSizeControl.tsx
+│   ├── LineWidthControl.tsx
 │   └── HelpDialog.tsx
 ├── store/            # Zustand store
 │   ├── editorStore.ts
@@ -67,6 +70,8 @@ src/
 ├── renderer/         # SVG rendering layers
 │   ├── GridLayer.tsx
 │   └── SegmentLayer.tsx
+├── utils/            # Utility functions
+│   └── svgExport.ts
 ├── validation/       # Input validation and sanitization
 │   ├── constants.ts
 │   └── constants.test.ts

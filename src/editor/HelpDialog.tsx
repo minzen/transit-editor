@@ -31,13 +31,13 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Station Tool"
-                                secondary="Click anywhere on the canvas to create a new station. Stations snap to the grid."
+                                secondary="Click anywhere on the canvas to create a new station. Stations snap to the grid and to octolinear angles from nearby stations."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
                                 primary="Segment Tool"
-                                secondary="Click on a station to start creating a segment, then click on another station to connect them. Segments automatically snap to octolinear angles."
+                                secondary="Click on a station to start creating a segment, then click on another station to connect them. Segments automatically snap to octolinear angles. Drag bend points to adjust the path - they snap to octolinear positions."
                             />
                         </ListItem>
                     </List>
@@ -108,25 +108,25 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Zoom In (+)"
-                                secondary="Click the Zoom In button in the toolbar to zoom in on the canvas"
+                                secondary="Click the Zoom In button in the toolbar to zoom in on the canvas. Zoom centers on the current view."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
                                 primary="Zoom Out (-)"
-                                secondary="Click the Zoom Out button in the toolbar to zoom out"
+                                secondary="Click the Zoom Out button in the toolbar to zoom out. Zoom centers on the current view."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
                                 primary="Reset View"
-                                secondary="Click the Reset View button to return to the default zoom level (1:1) and center the canvas"
+                                secondary="Click the Reset View button to return to the default zoom level (1:1) and reset the viewport."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
                                 primary="Mouse Wheel"
-                                secondary="Use the mouse wheel to zoom in and out at the cursor position"
+                                secondary="Use the mouse wheel to zoom in and out. The zoom centers on the cursor position."
                             />
                         </ListItem>
                     </List>
@@ -137,7 +137,7 @@ export function HelpDialog({ open, onClose }: Props) {
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" gutterBottom>Export</Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                        Use the 'Export SVG' button to save your map as a vector file, or 'Export PNG' to save as a raster image.
+                        Use the 'Export SVG' button to save your map as a vector file, or 'Export PNG' to save as a raster image. SVG exports are compatible with external editors like Gimp and Inkscape.
                     </Typography>
                 </Box>
 
@@ -173,6 +173,15 @@ export function HelpDialog({ open, onClose }: Props) {
 
                 <Divider sx={{ mb: 2 }} />
 
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>Line Width</Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                        Customize the thickness of lines on your map. Range: 1-20 pixels. Default: 10 pixels.
+                    </Typography>
+                </Box>
+
+                <Divider sx={{ mb: 2 }} />
+
                 <Box>
                     <Typography variant="h6" gutterBottom>Tips</Typography>
                     <List dense>
@@ -188,7 +197,17 @@ export function HelpDialog({ open, onClose }: Props) {
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="• Segments automatically snap to 45° and 90° angles for clean, professional-looking maps"
+                                primary="• Stations and bend points snap to octolinear angles (0°, 45°, 90°, 135°, 180°, etc.) for clean, professional-looking maps"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="• Adjust line width to make your map more readable or match your design style"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="• SVG exports work with external editors like Gimp and Inkscape for further editing"
                             />
                         </ListItem>
                         <ListItem>
