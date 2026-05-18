@@ -560,6 +560,9 @@ export function EditorCanvas() {
                         height={GRID_SIZE}
                         gridSize={gridSize}
                         showGrid={showGridForExport}
+                        zoom={viewport.zoom}
+                        offsetX={viewport.offsetX}
+                        offsetY={viewport.offsetY}
                     />
 
                     <SegmentLayer

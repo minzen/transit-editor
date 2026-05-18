@@ -3,6 +3,9 @@ type Props = {
   height: number
   gridSize: number
   showGrid?: boolean
+  zoom?: number
+  offsetX?: number
+  offsetY?: number
 }
 
 export function GridLayer({
@@ -10,6 +13,9 @@ export function GridLayer({
   height,
   gridSize,
   showGrid = true,
+  zoom = 1,
+  offsetX = 0,
+  offsetY = 0,
 }: Props) {
   if (!showGrid) {
     return null
@@ -17,30 +23,36 @@ export function GridLayer({
 
   const lines = []
 
-  for (let x = 0; x < width; x += gridSize) {
+  // Calculate the visible area in world coordinates
+  const startX = Math.floor((-offsetX / zoom) / gridSize) * gridSize
+  const startY = Math.floor((-offsetY / zoom) / gridSize) * gridSize
+  const endX = Math.ceil((width - offsetX) / zoom / gridSize) * gridSize + gridSize
+  const endY = Math.ceil((height - offsetY) / zoom / gridSize) * gridSize + gridSize
+
+  for (let x = startX; x < endX; x += gridSize) {
     lines.push(
       <line
         key={`vx-${x}`}
         x1={x}
-        y1={0}
+        y1={startY}
         x2={x}
-        y2={height}
+        y2={endY}
         stroke="#e2e2e2"
-        strokeWidth={1}
+        strokeWidth={1 / zoom}
       />
     )
   }
 
-  for (let y = 0; y < height; y += gridSize) {
+  for (let y = startY; y < endY; y += gridSize) {
     lines.push(
       <line
         key={`hy-${y}`}
-        x1={0}
+        x1={startX}
         y1={y}
-        x2={width}
+        x2={endX}
         y2={y}
         stroke="#e2e2e2"
-        strokeWidth={1}
+        strokeWidth={1 / zoom}
       />
     )
   }
