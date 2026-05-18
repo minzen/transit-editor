@@ -2,10 +2,12 @@ import type { Segment } from '../model/segment'
 
 type Props = {
   segments: Segment[]
+  lineWidth: number
 }
 
 export function SegmentLayer({
   segments,
+  lineWidth,
 }: Props) {
   return (
     <>
@@ -23,7 +25,7 @@ export function SegmentLayer({
             key={segment.id}
             d={d}
             stroke={segment.color}
-            strokeWidth={10}
+            strokeWidth={lineWidth}
             strokeLinecap="round"
             fill="none"
           />

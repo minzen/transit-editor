@@ -101,6 +101,7 @@ type EditorState = {
     segments: Record<string, Segment>
     lines: Record<string, Line>
     viewport: Viewport
+    lineWidth: number
 
     pastStates: DataSnapshot[]
     futureStates: DataSnapshot[]
@@ -122,6 +123,7 @@ type EditorState = {
     zoomIn: (centerX?: number, centerY?: number) => void
     zoomOut: (centerX?: number, centerY?: number) => void
     resetViewport: () => void
+    setLineWidth: (width: number) => void
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -132,6 +134,7 @@ export const useEditorStore = create<EditorState>()(
     segments: {},
     lines: {},
     viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
+    lineWidth: 10,
     pastStates: [],
     futureStates: [],
 
@@ -603,6 +606,9 @@ export const useEditorStore = create<EditorState>()(
         set(() => ({
             viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
         })),
+
+    setLineWidth: (width) =>
+        set({ lineWidth: width }),
 
 }),
         {

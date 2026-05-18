@@ -4,6 +4,7 @@ import type { Line } from '../model/line'
 import { LineCreator } from './LineCreator'
 import { BackgroundImageControl } from './BackgroundImageControl'
 import { GridSizeControl } from './GridSizeControl'
+import { LineWidthControl } from './LineWidthControl'
 import { HelpDialog } from './HelpDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
@@ -28,6 +29,8 @@ type Props = {
     setShowBackground: (show: boolean) => void
     gridSize: number
     setGridSize: (size: number) => void
+    lineWidth: number
+    setLineWidth: (width: number) => void
     selectedLineId: string | null
     lines: Record<string, Line>
     isCreatingLine: boolean
@@ -80,6 +83,8 @@ export function EditorToolbar({
     setShowBackground,
     gridSize,
     setGridSize,
+    lineWidth,
+    setLineWidth,
     selectedLineId,
     lines,
     isCreatingLine,
@@ -198,6 +203,11 @@ export function EditorToolbar({
             <GridSizeControl
                 gridSize={gridSize}
                 setGridSize={setGridSize}
+            />
+
+            <LineWidthControl
+                lineWidth={lineWidth}
+                setLineWidth={setLineWidth}
             />
 
             {activeTool === 'segment' && (

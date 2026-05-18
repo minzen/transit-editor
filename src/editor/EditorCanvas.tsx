@@ -38,6 +38,8 @@ export function EditorCanvas() {
     const zoomInStore = useEditorStore((s) => s.zoomIn)
     const zoomOutStore = useEditorStore((s) => s.zoomOut)
     const resetViewport = useEditorStore((s) => s.resetViewport)
+    const lineWidth = useEditorStore((s) => s.lineWidth)
+    const setLineWidth = useEditorStore((s) => s.setLineWidth)
 
     // Wrapper functions to zoom around the center of the SVG element
     const zoomIn = () => {
@@ -490,6 +492,8 @@ export function EditorCanvas() {
                 setShowBackground={setShowBackground}
                 gridSize={gridSize}
                 setGridSize={setGridSize}
+                lineWidth={lineWidth}
+                setLineWidth={setLineWidth}
                 selectedLineId={selectedLineId}
                 lines={lines}
                 isCreatingLine={isCreatingLine}
@@ -559,6 +563,7 @@ export function EditorCanvas() {
 
                     <SegmentLayer
                         segments={Object.values(segments)}
+                        lineWidth={lineWidth}
                     />
 
                     {activeTool === 'select' &&
