@@ -618,6 +618,7 @@ export const useEditorStore = create<EditorState>()(
                 stations: state.stations,
                 segments: state.segments,
                 lines: state.lines,
+                lineWidth: state.lineWidth,
             }),
         },
     ),
