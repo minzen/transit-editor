@@ -228,7 +228,7 @@ export function EditorCanvas() {
             const img = new Image()
             img.onload = () => {
                 const canvas = document.createElement('canvas')
-                const bbox = svgElement.getBoundingClientRect()
+                const bbox = svgElement.getBBox()
 
                 canvas.width = bbox.width + EXPORT_PADDING * 2
                 canvas.height = bbox.height + EXPORT_PADDING * 2
@@ -237,7 +237,7 @@ export function EditorCanvas() {
                 if (ctx) {
                     ctx.fillStyle = '#ffffff'
                     ctx.fillRect(0, 0, canvas.width, canvas.height)
-                    ctx.drawImage(img, EXPORT_PADDING, EXPORT_PADDING, bbox.width, bbox.height)
+                    ctx.drawImage(img, -bbox.x + EXPORT_PADDING, -bbox.y + EXPORT_PADDING, bbox.width, bbox.height)
 
                     const pngUrl = canvas.toDataURL('image/png')
                     const link = document.createElement('a')
