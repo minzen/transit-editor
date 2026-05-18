@@ -63,7 +63,7 @@ export function HelpDialog({ open, onClose }: Props) {
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="3. Select a color from the palette"
+                                primary="3. Select a color from the palette or enter a custom hex code (e.g., #ff00ff)"
                             />
                         </ListItem>
                         <ListItem>

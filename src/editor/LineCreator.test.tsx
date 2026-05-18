@@ -82,4 +82,76 @@ describe('LineCreator', () => {
     expect(defaultProps.setNewLineName).toHaveBeenCalledWith('')
     expect(defaultProps.setNewLineColor).toHaveBeenCalledWith('#1976d2')
   })
+
+  it('renders hex color input field', () => {
+    render(<LineCreator {...defaultProps} />)
+    
+    const hexInput = screen.getByPlaceholderText('#RRGGBB')
+    expect(hexInput).toBeInTheDocument()
+  })
+
+  it('calls setNewLineColor when hex color input changes', () => {
+    render(<LineCreator {...defaultProps} />)
+    
+    const hexInput = screen.getByPlaceholderText('#RRGGBB')
+    fireEvent.change(hexInput, { target: { value: '#ff00ff' } })
+    
+    expect(defaultProps.setNewLineColor).toHaveBeenCalledWith('#ff00ff')
+  })
+
+  it('shows error when hex color is invalid', () => {
+    const props = {
+      ...defaultProps,
+      newLineColor: 'invalid',
+    }
+    render(<LineCreator {...props} />)
+    
+    const hexInput = screen.getByPlaceholderText('#RRGGBB')
+    expect(hexInput.parentElement).toHaveClass('Mui-error')
+  })
+
+  it('shows error message when hex color is invalid', () => {
+    const props = {
+      ...defaultProps,
+      newLineColor: 'invalid',
+    }
+    render(<LineCreator {...props} />)
+    
+    expect(screen.getByText('Invalid hex color (e.g., #ff0000)')).toBeInTheDocument()
+  })
+
+  it('does not show error when hex color is valid', () => {
+    const props = {
+      ...defaultProps,
+      newLineColor: '#ff00ff',
+    }
+    render(<LineCreator {...props} />)
+    
+    const hexInput = screen.getByPlaceholderText('#RRGGBB')
+    expect(hexInput.parentElement).not.toHaveClass('Mui-error')
+  })
+
+  it('disables Create button when color is empty', () => {
+    const props = {
+      ...defaultProps,
+      newLineName: 'Test Line',
+      newLineColor: '',
+    }
+    render(<LineCreator {...props} />)
+    
+    const createButton = screen.getByText('Create')
+    expect(createButton).toBeDisabled()
+  })
+
+  it('disables Create button when color is invalid', () => {
+    const props = {
+      ...defaultProps,
+      newLineName: 'Test Line',
+      newLineColor: 'invalid',
+    }
+    render(<LineCreator {...props} />)
+    
+    const createButton = screen.getByText('Create')
+    expect(createButton).toBeDisabled()
+  })
 })

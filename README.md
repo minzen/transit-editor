@@ -9,6 +9,7 @@ A browser-based reactive editor for schematic transit maps.
 - **Segment creation** - Create connections between stations in octolinear style (45° and 90° angles)
 - **Octolinear snapping** - Stations and bend points snap to octolinear angles (0°, 45°, 90°, 135°, 180°, etc.)
 - **Multiple lines** - Create multiple lines with different colors
+- **Custom colors** - Choose from a color palette or enter custom hex codes (e.g., #ff00ff)
 - **Undo/Redo** - Undo and redo changes
 - **Export** - Export maps in SVG or PNG format (compatible with external editors like Gimp and Inkscape)
 - **Background image** - Load a background image onto the map (e.g., city map)
