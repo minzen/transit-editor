@@ -35,9 +35,32 @@ export function EditorCanvas() {
 
     const viewport = useEditorStore((s) => s.viewport)
     const setViewport = useEditorStore((s) => s.setViewport)
-    const zoomIn = useEditorStore((s) => s.zoomIn)
-    const zoomOut = useEditorStore((s) => s.zoomOut)
+    const zoomInStore = useEditorStore((s) => s.zoomIn)
+    const zoomOutStore = useEditorStore((s) => s.zoomOut)
     const resetViewport = useEditorStore((s) => s.resetViewport)
+
+    // Wrapper functions to zoom around the center of the SVG element
+    const zoomIn = () => {
+        const svg = svgRef.current
+        if (!svg) {
+            zoomInStore()
+            return
+        }
+        const centerX = svg.clientWidth / 2
+        const centerY = svg.clientHeight / 2
+        zoomInStore(centerX, centerY)
+    }
+
+    const zoomOut = () => {
+        const svg = svgRef.current
+        if (!svg) {
+            zoomOutStore()
+            return
+        }
+        const centerX = svg.clientWidth / 2
+        const centerY = svg.clientHeight / 2
+        zoomOutStore(centerX, centerY)
+    }
 
     const [pendingStationId, setPendingStationId] = useState<string | null>(null)
 

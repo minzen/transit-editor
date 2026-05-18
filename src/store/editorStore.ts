@@ -119,8 +119,8 @@ type EditorState = {
     undo: () => void
     redo: () => void
     setViewport: (viewport: Viewport) => void
-    zoomIn: () => void
-    zoomOut: () => void
+    zoomIn: (centerX?: number, centerY?: number) => void
+    zoomOut: (centerX?: number, centerY?: number) => void
     resetViewport: () => void
 }
 
@@ -547,21 +547,57 @@ export const useEditorStore = create<EditorState>()(
     setViewport: (viewport) =>
         set({ viewport }),
 
-    zoomIn: () =>
-        set((state) => ({
-            viewport: {
-                ...state.viewport,
-                zoom: Math.min(10, state.viewport.zoom * 1.15),
-            },
-        })),
+    zoomIn: (centerX?: number, centerY?: number) =>
+        set((state) => {
+            const oldZoom = state.viewport.zoom
+            const newZoom = Math.min(10, oldZoom * 1.15)
+            const zoomRatio = newZoom / oldZoom
 
-    zoomOut: () =>
-        set((state) => ({
-            viewport: {
-                ...state.viewport,
-                zoom: Math.max(0.1, state.viewport.zoom / 1.15),
-            },
-        })),
+            // If center coordinates are provided, adjust offsets to zoom around that point
+            if (centerX !== undefined && centerY !== undefined) {
+                return {
+                    viewport: {
+                        zoom: newZoom,
+                        offsetX: centerX - (centerX - state.viewport.offsetX) * zoomRatio,
+                        offsetY: centerY - (centerY - state.viewport.offsetY) * zoomRatio,
+                    },
+                }
+            }
+
+            // Otherwise just change zoom (legacy behavior)
+            return {
+                viewport: {
+                    ...state.viewport,
+                    zoom: newZoom,
+                },
+            }
+        }),
+
+    zoomOut: (centerX?: number, centerY?: number) =>
+        set((state) => {
+            const oldZoom = state.viewport.zoom
+            const newZoom = Math.max(0.1, oldZoom / 1.15)
+            const zoomRatio = newZoom / oldZoom
+
+            // If center coordinates are provided, adjust offsets to zoom around that point
+            if (centerX !== undefined && centerY !== undefined) {
+                return {
+                    viewport: {
+                        zoom: newZoom,
+                        offsetX: centerX - (centerX - state.viewport.offsetX) * zoomRatio,
+                        offsetY: centerY - (centerY - state.viewport.offsetY) * zoomRatio,
+                    },
+                }
+            }
+
+            // Otherwise just change zoom (legacy behavior)
+            return {
+                viewport: {
+                    ...state.viewport,
+                    zoom: newZoom,
+                },
+            }
+        }),
 
     resetViewport: () =>
         set(() => ({

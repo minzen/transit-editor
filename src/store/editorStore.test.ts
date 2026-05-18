@@ -336,6 +336,32 @@ describe('editor store', () => {
     expect(updatedState.viewport.zoom).toBe(initialZoom / 1.15)
   })
 
+  it('zooms in around center point', () => {
+    useEditorStore.getState().setViewport({ zoom: 1, offsetX: 100, offsetY: 100 })
+
+    useEditorStore.getState().zoomIn(200, 200)
+
+    const state = useEditorStore.getState()
+    expect(state.viewport.zoom).toBe(1.15)
+    // Offsets should be adjusted to zoom around (200, 200)
+    // newOffsetX = 200 - (200 - 100) * 1.15 = 200 - 115 = 85
+    expect(state.viewport.offsetX).toBeCloseTo(85, 0)
+    expect(state.viewport.offsetY).toBeCloseTo(85, 0)
+  })
+
+  it('zooms out around center point', () => {
+    useEditorStore.getState().setViewport({ zoom: 1.15, offsetX: 85, offsetY: 85 })
+
+    useEditorStore.getState().zoomOut(200, 200)
+
+    const state = useEditorStore.getState()
+    expect(state.viewport.zoom).toBeCloseTo(1, 0)
+    // Offsets should be adjusted to zoom around (200, 200)
+    // newOffsetX = 200 - (200 - 85) * (1/1.15) = 200 - 115 * 0.869565 ≈ 200 - 100 = 100
+    expect(state.viewport.offsetX).toBeCloseTo(100, 0)
+    expect(state.viewport.offsetY).toBeCloseTo(100, 0)
+  })
+
   it('zooms out does not go below 0.1', () => {
     useEditorStore.getState().setViewport({ zoom: 0.1, offsetX: 0, offsetY: 0 })
 
