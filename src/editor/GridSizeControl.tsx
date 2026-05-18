@@ -10,12 +10,16 @@ export function GridSizeControl({ gridSize, setGridSize }: Props) {
         const value = e.target.value
         const numValue = Number(value)
         
-        // Prevent setting to 0, NaN, or values outside valid range
-        if (value === '' || isNaN(numValue) || numValue < 10 || numValue > 100) {
+        // Allow empty value for clearing
+        if (value === '') {
+            setGridSize(10) // Reset to default
             return
         }
         
-        setGridSize(numValue)
+        // Allow typing without strict validation
+        if (!isNaN(numValue)) {
+            setGridSize(numValue)
+        }
     }
 
     return (
