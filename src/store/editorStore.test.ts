@@ -535,4 +535,102 @@ describe('editor store', () => {
       expect(Object.keys(updatedState.segments).length).toBe(1)
     })
   })
+
+  describe('Multi-line segments', () => {
+    it('creates segment with single lineId in array', () => {
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineId = Object.keys(state.lines)[0]
+
+      useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+      const updatedState = useEditorStore.getState()
+      const segmentIds = Object.keys(updatedState.segments)
+      const segment = updatedState.segments[segmentIds[0]]
+
+      expect(segment.lineIds).toEqual([lineId])
+    })
+
+    it('segment lineIds array can contain multiple line IDs', () => {
+      // Create a segment with multiple lineIds manually
+      const segmentId = 'test-segment'
+      const lineIds = ['line1', 'line2', 'line3']
+      
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      useEditorStore.getState().addLine('Line 2', '#00ff00')
+      useEditorStore.getState().addLine('Line 3', '#0000ff')
+
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+
+      // Manually add a segment with multiple lineIds
+      useEditorStore.setState({
+        ...state,
+        segments: {
+          ...state.segments,
+          [segmentId]: {
+            id: segmentId,
+            fromStationId: stationIds[0],
+            toStationId: stationIds[1],
+            lineIds,
+            points: [
+              { x: 100, y: 200 },
+              { x: 300, y: 400 },
+            ],
+          },
+        },
+      })
+
+      const updatedState = useEditorStore.getState()
+      const segment = updatedState.segments[segmentId]
+
+      expect(segment.lineIds).toEqual(lineIds)
+      expect(segment.lineIds).toHaveLength(3)
+    })
+
+    it('splits segment with multiple lineIds into multiple segments', () => {
+      useEditorStore.getState().addStation(100, 200)
+      useEditorStore.getState().addStation(300, 400)
+      useEditorStore.getState().addLine('Line 1', '#ff0000')
+      useEditorStore.getState().addLine('Line 2', '#00ff00')
+
+      const state = useEditorStore.getState()
+      const stationIds = Object.keys(state.stations)
+      const lineIds = Object.keys(state.lines)
+
+      // Create a segment with multiple lineIds
+      const segmentId = 'test-segment'
+      useEditorStore.setState({
+        ...state,
+        segments: {
+          ...state.segments,
+          [segmentId]: {
+            id: segmentId,
+            fromStationId: stationIds[0],
+            toStationId: stationIds[1],
+            lineIds,
+            points: [
+              { x: 100, y: 200 },
+              { x: 300, y: 400 },
+            ],
+          },
+        },
+      })
+
+      // Add a station on the segment (should split for each line)
+      useEditorStore.getState().addStation(200, 300)
+
+      const updatedState = useEditorStore.getState()
+      // Original segment should be removed
+      expect(updatedState.segments[segmentId]).toBeUndefined()
+      // Should have 2 new segments per line = 4 segments total
+      expect(Object.keys(updatedState.segments).length).toBe(4)
+    })
+  })
 })
