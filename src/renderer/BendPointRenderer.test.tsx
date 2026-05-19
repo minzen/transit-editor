@@ -9,8 +9,7 @@ describe('BendPointRenderer', () => {
             id: 'seg1',
             fromStationId: 'st1',
             toStationId: 'st2',
-            lineId: 'line1',
-            color: '#ff0000',
+            lineIds: ['line1'],
             points: [
                 { x: 0, y: 0 },
                 { x: 100, y: 100 },
@@ -21,8 +20,7 @@ describe('BendPointRenderer', () => {
             id: 'seg2',
             fromStationId: 'st2',
             toStationId: 'st3',
-            lineId: 'line1',
-            color: '#ff0000',
+            lineIds: ['line1'],
             points: [
                 { x: 200, y: 200 },
                 { x: 300, y: 300 },
@@ -46,8 +44,7 @@ describe('BendPointRenderer', () => {
                 id: 'seg1',
                 fromStationId: 'st1',
                 toStationId: 'st2',
-                lineId: 'line1',
-                color: '#ff0000',
+                lineIds: ['line1'],
                 points: [
                     { x: 0, y: 0 },
                     { x: 200, y: 200 },

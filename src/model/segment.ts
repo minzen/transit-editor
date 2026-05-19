@@ -6,8 +6,7 @@ export type Segment = {
   fromStationId: string
   toStationId: string
 
-  lineId: string
-  color: string
+  lineIds: string[]
 
   points: Point[]
 }

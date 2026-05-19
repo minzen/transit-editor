@@ -167,9 +167,12 @@ export const useEditorStore = create<EditorState>()(
 
             if (segmentToSplit) {
                 // Split the segment into two segments
-                const line = state.lines[segmentToSplit.lineId]
-                if (!line) {
-                    // If line doesn't exist, just add the station without splitting
+                // With multiple line support, we need to split for each line
+                const lineIds = segmentToSplit.lineIds
+                const validLines = lineIds.map(lineId => state.lines[lineId]).filter(line => line !== undefined)
+                
+                if (validLines.length === 0) {
+                    // If no valid lines exist, just add the station without splitting
                     return {
                         stations: {
                             ...state.stations,
@@ -182,9 +185,6 @@ export const useEditorStore = create<EditorState>()(
                     }
                 }
 
-                // Create two new segments
-                const segment1Id = nanoid()
-                const segment2Id = nanoid()
                 const fromStation = state.stations[segmentToSplit.fromStationId]
                 const toStation = state.stations[segmentToSplit.toStationId]
 
@@ -206,27 +206,39 @@ export const useEditorStore = create<EditorState>()(
                 const path1 = createOctolinearPath(fromStation, newStation)
                 const path2 = createOctolinearPath(newStation, toStation)
 
-                // Remove the old segment and add two new ones
+                // Remove the old segment and add two new ones for each line
                 const { [segmentToSplit.id]: _removedSegment, ...remainingSegments } = state.segments
-                newSegments = {
-                    ...remainingSegments,
-                    [segment1Id]: {
-                        id: segment1Id,
-                        fromStationId: segmentToSplit.fromStationId,
-                        toStationId: id,
-                        lineId: segmentToSplit.lineId,
-                        color: segmentToSplit.color,
-                        points: path1,
-                    },
-                    [segment2Id]: {
-                        id: segment2Id,
-                        fromStationId: id,
-                        toStationId: segmentToSplit.toStationId,
-                        lineId: segmentToSplit.lineId,
-                        color: segmentToSplit.color,
-                        points: path2,
-                    },
-                }
+                
+                // Create new segments for each line
+                const newSegmentsEntries: Record<string, Segment>[] = lineIds.flatMap((lineId) => {
+                    const segment1Id = nanoid()
+                    const segment2Id = nanoid()
+                    return [
+                        {
+                            [segment1Id]: {
+                                id: segment1Id,
+                                fromStationId: segmentToSplit.fromStationId,
+                                toStationId: id,
+                                lineIds: [lineId],
+                                points: path1,
+                            },
+                        },
+                        {
+                            [segment2Id]: {
+                                id: segment2Id,
+                                fromStationId: id,
+                                toStationId: segmentToSplit.toStationId,
+                                lineIds: [lineId],
+                                points: path2,
+                            },
+                        },
+                    ]
+                })
+                
+                newSegments = newSegmentsEntries.reduce(
+                    (acc, entry) => ({ ...acc, ...entry }),
+                    remainingSegments
+                )
             }
 
             return {
@@ -426,8 +438,7 @@ export const useEditorStore = create<EditorState>()(
                         fromStationId,
                         toStationId,
 
-                        lineId,
-                        color: line.color,
+                        lineIds: [lineId],
 
                         points,
                     },

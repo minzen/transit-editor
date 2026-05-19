@@ -9,7 +9,6 @@ import { processSVGForExport } from '../utils/svgExport'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
-import { BendPointRenderer } from '../renderer/BendPointRenderer'
 import { PreviewLine } from '../renderer/PreviewLine'
 import { StationRenderer } from '../renderer/StationRenderer'
 
@@ -581,17 +580,9 @@ export function EditorCanvas() {
 
                     <SegmentLayer
                         segments={Object.values(segments)}
+                        lines={lines}
                         lineWidth={lineWidth}
                     />
-
-                    {activeTool === 'select' && (
-                        <BendPointRenderer
-                            segments={Object.values(segments)}
-                            onBendPointDragStart={(segmentId, pointIndex) => {
-                                setDraggingBendPoint({ segmentId, pointIndex })
-                            }}
-                        />
-                    )}
 
                     {activeTool === 'segment' &&
                         pendingStation &&

@@ -91,7 +91,7 @@ describe('editor store', () => {
     const segment = updatedState.segments[segmentIds[0]]
     expect(segment.fromStationId).toBe(stationIds[0])
     expect(segment.toStationId).toBe(stationIds[1])
-    expect(segment.color).toBe('#00ff00')
+    expect(segment.lineIds).toEqual([lineId])
     expect(segment.points).toHaveLength(3)
   })
 
