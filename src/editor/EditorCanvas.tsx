@@ -21,6 +21,7 @@ import './EditorCanvas.css'
 const EXPORT_PADDING = 40
 const BACKGROUND_IMAGE_SIZE = 4000
 const BACKGROUND_IMAGE_OFFSET = 0
+const STATION_RADIUS = 8
 
 export function EditorCanvas() {
     const activeTool = useEditorStore((s) => s.activeTool)
@@ -43,6 +44,22 @@ export function EditorCanvas() {
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
+
+    // Helper function to check if a point is inside any existing station
+    const isPointInsideStation = (x: number, y: number, excludeStationId?: string): boolean => {
+        for (const station of Object.values(stations)) {
+            if (excludeStationId && station.id === excludeStationId) {
+                continue
+            }
+            const dx = x - station.x
+            const dy = y - station.y
+            const distance = Math.sqrt(dx * dx + dy * dy)
+            if (distance < STATION_RADIUS * 2) {
+                return true
+            }
+        }
+        return false
+    }
 
     // Wrapper functions to zoom around the center of the SVG element
     const zoomIn = () => {
@@ -399,6 +416,11 @@ export function EditorCanvas() {
             }
         }
 
+        // Prevent moving station inside another station
+        if (isPointInsideStation(snapped.x, snapped.y, draggingStationId)) {
+            return
+        }
+
         moveStation(draggingStationId, snapped.x, snapped.y)
     }
 
@@ -443,6 +465,11 @@ export function EditorCanvas() {
             if (nearestStation && nearestDist < 500) { // Only snap if within reasonable distance
                 snapped = snapPointToOctolinear(nearestStation, gridSnapped)
             }
+        }
+
+        // Prevent placing station inside another station
+        if (isPointInsideStation(snapped.x, snapped.y)) {
+            return
         }
 
         addStation(snapped.x, snapped.y)
