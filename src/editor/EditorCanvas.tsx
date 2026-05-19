@@ -21,7 +21,6 @@ import './EditorCanvas.css'
 const EXPORT_PADDING = 40
 const BACKGROUND_IMAGE_SIZE = 4000
 const BACKGROUND_IMAGE_OFFSET = 0
-const GRID_SIZE = 4000
 
 export function EditorCanvas() {
     const activeTool = useEditorStore((s) => s.activeTool)
@@ -41,6 +40,9 @@ export function EditorCanvas() {
     const resetViewport = useEditorStore((s) => s.resetViewport)
     const lineWidth = useEditorStore((s) => s.lineWidth)
     const setLineWidth = useEditorStore((s) => s.setLineWidth)
+    const gridCellSize = useEditorStore((s) => s.gridCellSize)
+    const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
+    const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
 
     // Wrapper functions to zoom around the center of the SVG element
     const zoomIn = () => {
@@ -76,7 +78,6 @@ export function EditorCanvas() {
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
     const [showBackground, setShowBackground] = useState(true)
 
-    const [gridSize, setGridSize] = useState(40)
     const [showGridForExport, setShowGridForExport] = useState(true)
 
     const colorPalette = [
@@ -334,7 +335,7 @@ export function EditorCanvas() {
                 const toStation = stations[segment.toStationId]
 
                 // First snap to grid, then to octolinear angles
-                const gridSnapped = snapPointToGrid(point.x, point.y, gridSize)
+                const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
                 let snappedPoint: { x: number; y: number }
 
@@ -380,7 +381,7 @@ export function EditorCanvas() {
             }
         }
 
-        const gridSnapped = snapPointToGrid(point.x, point.y, gridSize)
+        const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
         // Snap to octolinear angles from connected stations
         const stationIds = Object.keys(stations)
@@ -422,7 +423,7 @@ export function EditorCanvas() {
         const y = event.clientY - rect.top
 
         const point = screenToWorld(x, y, viewport)
-        const gridSnapped = snapPointToGrid(point.x, point.y, gridSize)
+        const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
         // Snap to octolinear angle from nearest station if any exist
         const stationIds = Object.keys(stations)
@@ -491,8 +492,10 @@ export function EditorCanvas() {
                 backgroundImage={backgroundImage}
                 showBackground={showBackground}
                 setShowBackground={setShowBackground}
-                gridSize={gridSize}
-                setGridSize={setGridSize}
+                gridCellsWidth={gridCellsWidth}
+                setGridCellsWidth={useEditorStore((s) => s.setGridCellsWidth)}
+                gridCellsHeight={gridCellsHeight}
+                setGridCellsHeight={useEditorStore((s) => s.setGridCellsHeight)}
                 lineWidth={lineWidth}
                 setLineWidth={setLineWidth}
                 selectedLineId={selectedLineId}
@@ -556,9 +559,9 @@ export function EditorCanvas() {
                     )}
 
                     <GridLayer
-                        width={GRID_SIZE}
-                        height={GRID_SIZE}
-                        gridSize={gridSize}
+                        gridCellSize={gridCellSize}
+                        gridCellsWidth={gridCellsWidth}
+                        gridCellsHeight={gridCellsHeight}
                         showGrid={showGridForExport}
                         zoom={viewport.zoom}
                         offsetX={viewport.offsetX}

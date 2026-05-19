@@ -3,91 +3,102 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { GridSizeControl } from './GridSizeControl'
 
 describe('GridSizeControl', () => {
-  it('renders with initial value', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('renders with initial values', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    expect(input).toHaveValue(40)
+    const widthInput = screen.getByLabelText('Width')
+    const heightInput = screen.getByLabelText('Height')
+    expect(widthInput).toHaveValue(40)
+    expect(heightInput).toHaveValue(30)
   })
 
-  it('updates grid size with valid value', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('updates grid width with valid value', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '50' } })
+    const widthInput = screen.getByLabelText('Width')
+    fireEvent.change(widthInput, { target: { value: '50' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(50)
+    expect(setGridCellsWidth).toHaveBeenCalledWith(50)
   })
 
-  it('resets grid size to default when value is empty', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('updates grid height with valid value', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '' } })
+    const heightInput = screen.getByLabelText('Height')
+    fireEvent.change(heightInput, { target: { value: '50' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(10)
+    expect(setGridCellsHeight).toHaveBeenCalledWith(50)
   })
 
-  it('updates grid size when value is 0', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('resets grid width to default when value is empty', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '0' } })
+    const widthInput = screen.getByLabelText('Width')
+    fireEvent.change(widthInput, { target: { value: '' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(0)
+    expect(setGridCellsWidth).toHaveBeenCalledWith(40)
   })
 
-  it('updates grid size when value is less than 10', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('resets grid height to default when value is empty', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '5' } })
+    const heightInput = screen.getByLabelText('Height')
+    fireEvent.change(heightInput, { target: { value: '' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(5)
+    expect(setGridCellsHeight).toHaveBeenCalledWith(40)
   })
 
-  it('updates grid size when value is greater than 100', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('updates grid width when value is 0', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '150' } })
+    const widthInput = screen.getByLabelText('Width')
+    fireEvent.change(widthInput, { target: { value: '0' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(150)
+    expect(setGridCellsWidth).toHaveBeenCalledWith(0)
   })
 
-  it('resets grid size to default when value is NaN (number input behavior)', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('updates grid height when value is 0', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: 'abc' } })
+    const heightInput = screen.getByLabelText('Height')
+    fireEvent.change(heightInput, { target: { value: '0' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(10)
+    expect(setGridCellsHeight).toHaveBeenCalledWith(0)
   })
 
-  it('updates grid size when value is exactly 10 (minimum)', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('resets grid width to default when value is NaN (number input behavior)', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '10' } })
+    const widthInput = screen.getByLabelText('Width')
+    fireEvent.change(widthInput, { target: { value: 'abc' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(10)
+    expect(setGridCellsWidth).toHaveBeenCalledWith(40)
   })
 
-  it('updates grid size when value is exactly 100 (maximum)', () => {
-    const setGridSize = vi.fn()
-    render(<GridSizeControl gridSize={40} setGridSize={setGridSize} />)
+  it('resets grid height to default when value is NaN (number input behavior)', () => {
+    const setGridCellsWidth = vi.fn()
+    const setGridCellsHeight = vi.fn()
+    render(<GridSizeControl gridCellsWidth={40} setGridCellsWidth={setGridCellsWidth} gridCellsHeight={30} setGridCellsHeight={setGridCellsHeight} />)
     
-    const input = screen.getByLabelText('Grid')
-    fireEvent.change(input, { target: { value: '100' } })
+    const heightInput = screen.getByLabelText('Height')
+    fireEvent.change(heightInput, { target: { value: 'abc' } })
     
-    expect(setGridSize).toHaveBeenCalledWith(100)
+    expect(setGridCellsHeight).toHaveBeenCalledWith(40)
   })
 })

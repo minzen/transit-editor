@@ -27,8 +27,10 @@ type Props = {
     backgroundImage: string | null
     showBackground: boolean
     setShowBackground: (show: boolean) => void
-    gridSize: number
-    setGridSize: (size: number) => void
+    gridCellsWidth: number
+    setGridCellsWidth: (width: number) => void
+    gridCellsHeight: number
+    setGridCellsHeight: (height: number) => void
     lineWidth: number
     setLineWidth: (width: number) => void
     selectedLineId: string | null
@@ -81,8 +83,10 @@ export function EditorToolbar({
     backgroundImage,
     showBackground,
     setShowBackground,
-    gridSize,
-    setGridSize,
+    gridCellsWidth,
+    setGridCellsWidth,
+    gridCellsHeight,
+    setGridCellsHeight,
     lineWidth,
     setLineWidth,
     selectedLineId,
@@ -201,8 +205,10 @@ export function EditorToolbar({
             <Divider orientation="vertical" flexItem />
 
             <GridSizeControl
-                gridSize={gridSize}
-                setGridSize={setGridSize}
+                gridCellsWidth={gridCellsWidth}
+                setGridCellsWidth={setGridCellsWidth}
+                gridCellsHeight={gridCellsHeight}
+                setGridCellsHeight={setGridCellsHeight}
             />
 
             <LineWidthControl

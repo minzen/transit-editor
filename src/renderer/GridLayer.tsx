@@ -1,7 +1,7 @@
 type Props = {
-  width: number
-  height: number
-  gridSize: number
+  gridCellSize: number
+  gridCellsWidth: number
+  gridCellsHeight: number
   showGrid?: boolean
   zoom?: number
   offsetX?: number
@@ -9,9 +9,9 @@ type Props = {
 }
 
 export function GridLayer({
-  width,
-  height,
-  gridSize,
+  gridCellSize,
+  gridCellsWidth,
+  gridCellsHeight,
   showGrid = true,
   zoom = 1,
   offsetX = 0,
@@ -23,13 +23,17 @@ export function GridLayer({
 
   const lines = []
 
-  // Calculate the visible area in world coordinates
-  const startX = Math.floor((-offsetX / zoom) / gridSize) * gridSize
-  const startY = Math.floor((-offsetY / zoom) / gridSize) * gridSize
-  const endX = Math.ceil((width - offsetX) / zoom / gridSize) * gridSize + gridSize
-  const endY = Math.ceil((height - offsetY) / zoom / gridSize) * gridSize + gridSize
+  // Calculate total grid dimensions
+  const totalWidth = gridCellsWidth * gridCellSize
+  const totalHeight = gridCellsHeight * gridCellSize
 
-  for (let x = startX; x < endX; x += gridSize) {
+  // Calculate the visible area in world coordinates
+  const startX = Math.floor((-offsetX / zoom) / gridCellSize) * gridCellSize
+  const startY = Math.floor((-offsetY / zoom) / gridCellSize) * gridCellSize
+  const endX = Math.ceil((totalWidth - offsetX) / zoom / gridCellSize) * gridCellSize + gridCellSize
+  const endY = Math.ceil((totalHeight - offsetY) / zoom / gridCellSize) * gridCellSize + gridCellSize
+
+  for (let x = startX; x < endX; x += gridCellSize) {
     lines.push(
       <line
         key={`vx-${x}`}
@@ -43,7 +47,7 @@ export function GridLayer({
     )
   }
 
-  for (let y = startY; y < endY; y += gridSize) {
+  for (let y = startY; y < endY; y += gridCellSize) {
     lines.push(
       <line
         key={`hy-${y}`}

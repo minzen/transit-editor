@@ -102,6 +102,9 @@ type EditorState = {
     lines: Record<string, Line>
     viewport: Viewport
     lineWidth: number
+    gridCellSize: number
+    gridCellsWidth: number
+    gridCellsHeight: number
 
     pastStates: DataSnapshot[]
     futureStates: DataSnapshot[]
@@ -124,6 +127,9 @@ type EditorState = {
     zoomOut: (centerX?: number, centerY?: number) => void
     resetViewport: () => void
     setLineWidth: (width: number) => void
+    setGridCellSize: (size: number) => void
+    setGridCellsWidth: (width: number) => void
+    setGridCellsHeight: (height: number) => void
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -135,6 +141,9 @@ export const useEditorStore = create<EditorState>()(
     lines: {},
     viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
     lineWidth: 10,
+    gridCellSize: 50,
+    gridCellsWidth: 40,
+    gridCellsHeight: 40,
     pastStates: [],
     futureStates: [],
 
@@ -610,6 +619,15 @@ export const useEditorStore = create<EditorState>()(
     setLineWidth: (width) =>
         set({ lineWidth: width }),
 
+    setGridCellSize: (size) =>
+        set({ gridCellSize: size }),
+
+    setGridCellsWidth: (width) =>
+        set({ gridCellsWidth: width }),
+
+    setGridCellsHeight: (height) =>
+        set({ gridCellsHeight: height }),
+
 }),
         {
             name: 'transit-editor-storage',
@@ -619,6 +637,9 @@ export const useEditorStore = create<EditorState>()(
                 segments: state.segments,
                 lines: state.lines,
                 lineWidth: state.lineWidth,
+                gridCellSize: state.gridCellSize,
+                gridCellsWidth: state.gridCellsWidth,
+                gridCellsHeight: state.gridCellsHeight,
             }),
         },
     ),
