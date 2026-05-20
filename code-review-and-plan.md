@@ -2,6 +2,18 @@
 
 This document provides a comprehensive review of the current Transit Map Editor codebase and outlines a strategic plan for structural, visual, and architectural improvements.
 
+**Status**: All milestones completed.
+
+| Milestone | Status | Commit |
+|---|---|---|
+| 1.1 Vertex offset algorithm | ✅ Done | `5a38e1a` |
+| 1.2 Pill/capsule transfer stations | ✅ Done | `8b40ee9` |
+| 2.1 `useMapExport` + `useEditorKeyboardShortcuts` hooks | ✅ Done | `dcf7809` |
+| 2.2 `useCanvasInteractions` hook | ✅ Done | `858e031` |
+| 2.3 Geometry helpers extracted from store | ✅ Done | `03ab5e5` |
+| 3.1 Cursor-centered zoom | ✅ Already in place | — |
+| 3.2 Boundary constraints | ✅ Done | `87691ea` |
+
 ---
 
 ## 1. Code Review Findings
@@ -58,26 +70,31 @@ We propose breaking down the improvements into four key milestones.
 ```
 
 ### Milestone 1: Parallel Path Geometry & Advanced Station Rendering
-1.  **Vertex Offset Algorithm**:
-    *   Create a geometry utility `src/geometry/offsetPath.ts` that takes an array of vertices (`Point[]`) and an offset distance `d`.
-    *   For each segment between vertices $P_i$ and $P_{i+1}$, calculate the perpendicular normal vector.
-    *   Shift each line segment along its normal by distance $d$.
-    *   Calculate the intersection points of these shifted adjacent segments to find the new offset bend coordinates (handling the miter joints correctly).
-    *   Use this algorithm to generate distinct, neat parallel paths in `SegmentLayer.tsx` that look beautiful at any angle (0°, 45°, 90°).
-2.  **Pill/Capsule Transfer Stations**:
-    *   In `StationRenderer.tsx`, if `lineCount > 1`, render a dynamic rounded rectangle (capsule) instead of an oversized circle.
-    *   Align the capsule rotation angle with the average angle of the connected segments.
+1.  **Vertex Offset Algorithm** — ✅ **Done** (commit `5a38e1a`):
+    *   Created `src/geometry/offsetPath.ts` (with unit tests in `src/geometry/offsetPath.test.ts`).
+    *   Computes perpendicular normals for each segment and uses angle-bisector miter joints between adjacent segments, with a miter limit to prevent extreme stretching at sharp corners.
+    *   `SegmentLayer.tsx` calls `offsetPath()` to render each parallel line at distance `(index - (M-1)/2) * spacing` where `spacing = lineWidth + 1.5`.
+2.  **Pill/Capsule Transfer Stations** — ✅ **Done** (commit `8b40ee9`):
+    *   `StationRenderer.tsx` renders a rounded `<rect>` (capsule) when more than one line connects to a station; single-line stations remain circles.
+    *   Capsule length scales with line count: `(lineCount - 1) * spacing + 2 * STATION_RADIUS`.
+    *   Capsule rotation = perpendicular to the average segment axis, computed via double-angle averaging so opposite directions add constructively.
+    *   Pending and selection rings, plus station name label offsets, scale with the capsule shape.
 
 ### Milestone 2: Refactoring & Component Decomposition
-1.  **Decompose `EditorCanvas.tsx`**:
-    *   **`useCanvasInteractions.ts`**: Move all mouse down, move, up, wheel, and drag-and-drop state machines into a custom hook.
-    *   **`useMapExport.ts`**: Extract SVG processing and PNG generation helpers.
-    *   Keep `EditorCanvas.tsx` as a clean presentation layout component that wires the canvas layers, toolbar, and interactions together.
-2.  **Move Geometry to Pure Functions**:
-    *   Relocate any remaining pathing and snapping geometry logic from `editorStore.ts` into `src/geometry/`.
+1.  **Decompose `EditorCanvas.tsx`** — ✅ **Done** (commits `dcf7809`, `858e031`):
+    *   **`useMapExport.ts`**: SVG/PNG export and `showGridForExport` state.
+    *   **`useEditorKeyboardShortcuts.ts`**: Space (panning) and Delete/Backspace shortcuts.
+    *   **`useCanvasInteractions.ts`**: pointer/wheel/click handlers and interaction state (panning, dragging stations, dragging bend points, `pointerWorldPosition`, drag refs).
+    *   `EditorCanvas.tsx` reduced from ~660 to ~338 lines and is now a clean presentation/wiring component.
+2.  **Move Geometry to Pure Functions** — ✅ **Done** (commit `03ab5e5`):
+    *   Created `src/geometry/distance.ts` with `pointToLineSegmentDistance` and `isPointNearPolyline` (9 unit tests in `distance.test.ts`).
+    *   Replaced ~33 lines of inline geometry in `editorStore.ts` with a call to `isPointNearPolyline`. `isPointOnSegment` remains as a thin store wrapper that validates station existence.
 
 ### Milestone 3: Grid & Interaction Polish
-1.  **Cursor-Centered Zoom**:
-    *   Improve the zoom function to recalculate viewport offsets based on the current screen cursor position, preventing the canvas from jumping wildly during zoom operations.
-2.  **Boundary Constraints**:
-    *   Add bounding boxes to panning and station placements to prevent users from dragging elements infinitely into empty space.
+1.  **Cursor-Centered Zoom** — ✅ **Already in place**:
+    *   Wheel zoom in `useCanvasInteractions.ts` already recomputes viewport offsets from the cursor position so the world point under the cursor stays put during zoom.
+    *   Toolbar zoom buttons in `EditorCanvas.tsx` zoom around the SVG center, which is the natural anchor when the cursor is on a UI button instead of the canvas.
+2.  **Boundary Constraints** — ✅ **Done** (commit `87691ea`):
+    *   Added `clampToGridBounds` (clamps points to `[0, worldWidth] × [0, worldHeight]`) and `clampPanOffset` (keeps at least `PAN_VISIBILITY_MARGIN = 100` px of the grid visible) helpers in `useCanvasInteractions.ts`.
+    *   Newly placed and dragged stations are clamped to grid bounds.
+    *   Pan offset is clamped while panning so the grid cannot be panned completely off-screen.
