@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { screenToWorld } from '../viewport/coordinates'
 import type { Point } from '../types/geometry'
 
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToGrid } from '../geometry/snap'
 import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
-import { processSVGForExport } from '../utils/svgExport'
+import { useMapExport } from './useMapExport'
+import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
@@ -18,7 +19,6 @@ import { isPointInsideStation } from '../utils/stationUtils'
 import './EditorCanvas.css'
 
 // Constants for magic numbers
-const EXPORT_PADDING = 40
 const BACKGROUND_IMAGE_SIZE = 4000
 const BACKGROUND_IMAGE_OFFSET = 0
 
@@ -78,8 +78,6 @@ export function EditorCanvas() {
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
     const [showBackground, setShowBackground] = useState(true)
 
-    const [showGridForExport, setShowGridForExport] = useState(true)
-
     const colorPalette = [
         '#e53935',
         '#ef5350',
@@ -126,9 +124,6 @@ export function EditorCanvas() {
     const [isPanning, setIsPanning] =
         useState(false)
 
-    const [spacePressed, setSpacePressed] =
-        useState(false)
-
     const [lastPointer, setLastPointer] =
         useState({
             x: 0,
@@ -168,93 +163,7 @@ export function EditorCanvas() {
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
 
-    const exportAsSVG = () => {
-        if (!svgRef.current) return
-
-        // Hide grid during export
-        setShowGridForExport(false)
-
-        // Wait for re-render before exporting
-        setTimeout(() => {
-            const svgElement = svgRef.current
-            if (!svgElement) {
-                setShowGridForExport(true)
-                return
-            }
-
-            const serializer = new XMLSerializer()
-            const svgString = serializer.serializeToString(svgElement)
-
-            // Get bounding box for viewBox calculation
-            const bbox = svgElement.getBBox()
-
-            // Process SVG for compatibility with external editors
-            const processedSVG = processSVGForExport(svgString, bbox)
-
-            const blob = new Blob([processedSVG], { type: 'image/svg+xml;charset=utf-8' })
-            const url = URL.createObjectURL(blob)
-
-            const link = document.createElement('a')
-            link.href = url
-            link.download = 'transit-map.svg'
-            link.click()
-
-            URL.revokeObjectURL(url)
-
-            // Show grid again after export
-            setShowGridForExport(true)
-        }, 0)
-    }
-
-    const exportAsPNG = () => {
-        if (!svgRef.current) return
-
-        // Hide grid during export
-        setShowGridForExport(false)
-
-        // Wait for re-render before exporting
-        setTimeout(() => {
-            const svgElement = svgRef.current
-            if (!svgElement) {
-                setShowGridForExport(true)
-                return
-            }
-
-            const serializer = new XMLSerializer()
-            const svgString = serializer.serializeToString(svgElement)
-
-            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
-            const svgUrl = URL.createObjectURL(svgBlob)
-
-            const img = new Image()
-            img.onload = () => {
-                const canvas = document.createElement('canvas')
-                const bbox = svgElement.getBBox()
-
-                canvas.width = bbox.width + EXPORT_PADDING * 2
-                canvas.height = bbox.height + EXPORT_PADDING * 2
-
-                const ctx = canvas.getContext('2d')
-                if (ctx) {
-                    ctx.fillStyle = '#ffffff'
-                    ctx.fillRect(0, 0, canvas.width, canvas.height)
-                    ctx.drawImage(img, -bbox.x + EXPORT_PADDING, -bbox.y + EXPORT_PADDING, bbox.width, bbox.height)
-
-                    const pngUrl = canvas.toDataURL('image/png')
-                    const link = document.createElement('a')
-                    link.href = pngUrl
-                    link.download = 'transit-map.png'
-                    link.click()
-                }
-
-                URL.revokeObjectURL(svgUrl)
-
-                // Show grid again after export
-                setShowGridForExport(true)
-            }
-            img.src = svgUrl
-        }, 0)
-    }
+    const { showGridForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
 
     const pendingStation =
         pendingStationId
@@ -462,32 +371,15 @@ export function EditorCanvas() {
         addStation(snapped.x, snapped.y)
     }
 
-    useEffect(() => {
-        const down = (e: KeyboardEvent) => {
-            if (e.code === 'Space') {
-                setSpacePressed(true)
-            }
-            if ((e.code === 'Delete' || e.code === 'Backspace') && selectedStationId && !spacePressed) {
-                e.preventDefault()
+    const { spacePressed } = useEditorKeyboardShortcuts({
+        selectedStationId,
+        onDeleteSelected: () => {
+            if (selectedStationId) {
                 deleteStation(selectedStationId)
                 setSelectedStationId(null)
             }
-        }
-
-        const up = (e: KeyboardEvent) => {
-            if (e.code === 'Space') {
-                setSpacePressed(false)
-            }
-        }
-
-        window.addEventListener('keydown', down)
-        window.addEventListener('keyup', up)
-
-        return () => {
-            window.removeEventListener('keydown', down)
-            window.removeEventListener('keyup', up)
-        }
-    }, [selectedStationId, spacePressed, deleteStation])
+        },
+    })
 
     return (
         <div className="editor-canvas">
