@@ -144,7 +144,7 @@ describe('SegmentLayer', () => {
         expect(paths[0]).toHaveAttribute('stroke-width', '8')
     })
 
-    it('generates correct path data for segment with bend points', () => {
+    it('generates path data with endpoints trimmed by station radius', () => {
         const segments: Segment[] = [
             {
                 id: 'seg1',
@@ -164,6 +164,19 @@ describe('SegmentLayer', () => {
         )
 
         const paths = container.querySelectorAll('path')
-        expect(paths[0]).toHaveAttribute('d', 'M 0 0 L 50 50 L 100 100')
+        const d = paths[0].getAttribute('d') ?? ''
+
+        // Diagonal segment of length sqrt(50^2 + 50^2) ≈ 70.71.
+        // Trim 8 px from each end => start ≈ (5.657, 5.657), end ≈ (94.343, 94.343).
+        // Interior bend point (50, 50) is preserved.
+        const match = d.match(/^M ([\d.]+) ([\d.]+) L 50 50 L ([\d.]+) ([\d.]+)$/)
+        expect(match).not.toBeNull()
+        if (match) {
+            const [, sx, sy, ex, ey] = match
+            expect(parseFloat(sx)).toBeCloseTo(5.66, 1)
+            expect(parseFloat(sy)).toBeCloseTo(5.66, 1)
+            expect(parseFloat(ex)).toBeCloseTo(94.34, 1)
+            expect(parseFloat(ey)).toBeCloseTo(94.34, 1)
+        }
     })
 })

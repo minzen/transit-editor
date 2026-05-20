@@ -1,6 +1,8 @@
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import { offsetPath } from '../geometry/offsetPath'
+import { trimPolyline } from '../geometry/trimPolyline'
+import { STATION_RADIUS } from './stationConstants'
 
 type Props = {
   segments: Segment[]
@@ -16,6 +18,10 @@ export function SegmentLayer({
   return (
     <>
       {segments.map((segment) => {
+        // Trim segment endpoints inward so lines terminate at the station
+        // outline (circle radius / capsule short-edge), not at the station centre.
+        const trimmed = trimPolyline(segment.points, STATION_RADIUS, STATION_RADIUS)
+
         // Render the segment once for each line it belongs to
         return segment.lineIds.map((lineId, index) => {
           const line = lines[lineId]
@@ -30,7 +36,7 @@ export function SegmentLayer({
             : 0
 
           // Calculate the actual offset path points using our miter joints algorithm
-          const offsetPoints = offsetPath(segment.points, offsetDistance)
+          const offsetPoints = offsetPath(trimmed, offsetDistance)
 
           const d = offsetPoints
             .map((p, pIndex) =>

@@ -1,6 +1,7 @@
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { EditorTool } from '../store/editorStore'
+import { STATION_RADIUS } from './stationConstants'
 
 type Props = {
     stations: Record<string, Station>
@@ -12,8 +13,6 @@ type Props = {
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
 }
-
-const STATION_RADIUS = 8
 
 /**
  * Calculate the average axis angle (in degrees) of all segments connected to a station.
