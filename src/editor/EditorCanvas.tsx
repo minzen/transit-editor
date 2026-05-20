@@ -1,12 +1,10 @@
 import { useRef, useState } from 'react'
-import { screenToWorld } from '../viewport/coordinates'
-import type { Point } from '../types/geometry'
 
 import { useEditorStore } from '../store/editorStore'
-import { snapPointToGrid } from '../geometry/snap'
-import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
+import { snapPointToOctolinear } from '../geometry/octolinear'
 import { useMapExport } from './useMapExport'
 import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
+import { useCanvasInteractions } from './useCanvasInteractions'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
@@ -14,7 +12,6 @@ import { PreviewLine } from '../renderer/PreviewLine'
 import { StationRenderer } from '../renderer/StationRenderer'
 
 import { EditorToolbar } from './EditorToolbar'
-import { isPointInsideStation } from '../utils/stationUtils'
 
 import './EditorCanvas.css'
 
@@ -28,13 +25,8 @@ export function EditorCanvas() {
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
     const lines = useEditorStore((s) => s.lines)
-    const addStation = useEditorStore((s) => s.addStation)
-    const moveStation = useEditorStore(
-        (s) => s.moveStation
-    )
 
     const viewport = useEditorStore((s) => s.viewport)
-    const setViewport = useEditorStore((s) => s.setViewport)
     const zoomInStore = useEditorStore((s) => s.zoomIn)
     const zoomOutStore = useEditorStore((s) => s.zoomOut)
     const resetViewport = useEditorStore((s) => s.resetViewport)
@@ -108,34 +100,7 @@ export function EditorCanvas() {
         '#616161',
     ]
 
-    const [pointerWorldPosition, setPointerWorldPosition] =
-        useState<Point | null>(null)
-
     const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
-
-    const [draggingStationId, setDraggingStationId] =
-        useState<string | null>(null)
-
-    const [draggingBendPoint, setDraggingBendPoint] = useState<{
-        segmentId: string
-        pointIndex: number
-    } | null>(null)
-
-    const [isPanning, setIsPanning] =
-        useState(false)
-
-    const [lastPointer, setLastPointer] =
-        useState({
-            x: 0,
-            y: 0,
-        })
-
-    const stationDragStartRef = useRef<{
-        x: number
-        y: number
-    } | null>(null)
-
-    const suppressNextClickRef = useRef(false)
 
     const svgRef = useRef<SVGSVGElement>(null)
 
@@ -151,10 +116,6 @@ export function EditorCanvas() {
         (s) => s.setStationName
     )
 
-    const updateSegmentPoint = useEditorStore(
-        (s) => s.updateSegmentPoint
-    )
-
     const addLine = useEditorStore((s) => s.addLine)
 
     const undo = useEditorStore((s) => s.undo)
@@ -164,6 +125,29 @@ export function EditorCanvas() {
     const futureStates = useEditorStore((s) => s.futureStates)
 
     const { showGridForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
+
+    const { spacePressed } = useEditorKeyboardShortcuts({
+        selectedStationId,
+        onDeleteSelected: () => {
+            if (selectedStationId) {
+                deleteStation(selectedStationId)
+                setSelectedStationId(null)
+            }
+        },
+    })
+
+    const {
+        pointerWorldPosition,
+        setPointerWorldPosition,
+        isPanning,
+        setDraggingStationId,
+        stationDragStartRef,
+        handleWheel,
+        handlePointerDown,
+        handlePointerMove,
+        handlePointerUp,
+        handleClick,
+    } = useCanvasInteractions({ spacePressed })
 
     const pendingStation =
         pendingStationId
@@ -178,208 +162,6 @@ export function EditorCanvas() {
             )
             : null
 
-    const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
-        event.preventDefault()
-
-        const rect = event.currentTarget.getBoundingClientRect()
-
-        const mouseX = event.clientX - rect.left
-        const mouseY = event.clientY - rect.top
-
-        const worldBefore = screenToWorld(mouseX, mouseY, viewport)
-
-        const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1
-        const newZoom = viewport.zoom * zoomFactor
-
-        const newOffsetX = mouseX - worldBefore.x * newZoom
-        const newOffsetY = mouseY - worldBefore.y * newZoom
-
-        setViewport({
-            zoom: newZoom,
-            offsetX: newOffsetX,
-            offsetY: newOffsetY,
-        })
-    }
-
-    const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
-        if (spacePressed) {
-            setIsPanning(true)
-            setLastPointer({
-                x: event.clientX,
-                y: event.clientY,
-            })
-        }
-    }
-
-    const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
-        if (isPanning) {
-            const dx = event.clientX - lastPointer.x
-            const dy = event.clientY - lastPointer.y
-
-            setViewport({
-                ...viewport,
-                offsetX: viewport.offsetX + dx,
-                offsetY: viewport.offsetY + dy,
-            })
-
-            setLastPointer({
-                x: event.clientX,
-                y: event.clientY,
-            })
-
-            return
-        }
-
-        const rect = event.currentTarget.getBoundingClientRect()
-        const x = event.clientX - rect.left
-        const y = event.clientY - rect.top
-
-        const point = screenToWorld(x, y, viewport)
-        setPointerWorldPosition(point)
-
-        if (draggingBendPoint) {
-            const segment = segments[draggingBendPoint.segmentId]
-            if (segment) {
-                const fromStation = stations[segment.fromStationId]
-                const toStation = stations[segment.toStationId]
-
-                // First snap to grid, then to octolinear angles
-                const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
-
-                let snappedPoint: { x: number; y: number }
-
-                if (fromStation && toStation) {
-                    // Snap to the intersection of octolinear directions from both stations
-                    // This ensures the bend point stays on valid octolinear paths (45°, 90°, etc.)
-                    // relative to both stations, creating proper L-shaped or diagonal paths
-                    const fromSnap = snapPointToOctolinear(fromStation, gridSnapped)
-                    const toSnap = snapPointToOctolinear(toStation, gridSnapped)
-
-                    // Find the intersection point of the two octolinear lines
-                    // This gives us the point where lines from both stations at octolinear
-                    // angles would meet, ensuring the bend point is valid for both directions
-                    const intersection = findLineIntersection(fromStation, fromSnap, toStation, toSnap)
-                    if (intersection) {
-                        snappedPoint = intersection
-                    } else {
-                        // Fallback to grid snap if lines are parallel (e.g., both horizontal)
-                        snappedPoint = gridSnapped
-                    }
-                } else {
-                    snappedPoint = gridSnapped
-                }
-
-                updateSegmentPoint(
-                    draggingBendPoint.segmentId,
-                    draggingBendPoint.pointIndex,
-                    snappedPoint.x,
-                    snappedPoint.y
-                )
-            }
-            return
-        }
-
-        if (!draggingStationId) return
-
-        if (stationDragStartRef.current) {
-            const dx = event.clientX - stationDragStartRef.current.x
-            const dy = event.clientY - stationDragStartRef.current.y
-
-            if (Math.hypot(dx, dy) > 3) {
-                suppressNextClickRef.current = true
-            }
-        }
-
-        const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
-
-        // Snap to octolinear angles from connected stations
-        const stationIds = Object.keys(stations)
-        let snapped = gridSnapped
-        if (stationIds.length > 1) { // Only snap if there are other stations
-            // Find connected stations (stations that share a segment with this one)
-            const connectedStations = Object.values(segments)
-                .filter(seg => seg.fromStationId === draggingStationId || seg.toStationId === draggingStationId)
-                .map(seg => seg.fromStationId === draggingStationId ? stations[seg.toStationId] : stations[seg.fromStationId])
-                .filter(s => s !== undefined)
-
-            if (connectedStations.length > 0) {
-                // Snap to octolinear from the first connected station, then re-snap to grid
-                // so the final position always lands on a grid intersection
-                const octoSnapped = snapPointToOctolinear(connectedStations[0], gridSnapped)
-                snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
-            }
-        }
-
-        // Prevent moving station inside another station
-        if (isPointInsideStation(snapped.x, snapped.y, stations, draggingStationId)) {
-            return
-        }
-
-        moveStation(draggingStationId, snapped.x, snapped.y)
-    }
-
-    const handlePointerUp = () => {
-        setDraggingStationId(null)
-        stationDragStartRef.current = null
-        setDraggingBendPoint(null)
-        setIsPanning(false)
-    }
-
-    const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
-        if (spacePressed) return
-        if (activeTool !== 'station') return
-
-        if (suppressNextClickRef.current) {
-            suppressNextClickRef.current = false
-            return
-        }
-
-        const rect = event.currentTarget.getBoundingClientRect()
-        const x = event.clientX - rect.left
-        const y = event.clientY - rect.top
-
-        const point = screenToWorld(x, y, viewport)
-        const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
-
-        // Snap to octolinear angle from nearest station if any exist
-        const stationIds = Object.keys(stations)
-        let snapped = gridSnapped
-        if (stationIds.length > 0) {
-            // Find nearest station
-            let nearestStation: { x: number; y: number } | null = null
-            let nearestDist = Infinity
-            for (const stationId of stationIds) {
-                const station = stations[stationId]
-                const dist = Math.hypot(station.x - gridSnapped.x, station.y - gridSnapped.y)
-                if (dist < nearestDist) {
-                    nearestDist = dist
-                    nearestStation = station
-                }
-            }
-            if (nearestStation && nearestDist < 500) { // Only snap if within reasonable distance
-                // Snap octolinear, then re-snap to grid so the final position is a grid intersection
-                const octoSnapped = snapPointToOctolinear(nearestStation, gridSnapped)
-                snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
-            }
-        }
-
-        // Prevent placing station inside another station
-        if (isPointInsideStation(snapped.x, snapped.y, stations)) {
-            return
-        }
-
-        addStation(snapped.x, snapped.y)
-    }
-
-    const { spacePressed } = useEditorKeyboardShortcuts({
-        selectedStationId,
-        onDeleteSelected: () => {
-            if (selectedStationId) {
-                deleteStation(selectedStationId)
-                setSelectedStationId(null)
-            }
-        },
-    })
 
     return (
         <div className="editor-canvas">
