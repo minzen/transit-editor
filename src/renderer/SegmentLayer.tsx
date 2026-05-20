@@ -1,5 +1,6 @@
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
+import { offsetPath } from '../geometry/offsetPath'
 
 type Props = {
   segments: Segment[]
@@ -15,18 +16,29 @@ export function SegmentLayer({
   return (
     <>
       {segments.map((segment) => {
-        const d = segment.points
-          .map((p, index) =>
-            index === 0
-              ? `M ${p.x} ${p.y}`
-              : `L ${p.x} ${p.y}`
-          )
-          .join(' ')
-
         // Render the segment once for each line it belongs to
-        return segment.lineIds.map((lineId) => {
+        return segment.lineIds.map((lineId, index) => {
           const line = lines[lineId]
           if (!line) return null
+
+          // Calculate parallel offset distance for this line
+          const totalLines = segment.lineIds.length
+          // Line spacing is slightly larger than the line width so they sit perfectly adjacent
+          const spacing = lineWidth + 1.5
+          const offsetDistance = totalLines > 1
+            ? (index - (totalLines - 1) / 2) * spacing
+            : 0
+
+          // Calculate the actual offset path points using our miter joints algorithm
+          const offsetPoints = offsetPath(segment.points, offsetDistance)
+
+          const d = offsetPoints
+            .map((p, pIndex) =>
+              pIndex === 0
+                ? `M ${p.x} ${p.y}`
+                : `L ${p.x} ${p.y}`
+            )
+            .join(' ')
 
           return (
             <path

@@ -658,6 +658,22 @@ export const useEditorStore = create<EditorState>()(
                 gridCellsWidth: state.gridCellsWidth,
                 gridCellsHeight: state.gridCellsHeight,
             }),
+            merge: (persistedState, currentState) => {
+                // Validate persisted grid values to prevent corrupted localStorage values
+                // from breaking grid snapping
+                const persisted = (persistedState ?? {}) as Partial<EditorState>
+                const clampGrid = (value: unknown, fallback: number): number => {
+                    const num = typeof value === 'number' && Number.isFinite(value) ? value : fallback
+                    return Math.max(10, Math.min(1000, num))
+                }
+                return {
+                    ...currentState,
+                    ...persisted,
+                    gridCellSize: clampGrid(persisted.gridCellSize, currentState.gridCellSize),
+                    gridCellsWidth: clampGrid(persisted.gridCellsWidth, currentState.gridCellsWidth),
+                    gridCellsHeight: clampGrid(persisted.gridCellsHeight, currentState.gridCellsHeight),
+                }
+            },
         },
     ),
 )
