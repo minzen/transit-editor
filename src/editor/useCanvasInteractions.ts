@@ -10,6 +10,13 @@ type Args = {
     spacePressed: boolean
 }
 
+// Margin (in screen pixels) of the grid that must remain visible when panning,
+// so the user cannot accidentally pan the grid completely off-screen.
+const PAN_VISIBILITY_MARGIN = 100
+
+const clamp = (value: number, min: number, max: number): number =>
+    Math.max(min, Math.min(max, value))
+
 /**
  * Encapsulates the SVG canvas pointer/wheel/click event handlers and the
  * interaction state they share (panning, dragging stations, dragging bend
@@ -26,10 +33,39 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const viewport = useEditorStore((s) => s.viewport)
     const setViewport = useEditorStore((s) => s.setViewport)
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
+    const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
+    const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const activeTool = useEditorStore((s) => s.activeTool)
     const addStation = useEditorStore((s) => s.addStation)
     const moveStation = useEditorStore((s) => s.moveStation)
     const updateSegmentPoint = useEditorStore((s) => s.updateSegmentPoint)
+
+    const worldWidth = gridCellsWidth * gridCellSize
+    const worldHeight = gridCellsHeight * gridCellSize
+
+    const clampToGridBounds = (point: { x: number; y: number }) => ({
+        x: clamp(point.x, 0, worldWidth),
+        y: clamp(point.y, 0, worldHeight),
+    })
+
+    const clampPanOffset = (
+        offsetX: number,
+        offsetY: number,
+        svgWidth: number,
+        svgHeight: number,
+        zoom: number
+    ) => ({
+        offsetX: clamp(
+            offsetX,
+            PAN_VISIBILITY_MARGIN - worldWidth * zoom,
+            svgWidth - PAN_VISIBILITY_MARGIN
+        ),
+        offsetY: clamp(
+            offsetY,
+            PAN_VISIBILITY_MARGIN - worldHeight * zoom,
+            svgHeight - PAN_VISIBILITY_MARGIN
+        ),
+    })
 
     const [pointerWorldPosition, setPointerWorldPosition] = useState<Point | null>(null)
     const [draggingStationId, setDraggingStationId] = useState<string | null>(null)
@@ -81,10 +117,19 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             const dx = event.clientX - lastPointer.x
             const dy = event.clientY - lastPointer.y
 
+            const rect = event.currentTarget.getBoundingClientRect()
+            const clamped = clampPanOffset(
+                viewport.offsetX + dx,
+                viewport.offsetY + dy,
+                rect.width,
+                rect.height,
+                viewport.zoom
+            )
+
             setViewport({
                 ...viewport,
-                offsetX: viewport.offsetX + dx,
-                offsetY: viewport.offsetY + dy,
+                offsetX: clamped.offsetX,
+                offsetY: clamped.offsetY,
             })
 
             setLastPointer({
@@ -172,6 +217,9 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             }
         }
 
+        // Clamp to grid bounds so dragged stations stay inside the editable area
+        snapped = clampToGridBounds(snapped)
+
         // Prevent moving station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations, draggingStationId)) {
             return
@@ -224,6 +272,9 @@ export function useCanvasInteractions({ spacePressed }: Args) {
                 snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
             }
         }
+
+        // Clamp click position to the grid area so stations always land inside
+        snapped = clampToGridBounds(snapped)
 
         // Prevent placing station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations)) {
