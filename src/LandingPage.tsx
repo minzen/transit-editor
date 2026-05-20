@@ -199,6 +199,31 @@ export function LandingPage() {
                     <Typography variant="body2" sx={{ mt: 1 }}>
                         © 2026 Transit Map Editor. Open source and free to use.
                     </Typography>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <Typography
+                            variant="body2"
+                            component="a"
+                            href="https://github.com/minzen/transit-editor"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ color: 'primary.light', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                        >
+                            GitHub Repository
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: 'grey.500' }}>
+                            •
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            component="a"
+                            href="https://issues.transit-map-editor.online/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ color: 'primary.light', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                        >
+                            Report Issues
+                        </Typography>
+                    </Box>
                 </Container>
             </Box>
         </Box>
