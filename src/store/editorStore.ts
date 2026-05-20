@@ -631,13 +631,19 @@ export const useEditorStore = create<EditorState>()(
         set({ lineWidth: width }),
 
     setGridCellSize: (size) =>
-        set({ gridCellSize: size }),
+        set(() => ({
+            gridCellSize: Math.max(10, Math.min(1000, size)),
+        })),
 
     setGridCellsWidth: (width) =>
-        set({ gridCellsWidth: width }),
+        set(() => ({
+            gridCellsWidth: Math.max(10, Math.min(1000, width)),
+        })),
 
     setGridCellsHeight: (height) =>
-        set({ gridCellsHeight: height }),
+        set(() => ({
+            gridCellsHeight: Math.max(10, Math.min(1000, height)),
+        })),
 
 }),
         {
