@@ -10,7 +10,7 @@ Items are ordered by impact-to-effort ratio. Each item lists the rationale, the 
 
 ### 1.1 Line endpoints meet the station capsule edge cleanly
 
-**Status**: Pending
+**Status**: ✅ Done (commit `d069b94`)
 
 **Problem**: `SegmentLayer` offsets the entire polyline (including endpoints) perpendicular to the segment direction. The station, however, stays at the original centerline. As a result, parallel lines appear to "float" through or beside the capsule rather than terminating cleanly at its edge.
 
@@ -119,7 +119,7 @@ Use this section to record commit hashes when items are completed:
 
 | Item | Status | Commit |
 |---|---|---|
-| 1.1 Line endpoint trimming | Pending | — |
+| 1.1 Line endpoint trimming | ✅ Done | `d069b94` |
 | 1.2 Bend point editing | Pending | — |
 | 2.1 Line bullet badges | Pending | — |
 | 2.2 Configurable label placement | Pending | — |
