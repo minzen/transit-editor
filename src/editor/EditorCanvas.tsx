@@ -394,8 +394,10 @@ export function EditorCanvas() {
                 .filter(s => s !== undefined)
 
             if (connectedStations.length > 0) {
-                // Snap to octolinear from the first connected station
-                snapped = snapPointToOctolinear(connectedStations[0], gridSnapped)
+                // Snap to octolinear from the first connected station, then re-snap to grid
+                // so the final position always lands on a grid intersection
+                const octoSnapped = snapPointToOctolinear(connectedStations[0], gridSnapped)
+                snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
             }
         }
 
@@ -446,7 +448,9 @@ export function EditorCanvas() {
                 }
             }
             if (nearestStation && nearestDist < 500) { // Only snap if within reasonable distance
-                snapped = snapPointToOctolinear(nearestStation, gridSnapped)
+                // Snap octolinear, then re-snap to grid so the final position is a grid intersection
+                const octoSnapped = snapPointToOctolinear(nearestStation, gridSnapped)
+                snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
             }
         }
 
@@ -597,6 +601,8 @@ export function EditorCanvas() {
 
                     <StationRenderer
                         stations={stations}
+                        segments={segments}
+                        lineWidth={lineWidth}
                         activeTool={activeTool}
                         selectedStationId={selectedStationId}
                         pendingStationId={pendingStationId}

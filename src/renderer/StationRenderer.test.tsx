@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, fireEvent } from '@testing-library/react'
 import { StationRenderer } from './StationRenderer'
 import type { Station } from '../model/station'
+import type { Segment } from '../model/segment'
 import type { EditorTool } from '../store/editorStore'
 
 describe('StationRenderer', () => {
@@ -11,11 +12,15 @@ describe('StationRenderer', () => {
         st3: { id: 'st3', x: 300, y: 300, name: 'Station 3' },
     }
 
+    const mockSegments: Record<string, Segment> = {}
+
     const mockOnStationPointerDown = vi.fn()
     const mockOnStationDoubleClick = vi.fn()
 
     const defaultProps = {
         stations: mockStations,
+        segments: mockSegments,
+        lineWidth: 4,
         activeTool: 'select' as EditorTool,
         selectedStationId: null,
         pendingStationId: null,
@@ -129,6 +134,36 @@ describe('StationRenderer', () => {
         circles.forEach(circle => {
             expect(circle).toHaveAttribute('fill', '#111')
             expect(circle).toHaveAttribute('r', '8')
+        })
+    })
+
+    it('renders capsule rect for stations connected to multiple lines', () => {
+        const segmentsWithMultipleLines: Record<string, Segment> = {
+            seg1: {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1', 'line2'],
+                points: [
+                    { x: 100, y: 100 },
+                    { x: 200, y: 200 },
+                ],
+            },
+        }
+        const { container } = render(
+            <StationRenderer
+                {...defaultProps}
+                segments={segmentsWithMultipleLines}
+            />
+        )
+
+        const rects = container.querySelectorAll('rect')
+        // st1 and st2 are both transfer stations with 2 lines -> 2 capsules
+        expect(rects.length).toBe(2)
+        rects.forEach(rect => {
+            expect(rect).toHaveAttribute('fill', '#111')
+            expect(rect).toHaveAttribute('rx')
+            expect(rect).toHaveAttribute('transform')
         })
     })
 })
