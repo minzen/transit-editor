@@ -232,7 +232,7 @@ export function LandingPage() {
                         <Typography
                             variant="body2"
                             component="a"
-                            href="https://issues.transit-map-editor.online/"
+                            href="https://issues.transit-map-editor.online/projects/transit-map-editor/issues"
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{ color: 'primary.light', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
