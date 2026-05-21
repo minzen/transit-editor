@@ -23,7 +23,7 @@ Items are ordered by impact-to-effort ratio. Each item lists the rationale, the 
 
 ### 1.2 Bend point editing (add / remove)
 
-**Status**: Pending
+**Status**: ✅ Done (commit `0e92361`)
 
 **Problem**: `BendPointRenderer.tsx` exists with tests, but it is **not** rendered by `EditorCanvas.tsx`. Users cannot add new bend points to an existing segment, nor remove existing ones.
 
@@ -120,7 +120,7 @@ Use this section to record commit hashes when items are completed:
 | Item | Status | Commit |
 |---|---|---|
 | 1.1 Line endpoint trimming | ✅ Done | `d069b94` |
-| 1.2 Bend point editing | Pending | — |
+| 1.2 Bend point editing | ✅ Done | `0e92361` |
 | 2.1 Line bullet badges | Pending | — |
 | 2.2 Configurable label placement | Pending | — |
 | 3.1 Line styles / transit modes | Pending | — |
