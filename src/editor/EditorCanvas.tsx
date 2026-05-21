@@ -316,6 +316,7 @@ export function EditorCanvas() {
                     <StationRenderer
                         stations={stations}
                         segments={segments}
+                        lines={lines}
                         lineWidth={lineWidth}
                         activeTool={activeTool}
                         selectedStationId={selectedStationId}

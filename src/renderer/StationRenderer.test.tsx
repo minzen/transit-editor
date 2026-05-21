@@ -166,4 +166,64 @@ describe('StationRenderer', () => {
             expect(rect).toHaveAttribute('transform')
         })
     })
+
+    it('renders line code badges for connected lines that have a code', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A' },
+            s2: { id: 's2', x: 200, y: 100, name: 'B' },
+        }
+        const segments: Record<string, Segment> = {
+            seg1: {
+                id: 'seg1',
+                fromStationId: 's1',
+                toStationId: 's2',
+                lineIds: ['L1', 'L2'],
+                points: [{ x: 100, y: 100 }, { x: 200, y: 100 }],
+            },
+        }
+        const lines = {
+            L1: { id: 'L1', name: 'Metro 1', color: '#1976d2', code: 'M1' },
+            L2: { id: 'L2', name: 'Metro 2', color: '#d32f2f', code: '2' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} segments={segments} lines={lines} />
+        )
+
+        const badgeTexts = Array.from(container.querySelectorAll('text'))
+            .map((t) => t.textContent)
+        // Each station should show both line codes
+        expect(badgeTexts).toContain('M1')
+        expect(badgeTexts).toContain('2')
+        // Two stations × two badges = 4 badge codes total
+        const m1count = badgeTexts.filter((t) => t === 'M1').length
+        expect(m1count).toBe(2)
+    })
+
+    it('omits line code badges for lines without a code', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A' },
+            s2: { id: 's2', x: 200, y: 100, name: 'B' },
+        }
+        const segments: Record<string, Segment> = {
+            seg1: {
+                id: 'seg1',
+                fromStationId: 's1',
+                toStationId: 's2',
+                lineIds: ['L1'],
+                points: [{ x: 100, y: 100 }, { x: 200, y: 100 }],
+            },
+        }
+        const lines = {
+            L1: { id: 'L1', name: 'Plain Line', color: '#1976d2' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} segments={segments} lines={lines} />
+        )
+
+        // Station names render as text elements, but no badges => no extra
+        // text nodes beyond the station names themselves.
+        const texts = Array.from(container.querySelectorAll('text'))
+            .map((t) => t.textContent)
+        expect(texts).toEqual(['A', 'B'])
+    })
 })

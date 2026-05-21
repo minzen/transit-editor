@@ -65,8 +65,9 @@ type EditorState = {
     removeBendPoint: (segmentId: string, pointIndex: number) => void
     addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
     deleteSegment: (id: string) => void
-    addLine: (name: string, color: string) => void
+    addLine: (name: string, color: string, code?: string) => void
     setLineName: (id: string, name: string) => void
+    setLineCode: (id: string, code: string) => void
     clear: () => void
     undo: () => void
     redo: () => void
@@ -90,8 +91,8 @@ export const useEditorStore = create<EditorState>()(
     viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
     lineWidth: 10,
     gridCellSize: 50,
-    gridCellsWidth: 40,
-    gridCellsHeight: 40,
+    gridCellsWidth: 80,
+    gridCellsHeight: 80,
     pastStates: [],
     futureStates: [],
 
@@ -537,7 +538,7 @@ export const useEditorStore = create<EditorState>()(
             }
         }),
 
-    addLine: (name, color) =>
+    addLine: (name, color, code) =>
         set((state) => {
             const id = nanoid()
 
@@ -552,6 +553,32 @@ export const useEditorStore = create<EditorState>()(
                         id,
                         name,
                         color,
+                        code: code && code.length > 0 ? code : undefined,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setLineCode: (id, code) =>
+        set((state) => {
+            const line = state.lines[id]
+            if (!line) {
+                return state
+            }
+
+            const trimmed = code.trim().slice(0, 4)
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: state.stations,
+                segments: state.segments,
+                lines: {
+                    ...state.lines,
+                    [id]: {
+                        ...line,
+                        code: trimmed.length > 0 ? trimmed : undefined,
                     },
                 },
                 pastStates: [...state.pastStates, currentSnapshot],

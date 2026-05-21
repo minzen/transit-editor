@@ -1,11 +1,13 @@
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
+import type { Line } from '../model/line'
 import type { EditorTool } from '../store/editorStore'
 import { STATION_RADIUS } from './stationConstants'
 
 type Props = {
     stations: Record<string, Station>
     segments: Record<string, Segment>
+    lines?: Record<string, Line>
     lineWidth: number
     activeTool: EditorTool
     selectedStationId: string | null
@@ -13,6 +15,9 @@ type Props = {
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
 }
+
+const BADGE_RADIUS = 9
+const BADGE_SPACING = BADGE_RADIUS * 2 + 4
 
 /**
  * Calculate the average axis angle (in degrees) of all segments connected to a station.
@@ -62,6 +67,7 @@ function getStationAxisAngleDeg(
 export function StationRenderer({
     stations,
     segments,
+    lines,
     lineWidth,
     activeTool,
     selectedStationId,
@@ -69,16 +75,19 @@ export function StationRenderer({
     onStationPointerDown,
     onStationDoubleClick,
 }: Props) {
-    // Helper: count unique lines connected to a station
-    const countConnectedLines = (stationId: string): number => {
-        const connectedLineIds = new Set<string>()
+    // Helper: get the unique line ids connected to a station, in stable order.
+    const getConnectedLineIds = (stationId: string): string[] => {
+        const connected = new Set<string>()
         for (const segment of Object.values(segments)) {
             if (segment.fromStationId === stationId || segment.toStationId === stationId) {
-                segment.lineIds.forEach((lineId) => connectedLineIds.add(lineId))
+                segment.lineIds.forEach((lineId) => connected.add(lineId))
             }
         }
-        return connectedLineIds.size
+        return Array.from(connected)
     }
+
+    const countConnectedLines = (stationId: string): number =>
+        getConnectedLineIds(stationId).length
 
     return (
         <>
@@ -193,6 +202,45 @@ export function StationRenderer({
                                 {s.name}
                             </text>
                         )}
+
+                        {/* Line code bullets: small coloured circles below the station */}
+                        {lines && (() => {
+                            const codedLines = getConnectedLineIds(s.id)
+                                .map((id) => lines[id])
+                                .filter((line): line is Line => Boolean(line?.code))
+                            if (codedLines.length === 0) return null
+                            const totalWidth = (codedLines.length - 1) * BADGE_SPACING
+                            const badgeY = s.y + labelOffset + BADGE_RADIUS
+                            return codedLines.map((line, i) => {
+                                const cx = s.x - totalWidth / 2 + i * BADGE_SPACING
+                                return (
+                                    <g
+                                        key={`badge-${s.id}-${line.id}`}
+                                        style={{ pointerEvents: 'none' }}
+                                    >
+                                        <circle
+                                            cx={cx}
+                                            cy={badgeY}
+                                            r={BADGE_RADIUS}
+                                            fill={line.color}
+                                            stroke="#fff"
+                                            strokeWidth={1.5}
+                                        />
+                                        <text
+                                            x={cx}
+                                            y={badgeY}
+                                            textAnchor="middle"
+                                            dominantBaseline="central"
+                                            fontSize={10}
+                                            fontWeight="bold"
+                                            fill="#fff"
+                                        >
+                                            {line.code}
+                                        </text>
+                                    </g>
+                                )
+                            })
+                        })()}
                     </g>
                 )
             })}

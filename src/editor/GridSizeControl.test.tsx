@@ -44,7 +44,7 @@ describe('GridSizeControl', () => {
     const widthInput = screen.getByLabelText('Width')
     fireEvent.change(widthInput, { target: { value: '' } })
     
-    expect(setGridCellsWidth).toHaveBeenCalledWith(40)
+    expect(setGridCellsWidth).toHaveBeenCalledWith(80)
   })
 
   it('resets grid height to default when value is empty', () => {
@@ -55,7 +55,7 @@ describe('GridSizeControl', () => {
     const heightInput = screen.getByLabelText('Height')
     fireEvent.change(heightInput, { target: { value: '' } })
     
-    expect(setGridCellsHeight).toHaveBeenCalledWith(40)
+    expect(setGridCellsHeight).toHaveBeenCalledWith(80)
   })
 
   it('updates grid width when value is 0', () => {
@@ -88,7 +88,7 @@ describe('GridSizeControl', () => {
     const widthInput = screen.getByLabelText('Width')
     fireEvent.change(widthInput, { target: { value: 'abc' } })
     
-    expect(setGridCellsWidth).toHaveBeenCalledWith(40)
+    expect(setGridCellsWidth).toHaveBeenCalledWith(80)
   })
 
   it('resets grid height to default when value is NaN (number input behavior)', () => {
@@ -99,6 +99,6 @@ describe('GridSizeControl', () => {
     const heightInput = screen.getByLabelText('Height')
     fireEvent.change(heightInput, { target: { value: 'abc' } })
     
-    expect(setGridCellsHeight).toHaveBeenCalledWith(40)
+    expect(setGridCellsHeight).toHaveBeenCalledWith(80)
   })
 })

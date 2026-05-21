@@ -14,7 +14,7 @@ export function GridSizeControl({ gridCellsWidth, setGridCellsWidth, gridCellsHe
         
         // Allow empty value for clearing
         if (value === '') {
-            setGridCellsWidth(40) // Reset to default
+            setGridCellsWidth(80) // Reset to default
             return
         }
         
@@ -30,7 +30,7 @@ export function GridSizeControl({ gridCellsWidth, setGridCellsWidth, gridCellsHe
         
         // Allow empty value for clearing
         if (value === '') {
-            setGridCellsHeight(40) // Reset to default
+            setGridCellsHeight(80) // Reset to default
             return
         }
         

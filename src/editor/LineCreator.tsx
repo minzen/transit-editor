@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { TextField, Box, Button, IconButton, Stack, InputAdornment } from '@mui/material'
 import { validateLineName, VALIDATION } from '../validation/constants'
 
@@ -6,10 +7,12 @@ type Props = {
     setNewLineName: (name: string) => void
     newLineColor: string
     setNewLineColor: (color: string) => void
-    addLine: (name: string, color: string) => void
+    addLine: (name: string, color: string, code?: string) => void
     setIsCreatingLine: (creating: boolean) => void
     colorPalette: string[]
 }
+
+const MAX_LINE_CODE_LENGTH = 4
 
 function isValidHexColor(hex: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(hex)
@@ -25,12 +28,18 @@ export function LineCreator({
     colorPalette,
 }: Props) {
     const validation = validateLineName(newLineName)
+    const [newLineCode, setNewLineCode] = useState('')
 
     const handleCreate = () => {
         if (validation.valid) {
-            addLine(validation.sanitized ?? newLineName, newLineColor)
+            addLine(
+                validation.sanitized ?? newLineName,
+                newLineColor,
+                newLineCode.trim() || undefined
+            )
             setNewLineName('')
             setNewLineColor('#1976d2')
+            setNewLineCode('')
             setIsCreatingLine(false)
         }
     }
@@ -120,6 +129,19 @@ export function LineCreator({
                 error={newLineColor !== '' && !isValidHexColor(newLineColor)}
                 helperText={newLineColor !== '' && !isValidHexColor(newLineColor) ? 'Invalid hex color (e.g., #ff0000)' : ''}
             />
+            <TextField
+                value={newLineCode}
+                onChange={(e) => setNewLineCode(e.target.value)}
+                placeholder="Code (optional, e.g. M1)"
+                size="small"
+                sx={{ minWidth: 120 }}
+                slotProps={{
+                    htmlInput: {
+                        maxLength: MAX_LINE_CODE_LENGTH,
+                    },
+                }}
+                helperText="Short badge shown on stations"
+            />
             <Stack direction="row" spacing={0.5}>
                 <Button
                     variant="contained"
@@ -135,6 +157,7 @@ export function LineCreator({
                     onClick={() => {
                         setNewLineName('')
                         setNewLineColor('#1976d2')
+                        setNewLineCode('')
                         setIsCreatingLine(false)
                     }}
                 >

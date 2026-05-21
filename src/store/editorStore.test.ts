@@ -391,6 +391,38 @@ describe('editor store', () => {
     expect(updatedState).toEqual(initialState)
   })
 
+  it('addLine stores an optional code field', () => {
+    useEditorStore.getState().addLine('Metro 1', '#1976d2', 'M1')
+    const state = useEditorStore.getState()
+    const lineId = Object.keys(state.lines)[0]
+    expect(state.lines[lineId].code).toBe('M1')
+  })
+
+  it('addLine treats an empty code as undefined', () => {
+    useEditorStore.getState().addLine('No code', '#1976d2', '')
+    const state = useEditorStore.getState()
+    const lineId = Object.keys(state.lines)[0]
+    expect(state.lines[lineId].code).toBeUndefined()
+  })
+
+  it('setLineCode trims and truncates the code', () => {
+    useEditorStore.getState().addLine('Line', '#1976d2')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
+    useEditorStore.getState().setLineCode(lineId, '  ABCDE  ')
+
+    expect(useEditorStore.getState().lines[lineId].code).toBe('ABCD')
+  })
+
+  it('setLineCode clears the code when given an empty string', () => {
+    useEditorStore.getState().addLine('Line', '#1976d2', 'M1')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
+    useEditorStore.getState().setLineCode(lineId, '')
+
+    expect(useEditorStore.getState().lines[lineId].code).toBeUndefined()
+  })
+
   it('clears all data', () => {
     useEditorStore.getState().addStation(100, 200)
     useEditorStore.getState().addStation(300, 400)
