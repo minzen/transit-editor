@@ -1,5 +1,5 @@
-import { Box, Container, Typography, Button, Card, CardContent, CardMedia } from '@mui/material'
-import { ArrowForward, Map, Train, Palette, Undo } from '@mui/icons-material'
+import { Alert, AlertTitle, Box, Chip, Container, Typography, Button, Card, CardContent, CardMedia } from '@mui/material'
+import { ArrowForward, Map, Train, Palette, Undo, Construction } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import editorInterface from './assets/transit-editor-interface.png'
 import editorExample from './assets/transit-editor-example.png'
@@ -23,15 +23,22 @@ export function LandingPage() {
                 }}
             >
                 <Container maxWidth="lg">
-                    <Typography variant="h1" component="h1" sx={{ mb: 3, fontWeight: 700 }}>
-                        Transit Map Editor
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+                        <Typography variant="h1" component="h1" sx={{ fontWeight: 700 }}>
+                            Transit Map Editor
+                        </Typography>
+                        <Chip
+                            icon={<Construction />}
+                            label="Early dev version"
+                            color="warning"
+                            sx={{ fontWeight: 600 }}
+                        />
+                    </Box>
                     <Typography variant="h4" component="h2" sx={{ mb: 4, opacity: 0.95 }}>
                         Create beautiful, schematic transit maps directly in your browser
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 6, maxWidth: 600, opacity: 0.9 }}>
-                        A powerful, browser-based editor for designing schematic transit maps.
-                        Perfect for urban planners, transit enthusiasts, and anyone who wants to visualize transportation networks.
+                        A browser-based editor for sketching schematic transit maps. Work in progress.
                     </Typography>
                     <Button
                         variant="contained"
@@ -45,6 +52,15 @@ export function LandingPage() {
                     </Button>
                 </Container>
             </Box>
+
+            {/* Early dev notice */}
+            <Container maxWidth="lg" sx={{ pt: 6 }}>
+                <Alert severity="warning" icon={<Construction />} sx={{ alignItems: 'center' }}>
+                    <AlertTitle sx={{ fontWeight: 700 }}>Early development version</AlertTitle>
+                    This is an early, in-development build. Expect rough edges, missing features, and breaking changes.
+                    Bug reports and feedback are very welcome on the issue tracker.
+                </Alert>
+            </Container>
 
             {/* Features Section */}
             <Container maxWidth="lg" sx={{ py: 12 }}>
@@ -62,7 +78,7 @@ export function LandingPage() {
                                     Intuitive Canvas
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Zoom, pan, and interact with your map using intuitive mouse and keyboard controls.
+                                    Pan, zoom, and edit with mouse and keyboard.
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -77,7 +93,7 @@ export function LandingPage() {
                                     Octolinear Design
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Automatic snapping to 45° and 90° angles ensures clean, professional-looking maps.
+                                    Snaps segments to 45° and 90° angles.
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -92,7 +108,7 @@ export function LandingPage() {
                                     Multiple Lines
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Create and manage multiple transit lines with custom colors and names.
+                                    Multiple lines with custom colors, names, and optional short codes.
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -107,7 +123,7 @@ export function LandingPage() {
                                     Undo/Redo
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Full undo/redo support lets you experiment freely without fear of mistakes.
+                                    Step backwards and forwards through your edits.
                                 </Typography>
                             </CardContent>
                         </Card>
@@ -133,7 +149,7 @@ export function LandingPage() {
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="h6" gutterBottom>Editor Interface</Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Clean, modern interface with intuitive controls
+                                        The editing canvas with toolbar controls
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -149,7 +165,7 @@ export function LandingPage() {
                                 <CardContent sx={{ p: 3 }}>
                                     <Typography variant="h6" gutterBottom>Exported Map</Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Export your maps as SVG or PNG for sharing
+                                        Export the result as SVG or PNG
                                     </Typography>
                                 </CardContent>
                             </Card>
@@ -175,7 +191,7 @@ export function LandingPage() {
                         Ready to Create Your Transit Map?
                     </Typography>
                     <Typography variant="body1" sx={{ mb: 6, color: 'text.secondary' }}>
-                        Start designing your schematic transit map today. No installation required - everything runs in your browser.
+                        Runs entirely in your browser. No account or installation required.
                     </Typography>
                     <Button
                         variant="contained"
