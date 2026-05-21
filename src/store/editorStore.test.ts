@@ -226,6 +226,96 @@ describe('editor store', () => {
     expect(updatedSegment).toEqual(initialState)
   })
 
+  it('insertBendPoint adds a new vertex into the closest segment edge', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segmentId = Object.keys(useEditorStore.getState().segments)[0]
+    const originalPoints = useEditorStore.getState().segments[segmentId].points
+    const originalLength = originalPoints.length
+
+    useEditorStore.getState().insertBendPoint(segmentId, 100, 50)
+
+    const updated = useEditorStore.getState().segments[segmentId]
+    expect(updated.points).toHaveLength(originalLength + 1)
+    // First and last vertices (station anchors) are preserved
+    expect(updated.points[0]).toEqual(originalPoints[0])
+    expect(updated.points[updated.points.length - 1]).toEqual(
+      originalPoints[originalPoints.length - 1]
+    )
+    // The inserted point is somewhere in the interior
+    const hasInserted = updated.points.some(
+      (p) => p.x === 100 && p.y === 50
+    )
+    expect(hasInserted).toBe(true)
+  })
+
+  it('insertBendPoint records a snapshot in pastStates for undo', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segmentId = Object.keys(useEditorStore.getState().segments)[0]
+    const pastLengthBefore = useEditorStore.getState().pastStates.length
+
+    useEditorStore.getState().insertBendPoint(segmentId, 100, 50)
+
+    expect(useEditorStore.getState().pastStates.length).toBe(pastLengthBefore + 1)
+  })
+
+  it('removeBendPoint removes an interior vertex', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segmentId = Object.keys(useEditorStore.getState().segments)[0]
+    useEditorStore.getState().insertBendPoint(segmentId, 100, 50)
+
+    const beforeRemove = useEditorStore.getState().segments[segmentId].points
+    const interiorIndex = beforeRemove.findIndex(
+      (p) => p.x === 100 && p.y === 50
+    )
+    expect(interiorIndex).toBeGreaterThan(0)
+
+    useEditorStore.getState().removeBendPoint(segmentId, interiorIndex)
+
+    const after = useEditorStore.getState().segments[segmentId].points
+    expect(after).toHaveLength(beforeRemove.length - 1)
+    expect(after.some((p) => p.x === 100 && p.y === 50)).toBe(false)
+  })
+
+  it('removeBendPoint refuses to remove an endpoint', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segmentId = Object.keys(useEditorStore.getState().segments)[0]
+    const before = useEditorStore.getState().segments[segmentId]
+
+    useEditorStore.getState().removeBendPoint(segmentId, 0)
+    useEditorStore.getState().removeBendPoint(
+      segmentId,
+      before.points.length - 1
+    )
+
+    const after = useEditorStore.getState().segments[segmentId]
+    expect(after.points).toEqual(before.points)
+  })
+
   it('undo restores previous state after adding a station', () => {
     useEditorStore.getState().addStation(100, 200)
 

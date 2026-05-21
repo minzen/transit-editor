@@ -87,4 +87,50 @@ describe('BendPointRenderer', () => {
 
         expect(container.firstChild).toBeNull()
     })
+
+    it('renders one handle per interior vertex for segments with 4+ points', () => {
+        const longSegment: Segment[] = [
+            {
+                id: 'segLong',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 50, y: 50 },
+                    { x: 100, y: 100 },
+                    { x: 150, y: 150 },
+                ],
+            },
+        ]
+        const onBendPointDragStart = vi.fn()
+        const { container } = render(
+            <BendPointRenderer segments={longSegment} onBendPointDragStart={onBendPointDragStart} />
+        )
+
+        const circles = container.querySelectorAll('circle')
+        // Two interior vertices: (50,50) and (100,100). Endpoints are excluded.
+        expect(circles).toHaveLength(2)
+        expect(circles[0]).toHaveAttribute('cx', '50')
+        expect(circles[1]).toHaveAttribute('cx', '100')
+    })
+
+    it('calls onBendPointDoubleClick when a bend point is double-clicked', () => {
+        const onBendPointDragStart = vi.fn()
+        const onBendPointDoubleClick = vi.fn()
+        const { container } = render(
+            <BendPointRenderer
+                segments={mockSegments}
+                onBendPointDragStart={onBendPointDragStart}
+                onBendPointDoubleClick={onBendPointDoubleClick}
+            />
+        )
+
+        const circle = container.querySelector('circle')
+        if (circle) {
+            fireEvent.doubleClick(circle)
+        }
+
+        expect(onBendPointDoubleClick).toHaveBeenCalledWith('seg1', 1)
+    })
 })

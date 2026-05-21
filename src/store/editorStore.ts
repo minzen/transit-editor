@@ -7,7 +7,7 @@ import type { Line } from '../model/line'
 import type { Viewport } from '../viewport/coordinates'
 import type { Point } from '../types/geometry'
 import { createOctolinearPath } from '../geometry/octolinear'
-import { isPointNearPolyline } from '../geometry/distance'
+import { isPointNearPolyline, pointToLineSegmentDistance } from '../geometry/distance'
 import { validateLineName, validateStationName } from '../validation/constants'
 
 export type EditorTool = 'select' | 'station' | 'segment'
@@ -61,6 +61,8 @@ type EditorState = {
     setStationName: (id: string, name: string) => void
     deleteStation: (id: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
+    insertBendPoint: (segmentId: string, x: number, y: number) => void
+    removeBendPoint: (segmentId: string, pointIndex: number) => void
     addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
     deleteSegment: (id: string) => void
     addLine: (name: string, color: string) => void
@@ -334,6 +336,89 @@ export const useEditorStore = create<EditorState>()(
 
             const newPoints = [...segment.points]
             newPoints[pointIndex] = { x, y }
+
+            return {
+                stations: state.stations,
+                segments: {
+                    ...state.segments,
+                    [segmentId]: {
+                        ...segment,
+                        points: newPoints,
+                    },
+                },
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    insertBendPoint: (segmentId, x, y) =>
+        set((state) => {
+            const segment = state.segments[segmentId]
+            if (!segment) {
+                return state
+            }
+
+            // Find the polyline edge (i, i+1) closest to the click point.
+            // Insert the new bend point at index (i + 1) so it becomes part of
+            // that edge.
+            const click = { x, y }
+            let bestEdgeIndex = 0
+            let bestDistance = Infinity
+            for (let i = 0; i < segment.points.length - 1; i++) {
+                const d = pointToLineSegmentDistance(
+                    click,
+                    segment.points[i],
+                    segment.points[i + 1]
+                )
+                if (d < bestDistance) {
+                    bestDistance = d
+                    bestEdgeIndex = i
+                }
+            }
+
+            const insertAt = bestEdgeIndex + 1
+            const newPoints = [
+                ...segment.points.slice(0, insertAt),
+                { x, y },
+                ...segment.points.slice(insertAt),
+            ]
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: state.stations,
+                segments: {
+                    ...state.segments,
+                    [segmentId]: {
+                        ...segment,
+                        points: newPoints,
+                    },
+                },
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    removeBendPoint: (segmentId, pointIndex) =>
+        set((state) => {
+            const segment = state.segments[segmentId]
+            if (!segment) {
+                return state
+            }
+
+            // Refuse to remove the endpoints (they are anchored to stations).
+            if (pointIndex <= 0 || pointIndex >= segment.points.length - 1) {
+                return state
+            }
+
+            const newPoints = [
+                ...segment.points.slice(0, pointIndex),
+                ...segment.points.slice(pointIndex + 1),
+            ]
+
+            const currentSnapshot = createSnapshot(state)
 
             return {
                 stations: state.stations,

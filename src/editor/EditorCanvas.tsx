@@ -10,6 +10,10 @@ import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
 import { PreviewLine } from '../renderer/PreviewLine'
 import { StationRenderer } from '../renderer/StationRenderer'
+import { BendPointRenderer } from '../renderer/BendPointRenderer'
+import { screenToWorld } from '../viewport/coordinates'
+import { snapPointToGrid } from '../geometry/snap'
+import { isPointNearPolyline } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
 
@@ -141,6 +145,7 @@ export function EditorCanvas() {
         setPointerWorldPosition,
         isPanning,
         setDraggingStationId,
+        setDraggingBendPoint,
         stationDragStartRef,
         handleWheel,
         handlePointerDown,
@@ -148,6 +153,30 @@ export function EditorCanvas() {
         handlePointerUp,
         handleClick,
     } = useCanvasInteractions({ spacePressed })
+
+    const insertBendPoint = useEditorStore((s) => s.insertBendPoint)
+    const removeBendPoint = useEditorStore((s) => s.removeBendPoint)
+
+    // Double-click on a segment polyline (in select mode) inserts a new bend
+    // point at the click position, snapped to the grid.
+    const handleDoubleClick = (event: React.MouseEvent<SVGSVGElement>) => {
+        if (activeTool !== 'select') return
+
+        const rect = event.currentTarget.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
+        const world = screenToWorld(x, y, viewport)
+        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
+
+        // Hit-test against each segment polyline; threshold is in world units.
+        const threshold = 10 / viewport.zoom
+        for (const segment of Object.values(segments)) {
+            if (isPointNearPolyline(world, segment.points, threshold)) {
+                insertBendPoint(segment.id, snapped.x, snapped.y)
+                return
+            }
+        }
+    }
 
     const pendingStation =
         pendingStationId
@@ -219,6 +248,7 @@ export function EditorCanvas() {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onClick={handleClick}
+                onDoubleClick={handleDoubleClick}
             >
                 <rect
                     width="100%"
@@ -272,6 +302,16 @@ export function EditorCanvas() {
                                 lineColor={lines[selectedLineId]?.color || '#1976d2'}
                             />
                         )}
+
+                    <BendPointRenderer
+                        segments={Object.values(segments)}
+                        onBendPointDragStart={(segmentId, pointIndex) => {
+                            setDraggingBendPoint({ segmentId, pointIndex })
+                        }}
+                        onBendPointDoubleClick={(segmentId, pointIndex) => {
+                            removeBendPoint(segmentId, pointIndex)
+                        }}
+                    />
 
                     <StationRenderer
                         stations={stations}
