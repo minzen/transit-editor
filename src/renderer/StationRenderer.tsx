@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
@@ -14,6 +15,7 @@ type Props = {
     pendingStationId: string | null
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
+    onStationLongPress?: (stationId: string) => void
 }
 
 const BADGE_RADIUS = 9
@@ -74,6 +76,7 @@ export function StationRenderer({
     pendingStationId,
     onStationPointerDown,
     onStationDoubleClick,
+    onStationLongPress,
 }: Props) {
     // Helper: get the unique line ids connected to a station, in stable order.
     const getConnectedLineIds = (stationId: string): string[] => {
@@ -88,6 +91,37 @@ export function StationRenderer({
 
     const countConnectedLines = (stationId: string): number =>
         getConnectedLineIds(stationId).length
+
+    const longPressRef = useRef<{ stationId: string; timer: number; startX: number; startY: number } | null>(null)
+
+    const LONG_PRESS_THRESHOLD_MS = 500
+    const LONG_PRESS_MOVE_THRESHOLD_PX = 10
+
+    const startLongPress = (stationId: string, clientX: number, clientY: number) => {
+        longPressRef.current = {
+            stationId,
+            timer: window.setTimeout(() => {
+                longPressRef.current = null
+                onStationLongPress?.(stationId)
+            }, LONG_PRESS_THRESHOLD_MS),
+            startX: clientX,
+            startY: clientY,
+        }
+    }
+
+    const cancelLongPress = (clientX?: number, clientY?: number) => {
+        if (!longPressRef.current) return
+        if (
+            clientX !== undefined &&
+            clientY !== undefined &&
+            Math.hypot(clientX - longPressRef.current.startX, clientY - longPressRef.current.startY) <=
+                LONG_PRESS_MOVE_THRESHOLD_PX
+        ) {
+            return
+        }
+        window.clearTimeout(longPressRef.current.timer)
+        longPressRef.current = null
+    }
 
     return (
         <>
@@ -161,8 +195,12 @@ export function StationRenderer({
                                 style={{ cursor: 'pointer' }}
                                 transform={`rotate(${capsuleRotationDeg} ${s.x} ${s.y})`}
                                 onPointerDown={(event) => {
+                                    startLongPress(s.id, event.clientX, event.clientY)
                                     onStationPointerDown(s.id, event)
                                 }}
+                                onPointerUp={() => cancelLongPress()}
+                                onPointerMove={(event) => cancelLongPress(event.clientX, event.clientY)}
+                                onPointerLeave={() => cancelLongPress()}
                                 onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     onStationDoubleClick(s.id)
@@ -176,8 +214,12 @@ export function StationRenderer({
                                 fill="#111"
                                 style={{ cursor: 'pointer' }}
                                 onPointerDown={(event) => {
+                                    startLongPress(s.id, event.clientX, event.clientY)
                                     onStationPointerDown(s.id, event)
                                 }}
+                                onPointerUp={() => cancelLongPress()}
+                                onPointerMove={(event) => cancelLongPress(event.clientX, event.clientY)}
+                                onPointerLeave={() => cancelLongPress()}
                                 onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     onStationDoubleClick(s.id)

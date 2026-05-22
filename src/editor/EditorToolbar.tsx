@@ -7,8 +7,8 @@ import { GridSizeControl } from './GridSizeControl'
 import { LineWidthControl } from './LineWidthControl'
 import { HelpDialog } from './HelpDialog'
 
-import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip } from '@mui/material'
-import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen } from '@mui/icons-material'
+import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog } from '@mui/material'
+import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -107,6 +107,9 @@ export function EditorToolbar({
 }: Props) {
     const navigate = useNavigate()
     const [helpOpen, setHelpOpen] = useState(false)
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
 
     return (
         <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, p: 1 }}>
@@ -174,47 +177,101 @@ export function EditorToolbar({
                 </IconButton>
             </Tooltip>
 
-            <Divider orientation="vertical" flexItem />
+            {isMobile ? (
+                <>
+                    <Tooltip title="More">
+                        <IconButton onClick={(e) => setMoreAnchor(e.currentTarget)}>
+                            <MoreVert />
+                        </IconButton>
+                    </Tooltip>
+                    <Popover
+                        open={Boolean(moreAnchor)}
+                        anchorEl={moreAnchor}
+                        onClose={() => setMoreAnchor(null)}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    >
+                        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, minWidth: 200 }}>
+                            <Button onClick={() => { exportAsSVG(); setMoreAnchor(null) }}>Export SVG</Button>
+                            <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>Export PNG</Button>
+                            <Button
+                                onClick={() => {
+                                    if (window.confirm('Are you sure you want to clear all data?')) {
+                                        clear()
+                                        setSelectedLineId(null)
+                                        setBackgroundImage(null)
+                                    }
+                                    setMoreAnchor(null)
+                                }}
+                            >
+                                Clear
+                            </Button>
+                            <Divider />
+                            <BackgroundImageControl
+                                backgroundImage={backgroundImage}
+                                showBackground={showBackground}
+                                setShowBackground={setShowBackground}
+                                setBackgroundImage={setBackgroundImage}
+                            />
+                            <Divider />
+                            <GridSizeControl
+                                gridCellsWidth={gridCellsWidth}
+                                setGridCellsWidth={setGridCellsWidth}
+                                gridCellsHeight={gridCellsHeight}
+                                setGridCellsHeight={setGridCellsHeight}
+                            />
+                            <LineWidthControl
+                                lineWidth={lineWidth}
+                                setLineWidth={setLineWidth}
+                            />
+                        </Box>
+                    </Popover>
+                </>
+            ) : (
+                <>
+                    <Divider orientation="vertical" flexItem />
 
-            <Button onClick={exportAsSVG}>Export SVG</Button>
-            <Button onClick={exportAsPNG}>Export PNG</Button>
+                    <Button onClick={exportAsSVG}>Export SVG</Button>
+                    <Button onClick={exportAsPNG}>Export PNG</Button>
 
-            <Divider orientation="vertical" flexItem />
+                    <Divider orientation="vertical" flexItem />
 
-            <Button
-                onClick={() => {
-                    if (window.confirm('Are you sure you want to clear all data?')) {
-                        clear()
-                        setSelectedLineId(null)
-                        setBackgroundImage(null)
-                    }
-                }}
-            >
-                Clear
-            </Button>
+                    <Button
+                        onClick={() => {
+                            if (window.confirm('Are you sure you want to clear all data?')) {
+                                clear()
+                                setSelectedLineId(null)
+                                setBackgroundImage(null)
+                            }
+                        }}
+                    >
+                        Clear
+                    </Button>
 
-            <Divider orientation="vertical" flexItem />
+                    <Divider orientation="vertical" flexItem />
 
-            <BackgroundImageControl
-                backgroundImage={backgroundImage}
-                showBackground={showBackground}
-                setShowBackground={setShowBackground}
-                setBackgroundImage={setBackgroundImage}
-            />
+                    <BackgroundImageControl
+                        backgroundImage={backgroundImage}
+                        showBackground={showBackground}
+                        setShowBackground={setShowBackground}
+                        setBackgroundImage={setBackgroundImage}
+                    />
 
-            <Divider orientation="vertical" flexItem />
+                    <Divider orientation="vertical" flexItem />
 
-            <GridSizeControl
-                gridCellsWidth={gridCellsWidth}
-                setGridCellsWidth={setGridCellsWidth}
-                gridCellsHeight={gridCellsHeight}
-                setGridCellsHeight={setGridCellsHeight}
-            />
+                    <GridSizeControl
+                        gridCellsWidth={gridCellsWidth}
+                        setGridCellsWidth={setGridCellsWidth}
+                        gridCellsHeight={gridCellsHeight}
+                        setGridCellsHeight={setGridCellsHeight}
+                    />
 
-            <LineWidthControl
-                lineWidth={lineWidth}
-                setLineWidth={setLineWidth}
-            />
+                    <LineWidthControl
+                        lineWidth={lineWidth}
+                        setLineWidth={setLineWidth}
+                    />
+                </>
+            )}
 
             {activeTool === 'segment' && (
                 <>
@@ -223,7 +280,7 @@ export function EditorToolbar({
                         value={selectedLineId ?? ''}
                         onChange={(e) => setSelectedLineId(e.target.value || null)}
                         displayEmpty
-                        sx={{ minWidth: 120 }}
+                        sx={{ minWidth: isMobile ? 80 : 120 }}
                     >
                         <MenuItem value="">Select line...</MenuItem>
                         {Object.values(lines).map((line) => (
@@ -234,7 +291,11 @@ export function EditorToolbar({
                     </Select>
                     <Button onClick={() => setIsCreatingLine(true)}>+ Line</Button>
 
-                    {isCreatingLine && (
+                    <Dialog
+                        open={isCreatingLine}
+                        onClose={() => setIsCreatingLine(false)}
+                        fullScreen={isMobile}
+                    >
                         <LineCreator
                             newLineName={newLineName}
                             setNewLineName={setNewLineName}
@@ -244,7 +305,7 @@ export function EditorToolbar({
                             setIsCreatingLine={setIsCreatingLine}
                             colorPalette={colorPalette}
                         />
-                    )}
+                    </Dialog>
                 </>
             )}
         </Box>

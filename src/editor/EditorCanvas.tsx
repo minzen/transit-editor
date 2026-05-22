@@ -11,11 +11,12 @@ import { SegmentLayer } from '../renderer/SegmentLayer'
 import { PreviewLine } from '../renderer/PreviewLine'
 import { StationRenderer } from '../renderer/StationRenderer'
 import { BendPointRenderer } from '../renderer/BendPointRenderer'
-import { screenToWorld } from '../viewport/coordinates'
+import { screenToWorld, worldToScreen } from '../viewport/coordinates'
 import { snapPointToGrid } from '../geometry/snap'
 import { isPointNearPolyline } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
+import { Menu, MenuItem } from '@mui/material'
 
 import './EditorCanvas.css'
 
@@ -105,6 +106,8 @@ export function EditorCanvas() {
     ]
 
     const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
+    const [contextMenuStationId, setContextMenuStationId] = useState<string | null>(null)
+    const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
 
     const svgRef = useRef<SVGSVGElement>(null)
 
@@ -147,10 +150,12 @@ export function EditorCanvas() {
         setDraggingStationId,
         setDraggingBendPoint,
         stationDragStartRef,
+        suppressNextClickRef,
         handleWheel,
         handlePointerDown,
         handlePointerMove,
         handlePointerUp,
+        handlePointerCancel,
         handleClick,
     } = useCanvasInteractions({ spacePressed })
 
@@ -159,6 +164,50 @@ export function EditorCanvas() {
 
     // Double-click on a segment polyline (in select mode) inserts a new bend
     // point at the click position, snapped to the grid.
+    const handleStationLongPress = (stationId: string) => {
+        const station = stations[stationId]
+        if (!station) return
+        const { x: screenX, y: screenY } = worldToScreen(station.x, station.y, viewport)
+        // Approximate menu dimensions so it stays on-screen
+        const menuWidth = 120
+        const menuHeight = 80
+        const clampedX = Math.min(
+            Math.max(screenX, menuWidth / 2),
+            window.innerWidth - menuWidth / 2
+        )
+        const clampedY = Math.min(
+            Math.max(screenY, menuHeight / 2),
+            window.innerHeight - menuHeight / 2
+        )
+        setContextMenuStationId(stationId)
+        setContextMenuPos({ x: clampedX, y: clampedY })
+        // Cancel any active drag and suppress the subsequent click
+        setDraggingStationId(null)
+        stationDragStartRef.current = null
+        suppressNextClickRef.current = true
+    }
+
+    const handleRenameStation = () => {
+        if (!contextMenuStationId) return
+        const station = stations[contextMenuStationId]
+        const newName = window.prompt('Station name:', station?.name ?? '')
+        if (newName !== null) {
+            setStationName(contextMenuStationId, newName)
+        }
+        setContextMenuStationId(null)
+        setContextMenuPos(null)
+    }
+
+    const handleDeleteStation = () => {
+        if (!contextMenuStationId) return
+        deleteStation(contextMenuStationId)
+        if (selectedStationId === contextMenuStationId) {
+            setSelectedStationId(null)
+        }
+        setContextMenuStationId(null)
+        setContextMenuPos(null)
+    }
+
     const handleDoubleClick = (event: React.MouseEvent<SVGSVGElement>) => {
         if (activeTool !== 'select') return
 
@@ -247,6 +296,7 @@ export function EditorCanvas() {
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
+                onPointerCancel={handlePointerCancel}
                 onClick={handleClick}
                 onDoubleClick={handleDoubleClick}
             >
@@ -371,9 +421,27 @@ export function EditorCanvas() {
                                 setStationName(stationId, newName)
                             }
                         }}
+                        onStationLongPress={handleStationLongPress}
                     />
                 </g>
             </svg>
+
+            <Menu
+                open={Boolean(contextMenuStationId)}
+                onClose={() => {
+                    setContextMenuStationId(null)
+                    setContextMenuPos(null)
+                }}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenuPos
+                        ? { top: contextMenuPos.y, left: contextMenuPos.x }
+                        : undefined
+                }
+            >
+                <MenuItem onClick={handleRenameStation}>Rename</MenuItem>
+                <MenuItem onClick={handleDeleteStation}>Delete</MenuItem>
+            </Menu>
         </div>
     )
 }

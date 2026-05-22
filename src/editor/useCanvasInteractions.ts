@@ -79,6 +79,9 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const stationDragStartRef = useRef<{ x: number; y: number } | null>(null)
     const suppressNextClickRef = useRef(false)
 
+    const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+    const previousPinchRef = useRef<{ centerX: number; centerY: number; distance: number } | null>(null)
+
     const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
         event.preventDefault()
 
@@ -103,6 +106,30 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     }
 
     const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
+        event.currentTarget.setPointerCapture(event.pointerId)
+
+        activePointersRef.current.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+        })
+
+        if (activePointersRef.current.size === 2) {
+            const pointers = Array.from(activePointersRef.current.values())
+            const dx = pointers[1].x - pointers[0].x
+            const dy = pointers[1].y - pointers[0].y
+            previousPinchRef.current = {
+                centerX: (pointers[0].x + pointers[1].x) / 2,
+                centerY: (pointers[0].y + pointers[1].y) / 2,
+                distance: Math.hypot(dx, dy),
+            }
+            // Cancel single-pointer interactions so pinch doesn't fight them
+            setIsPanning(false)
+            setDraggingStationId(null)
+            stationDragStartRef.current = null
+            setDraggingBendPoint(null)
+            return
+        }
+
         if (spacePressed) {
             setIsPanning(true)
             setLastPointer({
@@ -113,6 +140,54 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     }
 
     const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+        if (activePointersRef.current.has(event.pointerId)) {
+            activePointersRef.current.set(event.pointerId, {
+                x: event.clientX,
+                y: event.clientY,
+            })
+        }
+
+        if (activePointersRef.current.size >= 2) {
+            const pointers = Array.from(activePointersRef.current.values())
+            const dx = pointers[1].x - pointers[0].x
+            const dy = pointers[1].y - pointers[0].y
+            const newDistance = Math.hypot(dx, dy)
+            const newCenterX = (pointers[0].x + pointers[1].x) / 2
+            const newCenterY = (pointers[0].y + pointers[1].y) / 2
+
+            const prev = previousPinchRef.current
+            if (prev && prev.distance > 0) {
+                const zoomRatio = newDistance / prev.distance
+                const oldZoom = viewport.zoom
+                const newZoom = Math.min(10, Math.max(0.1, oldZoom * zoomRatio))
+
+                const panDx = newCenterX - prev.centerX
+                const panDy = newCenterY - prev.centerY
+
+                const rect = event.currentTarget.getBoundingClientRect()
+                const clamped = clampPanOffset(
+                    viewport.offsetX + panDx,
+                    viewport.offsetY + panDy,
+                    rect.width,
+                    rect.height,
+                    newZoom
+                )
+
+                setViewport({
+                    zoom: newZoom,
+                    offsetX: clamped.offsetX,
+                    offsetY: clamped.offsetY,
+                })
+            }
+
+            previousPinchRef.current = {
+                centerX: newCenterX,
+                centerY: newCenterY,
+                distance: newDistance,
+            }
+            return
+        }
+
         if (isPanning) {
             const dx = event.clientX - lastPointer.x
             const dy = event.clientY - lastPointer.y
@@ -228,11 +303,28 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         moveStation(draggingStationId, snapped.x, snapped.y)
     }
 
-    const handlePointerUp = () => {
-        setDraggingStationId(null)
-        stationDragStartRef.current = null
-        setDraggingBendPoint(null)
-        setIsPanning(false)
+    const handlePointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
+        const wasMultiTouch = previousPinchRef.current !== null
+
+        try {
+            event.currentTarget.releasePointerCapture(event.pointerId)
+        } catch {
+            // Pointer may have already been released (e.g. pointercancel)
+        }
+        activePointersRef.current.delete(event.pointerId)
+        if (activePointersRef.current.size < 2) {
+            previousPinchRef.current = null
+        }
+
+        if (activePointersRef.current.size === 0) {
+            if (wasMultiTouch) {
+                suppressNextClickRef.current = true
+            }
+            setDraggingStationId(null)
+            stationDragStartRef.current = null
+            setDraggingBendPoint(null)
+            setIsPanning(false)
+        }
     }
 
     const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
@@ -298,6 +390,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         handlePointerDown,
         handlePointerMove,
         handlePointerUp,
+        handlePointerCancel: handlePointerUp,
         handleClick,
     }
 }

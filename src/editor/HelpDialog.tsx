@@ -1,4 +1,4 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, List, ListItem, ListItemText, Divider } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, List, ListItem, ListItemText, Divider, useMediaQuery, useTheme } from '@mui/material'
 
 type Props = {
     open: boolean
@@ -6,8 +6,11 @@ type Props = {
 }
 
 export function HelpDialog({ open, onClose }: Props) {
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={isMobile}>
             <DialogTitle>Transit Map Editor - User Guide</DialogTitle>
             <DialogContent>
                 <Box sx={{ mb: 3 }}>
