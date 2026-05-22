@@ -16,6 +16,7 @@ import { snapPointToGrid } from '../geometry/snap'
 import { isPointNearPolyline } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
+import { RenameDialog } from './RenameDialog'
 import { Menu, MenuItem, Divider } from '@mui/material'
 
 import './EditorCanvas.css'
@@ -108,6 +109,8 @@ export function EditorCanvas() {
     const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
     const [contextMenuStationId, setContextMenuStationId] = useState<string | null>(null)
     const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
+    const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+    const [renameStationId, setRenameStationId] = useState<string | null>(null)
 
     const svgRef = useRef<SVGSVGElement>(null)
 
@@ -193,13 +196,18 @@ export function EditorCanvas() {
 
     const handleRenameStation = () => {
         if (!contextMenuStationId) return
-        const station = stations[contextMenuStationId]
-        const newName = window.prompt('Station name:', station?.name ?? '')
-        if (newName !== null) {
-            setStationName(contextMenuStationId, newName)
-        }
+        setRenameStationId(contextMenuStationId)
+        setRenameDialogOpen(true)
         setContextMenuStationId(null)
         setContextMenuPos(null)
+    }
+
+    const handleRenameConfirm = (newName: string) => {
+        if (renameStationId) {
+            setStationName(renameStationId, newName)
+        }
+        setRenameDialogOpen(false)
+        setRenameStationId(null)
     }
 
     const handleDeleteStation = () => {
@@ -415,21 +423,26 @@ export function EditorCanvas() {
                                 return
                             }
 
-                            const station = stations[stationId]
-                            const newName = window.prompt(
-                                'Station name:',
-                                station?.name ?? ''
-                            )
-
-                            if (newName !== null) {
-                                setStationName(stationId, newName)
-                            }
+                            setRenameStationId(stationId)
+                            setRenameDialogOpen(true)
                         }}
                         onStationLongPress={handleStationLongPress}
                     />
                 </g>
             </svg>
 
+            <RenameDialog
+                open={renameDialogOpen}
+                title="Station Name"
+                initialValue={renameStationId ? stations[renameStationId]?.name ?? '' : ''}
+                placeholder="Station name"
+                confirmLabel="Save"
+                onConfirm={handleRenameConfirm}
+                onCancel={() => {
+                    setRenameDialogOpen(false)
+                    setRenameStationId(null)
+                }}
+            />
             <Menu
                 open={Boolean(contextMenuStationId)}
                 onClose={() => {

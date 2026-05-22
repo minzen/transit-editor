@@ -6,6 +6,7 @@ import { BackgroundImageControl } from './BackgroundImageControl'
 import { GridSizeControl } from './GridSizeControl'
 import { LineWidthControl } from './LineWidthControl'
 import { HelpDialog } from './HelpDialog'
+import { ConfirmDialog } from './ConfirmDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
@@ -110,6 +111,14 @@ export function EditorToolbar({
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
+    const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
+
+    const handleClear = () => {
+        clear()
+        setSelectedLineId(null)
+        setBackgroundImage(null)
+        setClearConfirmOpen(false)
+    }
 
     return (
         <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, p: 1 }}>
@@ -196,11 +205,7 @@ export function EditorToolbar({
                             <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>Export PNG</Button>
                             <Button
                                 onClick={() => {
-                                    if (window.confirm('Are you sure you want to clear all data?')) {
-                                        clear()
-                                        setSelectedLineId(null)
-                                        setBackgroundImage(null)
-                                    }
+                                    setClearConfirmOpen(true)
                                     setMoreAnchor(null)
                                 }}
                             >
@@ -237,13 +242,7 @@ export function EditorToolbar({
                     <Divider orientation="vertical" flexItem />
 
                     <Button
-                        onClick={() => {
-                            if (window.confirm('Are you sure you want to clear all data?')) {
-                                clear()
-                                setSelectedLineId(null)
-                                setBackgroundImage(null)
-                            }
-                        }}
+                        onClick={() => setClearConfirmOpen(true)}
                     >
                         Clear
                     </Button>
@@ -308,6 +307,14 @@ export function EditorToolbar({
                     </Dialog>
                 </>
             )}
+            <ConfirmDialog
+                open={clearConfirmOpen}
+                title="Clear All Data"
+                message="Are you sure you want to clear all data? This cannot be undone."
+                confirmLabel="Clear"
+                onConfirm={handleClear}
+                onCancel={() => setClearConfirmOpen(false)}
+            />
         </Box>
     )
 }
