@@ -364,7 +364,7 @@ export function EditorCanvas() {
                             const station = stations[stationId]
                             const newName = window.prompt(
                                 'Station name:',
-                                station?.name || ''
+                                station?.name ?? ''
                             )
 
                             if (newName !== null) {

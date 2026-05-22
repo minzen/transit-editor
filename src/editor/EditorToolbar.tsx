@@ -220,7 +220,7 @@ export function EditorToolbar({
                 <>
                     <Divider orientation="vertical" flexItem />
                     <Select
-                        value={selectedLineId || ''}
+                        value={selectedLineId ?? ''}
                         onChange={(e) => setSelectedLineId(e.target.value || null)}
                         displayEmpty
                         sx={{ minWidth: 120 }}

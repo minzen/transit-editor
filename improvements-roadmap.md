@@ -40,7 +40,7 @@ Items are ordered by impact-to-effort ratio. Each item lists the rationale, the 
 
 ### 2.1 Line "bullet" badges next to stations
 
-**Status**: Pending
+**Status**: ✅ Done (commit `7928bf2`)
 
 **Problem**: Lines are distinguishable only by colour. Real transit maps (NYC subway, Tokyo, Berlin) place small coloured circles or rounded squares with the line code (`6`, `M1`, `A`) next to stations.
 
@@ -101,7 +101,7 @@ Items are ordered by impact-to-effort ratio. Each item lists the rationale, the 
 
 ### 5.1 Replace remaining `||` defaults with `??`
 
-`src/editor/EditorCanvas.tsx:326`, `src/editor/EditorToolbar.tsx:223` still have `||` lint warnings.
+**Status**: ✅ Done
 
 ### 5.2 Split `editorStore.ts` into slices
 
@@ -121,13 +121,13 @@ Use this section to record commit hashes when items are completed:
 |---|---|---|
 | 1.1 Line endpoint trimming | ✅ Done | `d069b94` |
 | 1.2 Bend point editing | ✅ Done | `0e92361` |
-| 2.1 Line bullet badges | Pending | — |
+| 2.1 Line bullet badges | ✅ Done | `7928bf2` |
 | 2.2 Configurable label placement | Pending | — |
 | 3.1 Line styles / transit modes | Pending | — |
 | 3.2 Background features | Pending | — |
 | 3.3 Selection/hover | Pending | — |
 | 4.1 Fare zones | Pending | — |
 | 4.2 Service icons | Pending | — |
-| 5.1 `??` lint fixes | Pending | — |
+| 5.1 `??` lint fixes | ✅ Done | (this commit) |
 | 5.2 Store slices | Pending | — |
 | 5.3 Versioned persistence | Pending | — |
