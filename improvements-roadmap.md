@@ -122,7 +122,7 @@ Use this section to record commit hashes when items are completed:
 | 1.1 Line endpoint trimming | ✅ Done | `d069b94` |
 | 1.2 Bend point editing | ✅ Done | `0e92361` |
 | 2.1 Line bullet badges | ✅ Done | `7928bf2` |
-| 2.2 Configurable label placement | Pending | — |
+| 2.2 Configurable label placement | ✅ Done | `24215e5` |
 | 3.1 Line styles / transit modes | Pending | — |
 | 3.2 Background features | Pending | — |
 | 3.3 Selection/hover | Pending | — |
