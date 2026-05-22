@@ -226,4 +226,54 @@ describe('StationRenderer', () => {
             .map((t) => t.textContent)
         expect(texts).toEqual(['A', 'B'])
     })
+
+    it('positions label above station by default', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const text = container.querySelector('text')
+        expect(text).toHaveAttribute('text-anchor', 'middle')
+        expect(Number(text?.getAttribute('y'))).toBeLessThan(100)
+    })
+
+    it('positions label below station when labelPosition is bottom', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A', labelPosition: 'bottom' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const text = container.querySelector('text')
+        expect(text).toHaveAttribute('text-anchor', 'middle')
+        expect(Number(text?.getAttribute('y'))).toBeGreaterThan(100)
+    })
+
+    it('positions label to the left of station when labelPosition is left', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A', labelPosition: 'left' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const text = container.querySelector('text')
+        expect(text).toHaveAttribute('text-anchor', 'end')
+        expect(Number(text?.getAttribute('x'))).toBeLessThan(100)
+        expect(Number(text?.getAttribute('y'))).toBe(100)
+    })
+
+    it('positions label to the right of station when labelPosition is right', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A', labelPosition: 'right' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const text = container.querySelector('text')
+        expect(text).toHaveAttribute('text-anchor', 'start')
+        expect(Number(text?.getAttribute('x'))).toBeGreaterThan(100)
+        expect(Number(text?.getAttribute('y'))).toBe(100)
+    })
 })

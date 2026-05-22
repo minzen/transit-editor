@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
-import type { Station } from '../model/station'
+import type { Station, LabelPosition } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import type { Viewport } from '../viewport/coordinates'
@@ -59,6 +59,7 @@ type EditorState = {
     addStation: (x: number, y: number) => void
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
+    setStationLabelPosition: (id: string, position: LabelPosition) => void
     deleteStation: (id: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
     insertBendPoint: (segmentId: string, x: number, y: number) => void
@@ -284,6 +285,31 @@ export const useEditorStore = create<EditorState>()(
                     [id]: {
                         ...station,
                         name: validation.sanitized ?? name,
+                    },
+                },
+                segments: state.segments,
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setStationLabelPosition: (id, position) =>
+        set((state) => {
+            const station = state.stations[id]
+
+            if (!station) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: {
+                    ...state.stations,
+                    [id]: {
+                        ...station,
+                        labelPosition: position,
                     },
                 },
                 segments: state.segments,

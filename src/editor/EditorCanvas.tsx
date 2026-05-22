@@ -16,7 +16,7 @@ import { snapPointToGrid } from '../geometry/snap'
 import { isPointNearPolyline } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
-import { Menu, MenuItem } from '@mui/material'
+import { Menu, MenuItem, Divider } from '@mui/material'
 
 import './EditorCanvas.css'
 
@@ -121,6 +121,10 @@ export function EditorCanvas() {
 
     const setStationName = useEditorStore(
         (s) => s.setStationName
+    )
+
+    const setStationLabelPosition = useEditorStore(
+        (s) => s.setStationLabelPosition
     )
 
     const addLine = useEditorStore((s) => s.addLine)
@@ -441,6 +445,25 @@ export function EditorCanvas() {
             >
                 <MenuItem onClick={handleRenameStation}>Rename</MenuItem>
                 <MenuItem onClick={handleDeleteStation}>Delete</MenuItem>
+                <Divider />
+                {(['top', 'bottom', 'left', 'right'] as const).map((pos) => (
+                    <MenuItem
+                        key={pos}
+                        onClick={() => {
+                            if (contextMenuStationId) {
+                                setStationLabelPosition(contextMenuStationId, pos)
+                            }
+                            setContextMenuStationId(null)
+                            setContextMenuPos(null)
+                        }}
+                        selected={
+                            stations[contextMenuStationId ?? '']?.labelPosition === pos ||
+                            (pos === 'top' && !stations[contextMenuStationId ?? '']?.labelPosition)
+                        }
+                    >
+                        Label {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                    </MenuItem>
+                ))}
             </Menu>
         </div>
     )

@@ -179,6 +179,22 @@ export function StationRenderer({
                     ? Math.max(capsuleLength, capsuleWidth) / 2 + 6
                     : STATION_RADIUS + 6
 
+                const labelPos = s.labelPosition ?? 'top'
+                const labelAttrs = (() => {
+                    switch (labelPos) {
+                        case 'top':
+                            return { x: s.x, y: s.y - labelOffset, textAnchor: 'middle' as const, dominantBaseline: 'auto' as const }
+                        case 'bottom':
+                            return { x: s.x, y: s.y + labelOffset, textAnchor: 'middle' as const, dominantBaseline: 'hanging' as const }
+                        case 'left':
+                            return { x: s.x - labelOffset, y: s.y, textAnchor: 'end' as const, dominantBaseline: 'central' as const }
+                        case 'right':
+                            return { x: s.x + labelOffset, y: s.y, textAnchor: 'start' as const, dominantBaseline: 'central' as const }
+                        default:
+                            return { x: s.x, y: s.y - labelOffset, textAnchor: 'middle' as const, dominantBaseline: 'auto' as const }
+                    }
+                })()
+
                 return (
                     <g key={s.id}>
                         {isPendingStation && renderRing(6, 4, 'pending')}
@@ -231,9 +247,10 @@ export function StationRenderer({
 
                         {s.name && (
                             <text
-                                x={s.x}
-                                y={s.y - labelOffset}
-                                textAnchor="middle"
+                                x={labelAttrs.x}
+                                y={labelAttrs.y}
+                                textAnchor={labelAttrs.textAnchor}
+                                dominantBaseline={labelAttrs.dominantBaseline}
                                 fontSize={16}
                                 fontWeight="bold"
                                 fill="#111"
