@@ -25,41 +25,15 @@ describe('LandingPage', () => {
     expect(screen.getByText('Start Creating')).toBeInTheDocument()
   })
 
-  it('renders features section', () => {
+  it('renders early development notice', () => {
     render(
       <BrowserRouter>
         <LandingPage />
       </BrowserRouter>
     )
-    
-    expect(screen.getByText('Powerful Features')).toBeInTheDocument()
-    expect(screen.getByText('Intuitive Canvas')).toBeInTheDocument()
-    expect(screen.getByText('Octolinear Design')).toBeInTheDocument()
-    expect(screen.getByText('Multiple Lines')).toBeInTheDocument()
-    expect(screen.getByText('Undo/Redo')).toBeInTheDocument()
-  })
 
-  it('renders demo section', () => {
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    )
-    
-    expect(screen.getByText('See It In Action')).toBeInTheDocument()
-    expect(screen.getByText('Editor Interface')).toBeInTheDocument()
-    expect(screen.getByText('Exported Map')).toBeInTheDocument()
-  })
-
-  it('renders CTA section', () => {
-    render(
-      <BrowserRouter>
-        <LandingPage />
-      </BrowserRouter>
-    )
-    
-    expect(screen.getByText('Ready to Create Your Transit Map?')).toBeInTheDocument()
-    expect(screen.getByText('Launch Editor')).toBeInTheDocument()
+    expect(screen.getByText('Early dev version')).toBeInTheDocument()
+    expect(screen.getByText('Early development version')).toBeInTheDocument()
   })
 
   it('renders footer', () => {

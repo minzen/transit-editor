@@ -1,8 +1,6 @@
-import { Alert, AlertTitle, Box, Chip, Container, Typography, Button, Card, CardContent, CardMedia } from '@mui/material'
-import { ArrowForward, Map, Train, Palette, Undo, Construction } from '@mui/icons-material'
+import { Alert, AlertTitle, Box, Chip, Container, Typography, Button } from '@mui/material'
+import { ArrowForward, Construction } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import editorInterface from './assets/transit-editor-interface.png'
-import editorExample from './assets/transit-editor-example.png'
 
 export function LandingPage() {
     const navigate = useNavigate()
