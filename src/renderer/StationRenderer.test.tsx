@@ -3,6 +3,7 @@ import { render, fireEvent } from '@testing-library/react'
 import { StationRenderer } from './StationRenderer'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
+import type { Line } from '../model/line'
 import type { EditorTool } from '../store/editorStore'
 
 describe('StationRenderer', () => {
@@ -22,7 +23,7 @@ describe('StationRenderer', () => {
         segments: mockSegments,
         lineWidth: 4,
         activeTool: 'select' as EditorTool,
-        selectedStationId: null,
+        selectedStationIds: [],
         pendingStationId: null,
         onStationPointerDown: mockOnStationPointerDown,
         onStationDoubleClick: mockOnStationDoubleClick,
@@ -102,11 +103,11 @@ describe('StationRenderer', () => {
         expect(circles.length).toBeGreaterThan(3)
     })
 
-    it('renders selection indicator when selectedStationId matches', () => {
+    it('renders selection indicator when selectedStationIds includes station', () => {
         const { container } = render(
             <StationRenderer
                 {...defaultProps}
-                selectedStationId="st1"
+                selectedStationIds={['st1']}
             />
         )
 
@@ -275,5 +276,32 @@ describe('StationRenderer', () => {
         expect(text).toHaveAttribute('text-anchor', 'start')
         expect(Number(text?.getAttribute('x'))).toBeGreaterThan(100)
         expect(Number(text?.getAttribute('y'))).toBe(100)
+    })
+
+    it('dims stations not on selected line', () => {
+        const stations: Record<string, Station> = {
+            onLine: { id: 'onLine', x: 0, y: 0, name: 'OnLine' },
+            offLine: { id: 'offLine', x: 100, y: 0, name: 'OffLine' },
+        }
+        const segs: Record<string, Segment> = {
+            seg1: { id: 'seg1', fromStationId: 'onLine', toStationId: 'mid', lineIds: ['line1'], points: [{ x: 0, y: 0 }, { x: 50, y: 0 }] },
+            seg2: { id: 'seg2', fromStationId: 'mid', toStationId: 'offLine', lineIds: ['line2'], points: [{ x: 50, y: 0 }, { x: 100, y: 0 }] },
+        }
+        const lines: Record<string, Line> = {
+            line1: { id: 'line1', name: 'L1', color: '#ff0000' },
+            line2: { id: 'line2', name: 'L2', color: '#00ff00' },
+        }
+        const { container } = render(
+            <StationRenderer
+                {...defaultProps}
+                stations={stations}
+                segments={segs}
+                lines={lines}
+                selectedLineId="line1"
+            />
+        )
+        const groups = container.querySelectorAll('g')
+        expect(groups[0]).toHaveAttribute('opacity', '1')
+        expect(groups[1]).toHaveAttribute('opacity', '0.25')
     })
 })

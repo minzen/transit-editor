@@ -8,6 +8,10 @@ type Props = {
   segments: Segment[]
   lines: Record<string, Line>
   lineWidth: number
+  selectedLineId?: string | null
+  hoveredSegmentId?: string | null
+  onSegmentMouseEnter?: (segmentId: string, event: React.MouseEvent<SVGGElement>) => void
+  onSegmentMouseLeave?: (segmentId: string) => void
 }
 
 function getStrokeDasharray(style: Line['lineStyle']): string | undefined {
@@ -19,12 +23,18 @@ function SegmentPath({
   d,
   line,
   lineWidth,
+  dimmed,
+  highlighted,
 }: {
   d: string
   line: Line
   lineWidth: number
+  dimmed?: boolean
+  highlighted?: boolean
 }) {
   const dasharray = getStrokeDasharray(line.lineStyle)
+  const opacity = dimmed ? 0.25 : highlighted ? 1 : 1
+  const strokeW = highlighted ? lineWidth + 2 : lineWidth
 
   if (line.lineStyle === 'double') {
     return (
@@ -32,18 +42,19 @@ function SegmentPath({
         <path
           d={d}
           stroke={line.color}
-          strokeWidth={lineWidth + 3}
+          strokeWidth={strokeW + 3}
           strokeLinecap="round"
           fill="none"
-          opacity={0.35}
+          opacity={dimmed ? 0.1 : 0.35}
         />
         <path
           d={d}
           stroke={line.color}
-          strokeWidth={lineWidth}
+          strokeWidth={strokeW}
           strokeLinecap="round"
           fill="none"
           strokeDasharray={dasharray}
+          opacity={opacity}
         />
       </>
     )
@@ -53,10 +64,11 @@ function SegmentPath({
     <path
       d={d}
       stroke={line.color}
-      strokeWidth={lineWidth}
+      strokeWidth={strokeW}
       strokeLinecap="round"
       fill="none"
       strokeDasharray={dasharray}
+      opacity={opacity}
     />
   )
 }
@@ -65,6 +77,10 @@ export function SegmentLayer({
   segments,
   lines,
   lineWidth,
+  selectedLineId,
+  hoveredSegmentId,
+  onSegmentMouseEnter,
+  onSegmentMouseLeave,
 }: Props) {
   return (
     <>
@@ -73,8 +89,11 @@ export function SegmentLayer({
         // outline (circle radius / capsule short-edge), not at the station centre.
         const trimmed = trimPolyline(segment.points, STATION_RADIUS, STATION_RADIUS)
 
+        const isHovered = hoveredSegmentId === segment.id
+        const isDimmed = selectedLineId ? !segment.lineIds.includes(selectedLineId) : false
+
         // Render the segment once for each line it belongs to
-        return segment.lineIds.map((lineId, index) => {
+        const paths = segment.lineIds.map((lineId, index) => {
           const line = lines[lineId]
           if (!line) return null
 
@@ -103,9 +122,22 @@ export function SegmentLayer({
               d={d}
               line={line}
               lineWidth={lineWidth}
+              dimmed={isDimmed}
+              highlighted={isHovered}
             />
           )
         })
+
+        return (
+          <g
+            key={segment.id}
+            style={{ pointerEvents: 'all' }}
+            onMouseEnter={(event) => onSegmentMouseEnter?.(segment.id, event)}
+            onMouseLeave={() => onSegmentMouseLeave?.(segment.id)}
+          >
+            {paths}
+          </g>
+        )
       })}
     </>
   )

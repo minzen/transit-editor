@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { render } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { render, fireEvent } from '@testing-library/react'
 import { SegmentLayer } from './SegmentLayer'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
@@ -233,5 +233,101 @@ describe('SegmentLayer', () => {
         expect(paths[0]).toHaveAttribute('opacity', '0.35')
         expect(paths[1]).toHaveAttribute('stroke-width', '4')
         expect(paths[1]).not.toHaveAttribute('stroke-dasharray')
+    })
+
+    it('highlights hovered segment with thicker stroke', () => {
+        const segments: Segment[] = [
+            {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 100 },
+                ],
+            },
+        ]
+
+        const { container } = render(
+            <SegmentLayer segments={segments} lines={mockLines} lineWidth={4} hoveredSegmentId="seg1" />
+        )
+
+        const paths = container.querySelectorAll('path')
+        expect(paths[0]).toHaveAttribute('stroke-width', '6')
+    })
+
+    it('dims segments not on selected line', () => {
+        const segments: Segment[] = [
+            {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 100 },
+                ],
+            },
+            {
+                id: 'seg2',
+                fromStationId: 'st2',
+                toStationId: 'st3',
+                lineIds: ['line2'],
+                points: [
+                    { x: 100, y: 100 },
+                    { x: 200, y: 200 },
+                ],
+            },
+        ]
+
+        const { container } = render(
+            <SegmentLayer segments={segments} lines={mockLines} lineWidth={4} selectedLineId="line1" />
+        )
+
+        const groups = container.querySelectorAll('g')
+        // First group (seg1 on selected line) should have opacity 1
+        const seg1Path = groups[0].querySelector('path')
+        expect(seg1Path).toHaveAttribute('opacity', '1')
+        // Second group (seg2 not on selected line) should be dimmed
+        const seg2Path = groups[1].querySelector('path')
+        expect(seg2Path).toHaveAttribute('opacity', '0.25')
+    })
+
+    it('calls onSegmentMouseEnter and onSegmentMouseLeave', () => {
+        const segments: Segment[] = [
+            {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 100 },
+                ],
+            },
+        ]
+
+        const onEnter = vi.fn()
+        const onLeave = vi.fn()
+
+        const { container } = render(
+            <SegmentLayer
+                segments={segments}
+                lines={mockLines}
+                lineWidth={4}
+                onSegmentMouseEnter={onEnter}
+                onSegmentMouseLeave={onLeave}
+            />
+        )
+
+        const g = container.querySelector('g')
+        expect(g).not.toBeNull()
+        if (g) {
+            fireEvent.mouseEnter(g)
+            expect(onEnter).toHaveBeenCalledWith('seg1', expect.anything())
+            fireEvent.mouseLeave(g)
+            expect(onLeave).toHaveBeenCalledWith('seg1')
+        }
     })
 })

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 type Options = {
-    selectedStationId: string | null
+    selectedStationIds: string[]
     selectedShapeId: string | null
     onDeleteSelected: () => void
 }
@@ -9,11 +9,11 @@ type Options = {
 /**
  * Subscribes to global keyboard shortcuts used in the editor canvas:
  * - Space (held): activates panning mode (returned via `spacePressed`).
- * - Delete / Backspace: triggers deletion of the currently selected station
+ * - Delete / Backspace: triggers deletion of the currently selected stations
  *   or shape, unless Space is also held.
  */
 export function useEditorKeyboardShortcuts({
-    selectedStationId,
+    selectedStationIds,
     selectedShapeId,
     onDeleteSelected,
 }: Options) {
@@ -24,7 +24,7 @@ export function useEditorKeyboardShortcuts({
             if (e.code === 'Space') {
                 setSpacePressed(true)
             }
-            if ((e.code === 'Delete' || e.code === 'Backspace') && (selectedStationId || selectedShapeId) && !spacePressed) {
+            if ((e.code === 'Delete' || e.code === 'Backspace') && (selectedStationIds.length > 0 || selectedShapeId) && !spacePressed) {
                 e.preventDefault()
                 onDeleteSelected()
             }
@@ -43,7 +43,7 @@ export function useEditorKeyboardShortcuts({
             window.removeEventListener('keydown', down)
             window.removeEventListener('keyup', up)
         }
-    }, [selectedStationId, selectedShapeId, spacePressed, onDeleteSelected])
+    }, [selectedStationIds, selectedShapeId, spacePressed, onDeleteSelected])
 
     return { spacePressed }
 }

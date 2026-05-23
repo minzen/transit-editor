@@ -108,7 +108,7 @@ export function EditorCanvas() {
         '#616161',
     ]
 
-    const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
+    const [selectedStationIds, setSelectedStationIds] = useState<string[]>([])
     const [contextMenuStationId, setContextMenuStationId] = useState<string | null>(null)
     const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
     const [renameDialogOpen, setRenameDialogOpen] = useState(false)
@@ -124,6 +124,10 @@ export function EditorCanvas() {
         shapeId: string
         pointIndex: number
     } | null>(null)
+
+    // Segment hover / tooltip state
+    const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null)
+    const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
 
     const svgRef = useRef<SVGSVGElement>(null)
 
@@ -157,12 +161,14 @@ export function EditorCanvas() {
     const { showGridForExport, showSelectionForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
 
     const { spacePressed } = useEditorKeyboardShortcuts({
-        selectedStationId,
+        selectedStationIds,
         selectedShapeId,
         onDeleteSelected: () => {
-            if (selectedStationId) {
-                deleteStation(selectedStationId)
-                setSelectedStationId(null)
+            if (selectedStationIds.length > 0) {
+                for (const stationId of selectedStationIds) {
+                    deleteStation(stationId)
+                }
+                setSelectedStationIds([])
             } else if (selectedShapeId) {
                 deleteShape(selectedShapeId)
                 setSelectedShapeId(null)
@@ -254,9 +260,7 @@ export function EditorCanvas() {
     const handleDeleteStation = () => {
         if (!contextMenuStationId) return
         deleteStation(contextMenuStationId)
-        if (selectedStationId === contextMenuStationId) {
-            setSelectedStationId(null)
-        }
+        setSelectedStationIds((prev) => prev.filter((id) => id !== contextMenuStationId))
         setContextMenuStationId(null)
         setContextMenuPos(null)
     }
@@ -407,8 +411,8 @@ export function EditorCanvas() {
                         for (const shape of Object.values(shapes)) {
                             if (isPointInPolygon(world, shape.points)) {
                                 setSelectedShapeId(shape.id)
-                                if (selectedStationId) {
-                                    setSelectedStationId(null)
+                                if (selectedStationIds.length > 0) {
+                                    setSelectedStationIds([])
                                 }
                                 return
                             }
@@ -518,6 +522,22 @@ export function EditorCanvas() {
                         segments={Object.values(segments)}
                         lines={lines}
                         lineWidth={lineWidth}
+                        selectedLineId={selectedLineId}
+                        hoveredSegmentId={hoveredSegmentId}
+                        onSegmentMouseEnter={(segmentId, event) => {
+                            setHoveredSegmentId(segmentId)
+                            const rect = svgRef.current?.getBoundingClientRect()
+                            if (rect) {
+                                setTooltipPos({
+                                    x: event.clientX - rect.left,
+                                    y: event.clientY - rect.top,
+                                })
+                            }
+                        }}
+                        onSegmentMouseLeave={() => {
+                            setHoveredSegmentId(null)
+                            setTooltipPos(null)
+                        }}
                     />
 
                     {activeTool === 'segment' &&
@@ -547,8 +567,9 @@ export function EditorCanvas() {
                         lines={lines}
                         lineWidth={lineWidth}
                         activeTool={activeTool}
-                        selectedStationId={selectedStationId}
+                        selectedStationIds={selectedStationIds}
                         pendingStationId={pendingStationId}
+                        selectedLineId={selectedLineId}
                         onStationPointerDown={(stationId, event) => {
                             event.stopPropagation()
 
@@ -581,11 +602,19 @@ export function EditorCanvas() {
                                 return
                             }
 
-                            setSelectedStationId(stationId)
-                            setDraggingStationId(stationId)
-                            stationDragStartRef.current = {
-                                x: event.clientX,
-                                y: event.clientY,
+                            if (event.shiftKey) {
+                                setSelectedStationIds((prev) =>
+                                    prev.includes(stationId)
+                                        ? prev.filter((id) => id !== stationId)
+                                        : [...prev, stationId]
+                                )
+                            } else {
+                                setSelectedStationIds([stationId])
+                                setDraggingStationId(stationId)
+                                stationDragStartRef.current = {
+                                    x: event.clientX,
+                                    y: event.clientY,
+                                }
                             }
                         }}
                         onStationDoubleClick={(stationId) => {
@@ -650,6 +679,29 @@ export function EditorCanvas() {
                     </MenuItem>
                 ))}
             </Menu>
+
+            {/* Segment hover tooltip */}
+            {tooltipPos && hoveredSegmentId && segments[hoveredSegmentId] && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: tooltipPos.x + 12,
+                        top: tooltipPos.y - 12,
+                        background: 'rgba(0,0,0,0.85)',
+                        color: '#fff',
+                        padding: '6px 10px',
+                        borderRadius: 4,
+                        fontSize: 12,
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    {segments[hoveredSegmentId].lineIds
+                        .map((lineId) => lines[lineId]?.name ?? lineId)
+                        .join(', ')}
+                </div>
+            )}
         </div>
     )
 }

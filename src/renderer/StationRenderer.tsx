@@ -11,8 +11,9 @@ type Props = {
     lines?: Record<string, Line>
     lineWidth: number
     activeTool: EditorTool
-    selectedStationId: string | null
+    selectedStationIds: string[]
     pendingStationId: string | null
+    selectedLineId?: string | null
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
     onStationLongPress?: (stationId: string) => void
@@ -73,8 +74,9 @@ export function StationRenderer({
     lines,
     lineWidth,
     activeTool,
-    selectedStationId,
+    selectedStationIds,
     pendingStationId,
+    selectedLineId,
     onStationPointerDown,
     onStationDoubleClick,
     onStationLongPress,
@@ -197,8 +199,10 @@ export function StationRenderer({
                     }
                 })()
 
+                const isDimmed = selectedLineId ? !getConnectedLineIds(s.id).includes(selectedLineId) : false
+
                 return (
-                    <g key={s.id}>
+                    <g key={s.id} opacity={isDimmed ? 0.25 : 1}>
                         {isPendingStation && renderRing(6, 4, 'pending')}
 
                         {isCapsule ? (
@@ -245,7 +249,7 @@ export function StationRenderer({
                             />
                         )}
 
-                        {showSelection && selectedStationId === s.id && renderRing(4, 3, 'selected')}
+                        {showSelection && selectedStationIds.includes(s.id) && renderRing(4, 3, 'selected')}
 
                         {s.name && (
                             <text
