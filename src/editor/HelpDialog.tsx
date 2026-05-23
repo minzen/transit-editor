@@ -28,7 +28,7 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Select Tool"
-                                secondary="Click on a station to select it (highlighted with a blue ring). Drag selected stations to move them. Press Delete or Backspace to delete the selected station. Double-click to rename a station."
+                                secondary="Click a station to select it (blue ring). Hold Shift and click to multi-select. Drag selected stations to move them. Press Delete or Backspace to delete all selected. Double-click a station to rename it. Right-click a station for a context menu with rename, delete, and label position options."
                             />
                         </ListItem>
                         <ListItem>
@@ -40,7 +40,13 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Segment Tool"
-                                secondary="Click on a station to start creating a segment, then click on another station to connect them. Segments automatically snap to octolinear angles. Drag bend points to adjust the path - they snap to octolinear positions."
+                                secondary="Click a station to start a segment, then click another station to connect them. Segments snap to octolinear angles. Double-click a segment path to add a bend point; double-click an existing bend point to remove it. Drag bend points to adjust the route."
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Shape Tool"
+                                secondary="Click on the canvas to place polygon vertices. Double-click to finalize the shape, or press Escape to cancel. Press Backspace or Delete to undo the last placed point. Click a finished shape to select it, then drag the white vertex handles to edit. Press Delete or Escape to deselect or remove a selected shape."
                             />
                         </ListItem>
                     </List>
@@ -51,7 +57,7 @@ export function HelpDialog({ open, onClose }: Props) {
                 <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" gutterBottom>Creating Lines</Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
-                        When using the Segment tool, you must select a line from the dropdown before creating segments. To create a new line:
+                        When using the Segment tool, select a line from the dropdown before creating segments. To create a new line:
                     </Typography>
                     <List dense>
                         <ListItem>
@@ -61,17 +67,22 @@ export function HelpDialog({ open, onClose }: Props) {
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="2. Enter a name for the line"
+                                primary="2. Enter a name and optional short code (e.g. 'U1')"
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="3. Select a color from the palette or enter a custom hex code (e.g., #ff00ff)"
+                                primary="3. Choose a line style (solid, dashed, double) and transit mode (metro, rail, tram, bus, ferry)"
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="4. Click 'Create' to add the line"
+                                primary="4. Select a color from the palette or enter a custom hex code (e.g., #ff00ff)"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="5. Click 'Create' to add the line"
                             />
                         </ListItem>
                     </List>
@@ -97,7 +108,37 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Delete / Backspace"
-                                secondary="Delete selected stations and segments"
+                                secondary="Delete selected stations, segments, or shapes"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Escape"
+                                secondary="Cancel shape drawing, deselect shape, or cancel rename dialog"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Space (hold) + drag"
+                                secondary="Pan the canvas"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Shift + click"
+                                secondary="Multi-select stations"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Backspace / Delete (during shape drawing)"
+                                secondary="Remove the last placed shape point"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="Double-click"
+                                secondary="Rename station, add bend point to segment, or finalize a shape"
                             />
                         </ListItem>
                     </List>
@@ -111,25 +152,25 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText
                                 primary="Zoom In (+)"
-                                secondary="Click the Zoom In button in the toolbar to zoom in on the canvas. Zoom centers on the current view."
+                                secondary="Click the Zoom In button or scroll up with the mouse wheel. Zoom centers on the cursor position."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
                                 primary="Zoom Out (-)"
-                                secondary="Click the Zoom Out button in the toolbar to zoom out. Zoom centers on the current view."
+                                secondary="Click the Zoom Out button or scroll down with the mouse wheel. Zoom centers on the cursor position."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
                                 primary="Reset View"
-                                secondary="Click the Reset View button to return to the default zoom level (1:1) and reset the viewport."
+                                secondary="Click the Reset View button to return to the default zoom level and center the viewport."
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="Mouse Wheel"
-                                secondary="Use the mouse wheel to zoom in and out. The zoom centers on the cursor position."
+                                primary="Pan"
+                                secondary="Hold Space and drag, or hold the middle mouse button and drag."
                             />
                         </ListItem>
                     </List>
@@ -190,22 +231,42 @@ export function HelpDialog({ open, onClose }: Props) {
                     <List dense>
                         <ListItem>
                             <ListItemText
-                                primary="• Use the mouse wheel to zoom in and out"
+                                primary="• Use the mouse wheel to zoom in and out; hold Space to pan"
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="• Hold the middle mouse button to pan the canvas"
+                                primary="• Stations and bend points snap to octolinear angles (0°, 45°, 90°, etc.) for clean, professional-looking maps"
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="• Stations and bend points snap to octolinear angles (0°, 45°, 90°, 135°, 180°, etc.) for clean, professional-looking maps"
+                                primary="• Hold Shift and click stations to select multiple at once for batch operations"
                             />
                         </ListItem>
                         <ListItem>
                             <ListItemText
-                                primary="• Adjust line width to make your map more readable or match your design style"
+                                primary="• Double-click a segment path to insert a bend point for fine-grained routing control"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="• Select a line in the toolbar to dim everything else and trace its route easily"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="• Use the Shape tool with low opacity to add water, parks, or land backgrounds behind your transit network"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="• Right-click a station to quickly adjust its label position when names overlap"
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary="• Assign line codes (e.g. 'M1', 'A') so small coloured badges appear next to stations, like real transit maps"
                             />
                         </ListItem>
                         <ListItem>
