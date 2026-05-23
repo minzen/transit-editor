@@ -6,8 +6,6 @@ import {
     DialogActions,
     Button,
     TextField,
-    useMediaQuery,
-    useTheme,
 } from '@mui/material'
 
 type Props = {
@@ -31,8 +29,6 @@ export function RenameDialog({
     onConfirm,
     onCancel,
 }: Props) {
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const inputRef = useRef<HTMLInputElement>(null)
 
     const handleConfirm = () => {
@@ -49,9 +45,9 @@ export function RenameDialog({
         <Dialog
             open={open}
             onClose={onCancel}
-            fullScreen={isMobile}
             maxWidth="xs"
             fullWidth
+            scroll="body"
             key={open ? initialValue : ''}
         >
             <DialogTitle>{title}</DialogTitle>

@@ -176,15 +176,18 @@ export function EditorCanvas() {
         if (!station) return
         const { x: screenX, y: screenY } = worldToScreen(station.x, station.y, viewport)
         // Approximate menu dimensions so it stays on-screen
-        const menuWidth = 120
-        const menuHeight = 80
+        const menuWidth = 180
+        const menuHeight = 320
+        const vv = window.visualViewport
+        const vpWidth = vv?.width ?? window.innerWidth
+        const vpHeight = vv?.height ?? window.innerHeight
         const clampedX = Math.min(
             Math.max(screenX, menuWidth / 2),
-            window.innerWidth - menuWidth / 2
+            vpWidth - menuWidth / 2
         )
         const clampedY = Math.min(
             Math.max(screenY, menuHeight / 2),
-            window.innerHeight - menuHeight / 2
+            vpHeight - menuHeight / 2
         )
         setContextMenuStationId(stationId)
         setContextMenuPos({ x: clampedX, y: clampedY })
@@ -455,6 +458,7 @@ export function EditorCanvas() {
                         ? { top: contextMenuPos.y, left: contextMenuPos.x }
                         : undefined
                 }
+                transformOrigin={{ vertical: 'center', horizontal: 'center' }}
             >
                 <MenuItem onClick={handleRenameStation}>Rename</MenuItem>
                 <MenuItem onClick={handleDeleteStation}>Delete</MenuItem>
