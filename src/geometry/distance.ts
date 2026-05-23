@@ -72,3 +72,26 @@ export function isPointNearPolyline(
 
     return false
 }
+
+/**
+ * Ray-casting test: returns true if the point is inside the polygon.
+ * The polygon vertices should be ordered (clockwise or counter-clockwise).
+ */
+export function isPointInPolygon(point: Point, polygon: Point[]): boolean {
+    let inside = false
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x
+        const yi = polygon[i].y
+        const xj = polygon[j].x
+        const yj = polygon[j].y
+
+        const intersect =
+            yi > point.y !== yj > point.y &&
+            point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi
+
+        if (intersect) {
+            inside = !inside
+        }
+    }
+    return inside
+}

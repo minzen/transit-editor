@@ -14,7 +14,7 @@ import { StationRenderer } from '../renderer/StationRenderer'
 import { BendPointRenderer } from '../renderer/BendPointRenderer'
 import { screenToWorld, worldToScreen } from '../viewport/coordinates'
 import { snapPointToGrid } from '../geometry/snap'
-import { isPointNearPolyline } from '../geometry/distance'
+import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
 import { RenameDialog } from './RenameDialog'
@@ -118,6 +118,13 @@ export function EditorCanvas() {
     const [shapePoints, setShapePoints] = useState<{ x: number; y: number }[]>([])
     const [shapeColor, setShapeColor] = useState('#a8d5e2')
 
+    // Shape editing state
+    const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null)
+    const [draggingShapeVertex, setDraggingShapeVertex] = useState<{
+        shapeId: string
+        pointIndex: number
+    } | null>(null)
+
     const svgRef = useRef<SVGSVGElement>(null)
 
     const addSegment = useEditorStore(
@@ -138,6 +145,8 @@ export function EditorCanvas() {
 
     const addLine = useEditorStore((s) => s.addLine)
     const addShape = useEditorStore((s) => s.addShape)
+    const updateShape = useEditorStore((s) => s.updateShape)
+    const deleteShape = useEditorStore((s) => s.deleteShape)
 
     const undo = useEditorStore((s) => s.undo)
     const redo = useEditorStore((s) => s.redo)
@@ -149,10 +158,14 @@ export function EditorCanvas() {
 
     const { spacePressed } = useEditorKeyboardShortcuts({
         selectedStationId,
+        selectedShapeId,
         onDeleteSelected: () => {
             if (selectedStationId) {
                 deleteStation(selectedStationId)
                 setSelectedStationId(null)
+            } else if (selectedShapeId) {
+                deleteShape(selectedShapeId)
+                setSelectedShapeId(null)
             }
         },
     })
@@ -175,13 +188,21 @@ export function EditorCanvas() {
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && shapePoints.length > 0) {
-                setShapePoints([])
+            if (e.key === 'Escape') {
+                if (shapePoints.length > 0) {
+                    setShapePoints([])
+                }
+                if (selectedShapeId) {
+                    setSelectedShapeId(null)
+                }
+            }
+            if ((e.key === 'Backspace' || e.key === 'Delete') && activeTool === 'shape' && shapePoints.length > 0) {
+                setShapePoints((prev) => prev.slice(0, -1))
             }
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [shapePoints.length])
+    }, [shapePoints.length, selectedShapeId, activeTool])
 
     const insertBendPoint = useEditorStore((s) => s.insertBendPoint)
     const removeBendPoint = useEditorStore((s) => s.removeBendPoint)
@@ -336,9 +357,37 @@ export function EditorCanvas() {
                 }}
                 onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerCancel}
+                onPointerMove={(event) => {
+                    if (draggingShapeVertex) {
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        const x = event.clientX - rect.left
+                        const y = event.clientY - rect.top
+                        const world = screenToWorld(x, y, viewport)
+                        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
+                        const shape = shapes[draggingShapeVertex.shapeId]
+                        if (shape) {
+                            const newPoints = [...shape.points]
+                            newPoints[draggingShapeVertex.pointIndex] = snapped
+                            updateShape(draggingShapeVertex.shapeId, { points: newPoints })
+                        }
+                        return
+                    }
+                    handlePointerMove(event)
+                }}
+                onPointerUp={(event) => {
+                    if (draggingShapeVertex) {
+                        setDraggingShapeVertex(null)
+                        return
+                    }
+                    handlePointerUp(event)
+                }}
+                onPointerCancel={(event) => {
+                    if (draggingShapeVertex) {
+                        setDraggingShapeVertex(null)
+                        return
+                    }
+                    handlePointerCancel(event)
+                }}
                 onClick={(event) => {
                     if (activeTool === 'shape') {
                         const rect = event.currentTarget.getBoundingClientRect()
@@ -349,6 +398,28 @@ export function EditorCanvas() {
                         setShapePoints((prev) => [...prev, snapped])
                         return
                     }
+
+                    if (activeTool === 'select') {
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        const x = event.clientX - rect.left
+                        const y = event.clientY - rect.top
+                        const world = screenToWorld(x, y, viewport)
+                        for (const shape of Object.values(shapes)) {
+                            if (isPointInPolygon(world, shape.points)) {
+                                setSelectedShapeId(shape.id)
+                                if (selectedStationId) {
+                                    setSelectedStationId(null)
+                                }
+                                return
+                            }
+                        }
+                        if (selectedShapeId) {
+                            setSelectedShapeId(null)
+                        }
+                        handleClick(event)
+                        return
+                    }
+
                     handleClick(event)
                 }}
                 onDoubleClick={handleDoubleClick}
@@ -390,6 +461,34 @@ export function EditorCanvas() {
                     />
 
                     <ShapeLayer shapes={shapes} />
+
+                    {/* Selected shape vertex handles */}
+                    {selectedShapeId && shapes[selectedShapeId] && (
+                        <>
+                            {/* Invisible hit-area polygon on top for easier selection */}
+                            <polygon
+                                points={shapes[selectedShapeId].points.map((p) => `${p.x},${p.y}`).join(' ')}
+                                fill="transparent"
+                                style={{ pointerEvents: 'all' }}
+                            />
+                            {shapes[selectedShapeId].points.map((p, i) => (
+                                <circle
+                                    key={`vertex-${selectedShapeId}-${i}`}
+                                    cx={p.x}
+                                    cy={p.y}
+                                    r={6 / viewport.zoom}
+                                    fill="#fff"
+                                    stroke="#1976d2"
+                                    strokeWidth={2}
+                                    style={{ cursor: 'move', pointerEvents: 'all' }}
+                                    onPointerDown={(event) => {
+                                        event.stopPropagation()
+                                        setDraggingShapeVertex({ shapeId: selectedShapeId, pointIndex: i })
+                                    }}
+                                />
+                            ))}
+                        </>
+                    )}
 
                     {shapePoints.length > 0 && (
                         <>
@@ -452,6 +551,10 @@ export function EditorCanvas() {
                         pendingStationId={pendingStationId}
                         onStationPointerDown={(stationId, event) => {
                             event.stopPropagation()
+
+                            if (selectedShapeId) {
+                                setSelectedShapeId(null)
+                            }
 
                             if (activeTool === 'segment') {
                                 if (pendingStationId) {

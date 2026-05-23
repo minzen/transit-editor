@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pointToLineSegmentDistance, isPointNearPolyline } from './distance'
+import { pointToLineSegmentDistance, isPointNearPolyline, isPointInPolygon } from './distance'
 
 describe('pointToLineSegmentDistance', () => {
     it('returns perpendicular distance for point next to a horizontal segment', () => {
@@ -64,5 +64,30 @@ describe('isPointNearPolyline', () => {
 
     it('returns false for a polyline with fewer than 2 points', () => {
         expect(isPointNearPolyline({ x: 0, y: 0 }, [{ x: 0, y: 0 }])).toBe(false)
+    })
+})
+
+describe('isPointInPolygon', () => {
+    const square = [
+        { x: 0, y: 0 },
+        { x: 100, y: 0 },
+        { x: 100, y: 100 },
+        { x: 0, y: 100 },
+    ]
+
+    it('returns true for a point inside the polygon', () => {
+        expect(isPointInPolygon({ x: 50, y: 50 }, square)).toBe(true)
+    })
+
+    it('returns false for a point outside the polygon', () => {
+        expect(isPointInPolygon({ x: 150, y: 50 }, square)).toBe(false)
+    })
+
+    it('returns true for a point on the edge', () => {
+        expect(isPointInPolygon({ x: 50, y: 0 }, square)).toBe(true)
+    })
+
+    it('returns false for an empty polygon', () => {
+        expect(isPointInPolygon({ x: 0, y: 0 }, [])).toBe(false)
     })
 })
