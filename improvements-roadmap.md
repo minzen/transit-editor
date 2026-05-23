@@ -81,7 +81,7 @@ Items are ordered by impact-to-effort ratio. Each item lists the rationale, the 
 
 ### 3.3 Selection and hover affordances
 
-**Status**: Pending
+**Status**: ✅ Done (commit `b331f84`)
 
 **Approach**:
 - Multi-select stations (shift+click).
@@ -124,8 +124,8 @@ Use this section to record commit hashes when items are completed:
 | 2.1 Line bullet badges | ✅ Done | `7928bf2` |
 | 2.2 Configurable label placement | ✅ Done | `24215e5` |
 | 3.1 Line styles / transit modes | Pending | — |
-| 3.2 Background features | Pending | — |
-| 3.3 Selection/hover | Pending | — |
+| 3.2 Background features | ✅ Done | `dbebec5` |
+| 3.3 Selection/hover | ✅ Done | `b331f84` |
 | 4.1 Fare zones | Pending | — |
 | 4.2 Service icons | Pending | — |
 | 5.1 `??` lint fixes | ✅ Done | `19eda87` |
