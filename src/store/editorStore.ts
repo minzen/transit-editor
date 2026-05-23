@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
 import type { Station, LabelPosition } from '../model/station'
 import type { Segment } from '../model/segment'
-import type { Line } from '../model/line'
+import type { Line, LineStyle, TransitMode } from '../model/line'
 import type { Viewport } from '../viewport/coordinates'
 import type { Point } from '../types/geometry'
 import { createOctolinearPath } from '../geometry/octolinear'
@@ -66,7 +66,7 @@ type EditorState = {
     removeBendPoint: (segmentId: string, pointIndex: number) => void
     addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
     deleteSegment: (id: string) => void
-    addLine: (name: string, color: string, code?: string) => void
+    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
     setLineName: (id: string, name: string) => void
     setLineCode: (id: string, code: string) => void
     clear: () => void
@@ -564,7 +564,7 @@ export const useEditorStore = create<EditorState>()(
             }
         }),
 
-    addLine: (name, color, code) =>
+    addLine: (name, color, code, lineStyle, transitMode) =>
         set((state) => {
             const id = nanoid()
 
@@ -580,6 +580,8 @@ export const useEditorStore = create<EditorState>()(
                         name,
                         color,
                         code: code && code.length > 0 ? code : undefined,
+                        lineStyle: lineStyle ?? 'solid',
+                        transitMode: transitMode ?? 'metro',
                     },
                 },
                 pastStates: [...state.pastStates, currentSnapshot],

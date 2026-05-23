@@ -1,5 +1,5 @@
 import type { EditorTool } from '../store/editorStore'
-import type { Line } from '../model/line'
+import type { Line, LineStyle, TransitMode } from '../model/line'
 
 import { LineCreator } from './LineCreator'
 import { BackgroundImageControl } from './BackgroundImageControl'
@@ -42,7 +42,7 @@ type Props = {
     setNewLineName: (name: string) => void
     newLineColor: string
     setNewLineColor: (color: string) => void
-    addLine: (name: string, color: string) => void
+    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
     setPendingStationId: (id: string | null) => void
     setPointerWorldPosition: (point: { x: number; y: number } | null) => void
     colorPalette: string[]

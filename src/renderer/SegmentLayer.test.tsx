@@ -179,4 +179,59 @@ describe('SegmentLayer', () => {
             expect(parseFloat(ey)).toBeCloseTo(94.34, 1)
         }
     })
+
+    it('renders dashed line with stroke-dasharray', () => {
+        const dashedLines: Record<string, Line> = {
+            'line1': { id: 'line1', name: 'Line 1', color: '#ff0000', lineStyle: 'dashed' },
+        }
+        const segments: Segment[] = [
+            {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 100 },
+                ],
+            },
+        ]
+
+        const { container } = render(
+            <SegmentLayer segments={segments} lines={dashedLines} lineWidth={4} />
+        )
+
+        const paths = container.querySelectorAll('path')
+        expect(paths).toHaveLength(1)
+        expect(paths[0]).toHaveAttribute('stroke-dasharray', '8 4')
+    })
+
+    it('renders double line as two paths', () => {
+        const doubleLines: Record<string, Line> = {
+            'line1': { id: 'line1', name: 'Line 1', color: '#ff0000', lineStyle: 'double' },
+        }
+        const segments: Segment[] = [
+            {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 100, y: 100 },
+                ],
+            },
+        ]
+
+        const { container } = render(
+            <SegmentLayer segments={segments} lines={doubleLines} lineWidth={4} />
+        )
+
+        const paths = container.querySelectorAll('path')
+        expect(paths).toHaveLength(2)
+        expect(paths[0]).toHaveAttribute('stroke-width', '7')
+        expect(paths[0]).toHaveAttribute('opacity', '0.35')
+        expect(paths[1]).toHaveAttribute('stroke-width', '4')
+        expect(paths[1]).not.toHaveAttribute('stroke-dasharray')
+    })
 })

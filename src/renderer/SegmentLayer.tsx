@@ -10,6 +10,57 @@ type Props = {
   lineWidth: number
 }
 
+function getStrokeDasharray(style: Line['lineStyle']): string | undefined {
+  if (style === 'dashed') return '8 4'
+  return undefined
+}
+
+function SegmentPath({
+  d,
+  line,
+  lineWidth,
+}: {
+  d: string
+  line: Line
+  lineWidth: number
+}) {
+  const dasharray = getStrokeDasharray(line.lineStyle)
+
+  if (line.lineStyle === 'double') {
+    return (
+      <>
+        <path
+          d={d}
+          stroke={line.color}
+          strokeWidth={lineWidth + 3}
+          strokeLinecap="round"
+          fill="none"
+          opacity={0.35}
+        />
+        <path
+          d={d}
+          stroke={line.color}
+          strokeWidth={lineWidth}
+          strokeLinecap="round"
+          fill="none"
+          strokeDasharray={dasharray}
+        />
+      </>
+    )
+  }
+
+  return (
+    <path
+      d={d}
+      stroke={line.color}
+      strokeWidth={lineWidth}
+      strokeLinecap="round"
+      fill="none"
+      strokeDasharray={dasharray}
+    />
+  )
+}
+
 export function SegmentLayer({
   segments,
   lines,
@@ -47,13 +98,11 @@ export function SegmentLayer({
             .join(' ')
 
           return (
-            <path
+            <SegmentPath
               key={`${segment.id}-${lineId}`}
               d={d}
-              stroke={line.color}
-              strokeWidth={lineWidth}
-              strokeLinecap="round"
-              fill="none"
+              line={line}
+              lineWidth={lineWidth}
             />
           )
         })

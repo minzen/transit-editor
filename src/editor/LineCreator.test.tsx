@@ -57,7 +57,7 @@ describe('LineCreator', () => {
     const createButton = screen.getByText('Create')
     fireEvent.click(createButton)
     
-    expect(props.addLine).toHaveBeenCalledWith('Test Line', '#1976d2', undefined)
+    expect(props.addLine).toHaveBeenCalledWith('Test Line', '#1976d2', undefined, 'solid', 'metro')
     expect(props.setNewLineName).toHaveBeenCalledWith('')
     expect(props.setIsCreatingLine).toHaveBeenCalledWith(false)
   })
@@ -150,8 +150,36 @@ describe('LineCreator', () => {
       newLineColor: 'invalid',
     }
     render(<LineCreator {...props} />)
-    
+
     const createButton = screen.getByText('Create')
     expect(createButton).toBeDisabled()
+  })
+
+  it('renders style and mode selects', () => {
+    render(<LineCreator {...defaultProps} />)
+
+    expect(screen.getByLabelText('Style')).toBeInTheDocument()
+    expect(screen.getByLabelText('Mode')).toBeInTheDocument()
+  })
+
+  it('passes selected style and mode to addLine', () => {
+    const props = {
+      ...defaultProps,
+      newLineName: 'Test Line',
+    }
+    render(<LineCreator {...props} />)
+
+    const styleSelect = screen.getByLabelText('Style')
+    fireEvent.mouseDown(styleSelect)
+    fireEvent.click(screen.getByText('Dashed'))
+
+    const modeSelect = screen.getByLabelText('Mode')
+    fireEvent.mouseDown(modeSelect)
+    fireEvent.click(screen.getByText('Rail'))
+
+    const createButton = screen.getByText('Create')
+    fireEvent.click(createButton)
+
+    expect(props.addLine).toHaveBeenCalledWith('Test Line', '#1976d2', undefined, 'dashed', 'rail')
   })
 })

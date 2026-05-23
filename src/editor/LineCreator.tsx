@@ -1,18 +1,21 @@
 import { useState } from 'react'
-import { TextField, Box, Button, IconButton, Stack, InputAdornment } from '@mui/material'
+import { TextField, Box, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
 import { validateLineName, VALIDATION } from '../validation/constants'
+import type { LineStyle, TransitMode } from '../model/line'
 
 type Props = {
     newLineName: string
     setNewLineName: (name: string) => void
     newLineColor: string
     setNewLineColor: (color: string) => void
-    addLine: (name: string, color: string, code?: string) => void
+    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
     setIsCreatingLine: (creating: boolean) => void
     colorPalette: string[]
 }
 
 const MAX_LINE_CODE_LENGTH = 4
+const LINE_STYLES: LineStyle[] = ['solid', 'dashed', 'double']
+const TRANSIT_MODES: TransitMode[] = ['metro', 'rail', 'tram', 'bus', 'ferry']
 
 function isValidHexColor(hex: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(hex)
@@ -29,17 +32,23 @@ export function LineCreator({
 }: Props) {
     const validation = validateLineName(newLineName)
     const [newLineCode, setNewLineCode] = useState('')
+    const [lineStyle, setLineStyle] = useState<LineStyle>('solid')
+    const [transitMode, setTransitMode] = useState<TransitMode>('metro')
 
     const handleCreate = () => {
         if (validation.valid) {
             addLine(
                 validation.sanitized ?? newLineName,
                 newLineColor,
-                newLineCode.trim() || undefined
+                newLineCode.trim() || undefined,
+                lineStyle,
+                transitMode
             )
             setNewLineName('')
             setNewLineColor('#1976d2')
             setNewLineCode('')
+            setLineStyle('solid')
+            setTransitMode('metro')
             setIsCreatingLine(false)
         }
     }
@@ -142,6 +151,34 @@ export function LineCreator({
                 }}
                 helperText="Short badge shown on stations"
             />
+            <Stack direction="row" spacing={1}>
+                <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
+                    <InputLabel id="line-style-label">Style</InputLabel>
+                    <Select
+                        labelId="line-style-label"
+                        value={lineStyle}
+                        label="Style"
+                        onChange={(e) => setLineStyle(e.target.value)}
+                    >
+                        {LINE_STYLES.map((s) => (
+                            <MenuItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
+                    <InputLabel id="transit-mode-label">Mode</InputLabel>
+                    <Select
+                        labelId="transit-mode-label"
+                        value={transitMode}
+                        label="Mode"
+                        onChange={(e) => setTransitMode(e.target.value)}
+                    >
+                        {TRANSIT_MODES.map((m) => (
+                            <MenuItem key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </Stack>
             <Stack direction="row" spacing={0.5}>
                 <Button
                     variant="contained"
@@ -158,6 +195,8 @@ export function LineCreator({
                         setNewLineName('')
                         setNewLineColor('#1976d2')
                         setNewLineCode('')
+                        setLineStyle('solid')
+                        setTransitMode('metro')
                         setIsCreatingLine(false)
                     }}
                 >

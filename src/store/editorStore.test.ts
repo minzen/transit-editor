@@ -426,6 +426,22 @@ describe('editor store', () => {
     expect(state.lines[lineId].code).toBeUndefined()
   })
 
+  it('addLine defaults lineStyle to solid and transitMode to metro', () => {
+    useEditorStore.getState().addLine('Default Line', '#1976d2')
+    const state = useEditorStore.getState()
+    const lineId = Object.keys(state.lines)[0]
+    expect(state.lines[lineId].lineStyle).toBe('solid')
+    expect(state.lines[lineId].transitMode).toBe('metro')
+  })
+
+  it('addLine stores custom lineStyle and transitMode', () => {
+    useEditorStore.getState().addLine('Rail Line', '#1976d2', undefined, 'double', 'rail')
+    const state = useEditorStore.getState()
+    const lineId = Object.keys(state.lines)[0]
+    expect(state.lines[lineId].lineStyle).toBe('double')
+    expect(state.lines[lineId].transitMode).toBe('rail')
+  })
+
   it('setLineCode trims and truncates the code', () => {
     useEditorStore.getState().addLine('Line', '#1976d2')
     const lineId = Object.keys(useEditorStore.getState().lines)[0]
