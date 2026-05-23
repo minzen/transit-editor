@@ -11,17 +11,20 @@ const EXPORT_PADDING = 40
  */
 export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
     const [showGridForExport, setShowGridForExport] = useState(true)
+    const [showSelectionForExport, setShowSelectionForExport] = useState(true)
 
     const exportAsSVG = useCallback(() => {
         if (!svgRef.current) return
 
         setShowGridForExport(false)
+        setShowSelectionForExport(false)
 
         // Wait for re-render before exporting
         setTimeout(() => {
             const svgElement = svgRef.current
             if (!svgElement) {
                 setShowGridForExport(true)
+                setShowSelectionForExport(true)
                 return
             }
 
@@ -42,6 +45,7 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
             URL.revokeObjectURL(url)
 
             setShowGridForExport(true)
+            setShowSelectionForExport(true)
         }, 0)
     }, [svgRef])
 
@@ -49,11 +53,13 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
         if (!svgRef.current) return
 
         setShowGridForExport(false)
+        setShowSelectionForExport(false)
 
         setTimeout(() => {
             const svgElement = svgRef.current
             if (!svgElement) {
                 setShowGridForExport(true)
+                setShowSelectionForExport(true)
                 return
             }
 
@@ -86,6 +92,7 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
 
                 URL.revokeObjectURL(svgUrl)
                 setShowGridForExport(true)
+                setShowSelectionForExport(true)
             }
             img.src = svgUrl
         }, 0)
@@ -93,6 +100,7 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
 
     return {
         showGridForExport,
+        showSelectionForExport,
         exportAsSVG,
         exportAsPNG,
     }

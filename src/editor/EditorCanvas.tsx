@@ -145,7 +145,7 @@ export function EditorCanvas() {
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
 
-    const { showGridForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
+    const { showGridForExport, showSelectionForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
 
     const { spacePressed } = useEditorKeyboardShortcuts({
         selectedStationId,
@@ -494,6 +494,7 @@ export function EditorCanvas() {
                             setRenameDialogOpen(true)
                         }}
                         onStationLongPress={handleStationLongPress}
+                        showSelection={showSelectionForExport}
                     />
                 </g>
             </svg>

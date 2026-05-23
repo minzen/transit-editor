@@ -16,6 +16,7 @@ type Props = {
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
     onStationLongPress?: (stationId: string) => void
+    showSelection?: boolean
 }
 
 const BADGE_RADIUS = 9
@@ -77,6 +78,7 @@ export function StationRenderer({
     onStationPointerDown,
     onStationDoubleClick,
     onStationLongPress,
+    showSelection = true,
 }: Props) {
     // Helper: get the unique line ids connected to a station, in stable order.
     const getConnectedLineIds = (stationId: string): string[] => {
@@ -243,7 +245,7 @@ export function StationRenderer({
                             />
                         )}
 
-                        {selectedStationId === s.id && renderRing(4, 3, 'selected')}
+                        {showSelection && selectedStationId === s.id && renderRing(4, 3, 'selected')}
 
                         {s.name && (
                             <text
