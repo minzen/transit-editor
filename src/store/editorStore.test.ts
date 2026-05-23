@@ -8,6 +8,7 @@ describe('editor store', () => {
       stations: {},
       segments: {},
       lines: {},
+      shapes: {},
       pastStates: [],
       futureStates: [],
     })
@@ -460,6 +461,70 @@ describe('editor store', () => {
     expect(useEditorStore.getState().lines[lineId].code).toBeUndefined()
   })
 
+  it('addShape creates a shape with points, color and default opacity', () => {
+    const points = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+    ]
+    useEditorStore.getState().addShape(points, '#a8d5e2', 'Lake')
+    const state = useEditorStore.getState()
+    const shapeId = Object.keys(state.shapes)[0]
+    expect(state.shapes[shapeId].points).toEqual(points)
+    expect(state.shapes[shapeId].color).toBe('#a8d5e2')
+    expect(state.shapes[shapeId].name).toBe('Lake')
+    expect(state.shapes[shapeId].opacity).toBe(0.5)
+  })
+
+  it('addShape treats an empty name as undefined', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }], '#a8d5e2', '')
+    const state = useEditorStore.getState()
+    const shapeId = Object.keys(state.shapes)[0]
+    expect(state.shapes[shapeId].name).toBeUndefined()
+  })
+
+  it('addShape uses custom opacity', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }], '#a8d5e2', undefined, 0.8)
+    const state = useEditorStore.getState()
+    const shapeId = Object.keys(state.shapes)[0]
+    expect(state.shapes[shapeId].opacity).toBe(0.8)
+  })
+
+  it('updateShape updates shape properties', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }], '#a8d5e2')
+    const shapeId = Object.keys(useEditorStore.getState().shapes)[0]
+
+    useEditorStore.getState().updateShape(shapeId, {
+      color: '#ff0000',
+      name: 'Park',
+      opacity: 0.7,
+    })
+
+    const shape = useEditorStore.getState().shapes[shapeId]
+    expect(shape.color).toBe('#ff0000')
+    expect(shape.name).toBe('Park')
+    expect(shape.opacity).toBe(0.7)
+  })
+
+  it('deleteShape removes a shape', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }], '#a8d5e2')
+    const shapeId = Object.keys(useEditorStore.getState().shapes)[0]
+
+    useEditorStore.getState().deleteShape(shapeId)
+
+    expect(useEditorStore.getState().shapes[shapeId]).toBeUndefined()
+  })
+
+  it('undo restores deleted shape', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }], '#a8d5e2')
+    const shapeId = Object.keys(useEditorStore.getState().shapes)[0]
+
+    useEditorStore.getState().deleteShape(shapeId)
+    useEditorStore.getState().undo()
+
+    expect(useEditorStore.getState().shapes[shapeId]).toBeDefined()
+  })
+
   it('clears all data', () => {
     useEditorStore.getState().addStation(100, 200)
     useEditorStore.getState().addStation(300, 400)
@@ -471,6 +536,7 @@ describe('editor store', () => {
     expect(Object.keys(state.stations)).toHaveLength(0)
     expect(Object.keys(state.segments)).toHaveLength(0)
     expect(Object.keys(state.lines)).toHaveLength(0)
+    expect(Object.keys(state.shapes)).toHaveLength(0)
     expect(state.pastStates).toHaveLength(0)
     expect(state.futureStates).toHaveLength(0)
   })

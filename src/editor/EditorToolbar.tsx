@@ -49,6 +49,8 @@ type Props = {
     zoomIn: () => void
     zoomOut: () => void
     resetViewport: () => void
+    shapeColor?: string
+    setShapeColor?: (color: string) => void
 }
 
 const tools: {
@@ -66,6 +68,10 @@ const tools: {
     {
         id: 'segment',
         label: 'Segment',
+    },
+    {
+        id: 'shape',
+        label: 'Shape',
     },
 ]
 
@@ -105,6 +111,8 @@ export function EditorToolbar({
     zoomIn,
     zoomOut,
     resetViewport,
+    shapeColor,
+    setShapeColor,
 }: Props) {
     const navigate = useNavigate()
     const [helpOpen, setHelpOpen] = useState(false)
@@ -171,6 +179,31 @@ export function EditorToolbar({
                     {tool.label}
                 </Button>
             ))}
+
+            {activeTool === 'shape' && shapeColor && setShapeColor && (
+                <>
+                    <Divider orientation="vertical" flexItem />
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {colorPalette.slice(0, 10).map((c) => (
+                            <Box
+                                key={c}
+                                onClick={() => setShapeColor(c)}
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    borderRadius: '50%',
+                                    backgroundColor: c,
+                                    cursor: 'pointer',
+                                    border:
+                                        c === shapeColor
+                                            ? '2px solid #000'
+                                            : '2px solid transparent',
+                                }}
+                            />
+                        ))}
+                    </Box>
+                </>
+            )}
 
             <Divider orientation="vertical" flexItem />
 

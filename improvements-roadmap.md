@@ -75,7 +75,7 @@ Items are ordered by impact-to-effort ratio. Each item lists the rationale, the 
 
 ### 3.2 Background geographic features
 
-**Status**: Pending
+**Status**: Done
 
 **Approach**: New "shape" tool to draw filled polygons (water, parks). Persist as a shapes layer rendered below segments.
 

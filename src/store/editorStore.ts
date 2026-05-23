@@ -4,24 +4,27 @@ import { nanoid } from 'nanoid'
 import type { Station, LabelPosition } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Line, LineStyle, TransitMode } from '../model/line'
+import type { Shape } from '../model/shape'
 import type { Viewport } from '../viewport/coordinates'
 import type { Point } from '../types/geometry'
 import { createOctolinearPath } from '../geometry/octolinear'
 import { isPointNearPolyline, pointToLineSegmentDistance } from '../geometry/distance'
 import { validateLineName, validateStationName } from '../validation/constants'
 
-export type EditorTool = 'select' | 'station' | 'segment'
+export type EditorTool = 'select' | 'station' | 'segment' | 'shape'
 
 type DataSnapshot = {
     stations: Record<string, Station>
     segments: Record<string, Segment>
     lines: Record<string, Line>
+    shapes: Record<string, Shape>
 }
 
 const createSnapshot = (state: EditorState): DataSnapshot => ({
     stations: state.stations,
     segments: state.segments,
     lines: state.lines,
+    shapes: state.shapes,
 })
 
 // Helper function to check if a point is on a segment line
@@ -46,6 +49,7 @@ type EditorState = {
     stations: Record<string, Station>
     segments: Record<string, Segment>
     lines: Record<string, Line>
+    shapes: Record<string, Shape>
     viewport: Viewport
     lineWidth: number
     gridCellSize: number
@@ -80,6 +84,9 @@ type EditorState = {
     setGridCellSize: (size: number) => void
     setGridCellsWidth: (width: number) => void
     setGridCellsHeight: (height: number) => void
+    addShape: (points: Point[], color: string, name?: string, opacity?: number) => void
+    updateShape: (id: string, updates: Partial<Pick<Shape, 'points' | 'color' | 'name' | 'opacity'>>) => void
+    deleteShape: (id: string) => void
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -89,6 +96,7 @@ export const useEditorStore = create<EditorState>()(
     stations: {},
     segments: {},
     lines: {},
+    shapes: {},
     viewport: { zoom: 1, offsetX: 0, offsetY: 0 },
     lineWidth: 10,
     gridCellSize: 50,
@@ -649,6 +657,7 @@ export const useEditorStore = create<EditorState>()(
             stations: {},
             segments: {},
             lines: {},
+            shapes: {},
             pastStates: [],
             futureStates: [],
         })),
@@ -731,6 +740,53 @@ export const useEditorStore = create<EditorState>()(
             gridCellsHeight: Math.max(10, Math.min(1000, height)),
         })),
 
+    addShape: (points, color, name, opacity) =>
+        set((state) => {
+            const id = nanoid()
+            const currentSnapshot = createSnapshot(state)
+            return {
+                shapes: {
+                    ...state.shapes,
+                    [id]: {
+                        id,
+                        points,
+                        color,
+                        name: name && name.length > 0 ? name : undefined,
+                        opacity: opacity ?? 0.5,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    updateShape: (id, updates) =>
+        set((state) => {
+            const shape = state.shapes[id]
+            if (!shape) return state
+            const currentSnapshot = createSnapshot(state)
+            return {
+                shapes: {
+                    ...state.shapes,
+                    [id]: { ...shape, ...updates },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    deleteShape: (id) =>
+        set((state) => {
+            if (!state.shapes[id]) return state
+            const currentSnapshot = createSnapshot(state)
+            const { [id]: _removed, ...remainingShapes } = state.shapes
+            return {
+                shapes: remainingShapes,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
 }),
         {
             name: 'transit-editor-storage',
@@ -739,6 +795,7 @@ export const useEditorStore = create<EditorState>()(
                 stations: state.stations,
                 segments: state.segments,
                 lines: state.lines,
+                shapes: state.shapes,
                 lineWidth: state.lineWidth,
                 gridCellSize: state.gridCellSize,
                 gridCellsWidth: state.gridCellsWidth,

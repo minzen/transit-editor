@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToOctolinear } from '../geometry/octolinear'
@@ -8,6 +8,7 @@ import { useCanvasInteractions } from './useCanvasInteractions'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
+import { ShapeLayer } from '../renderer/ShapeLayer'
 import { PreviewLine } from '../renderer/PreviewLine'
 import { StationRenderer } from '../renderer/StationRenderer'
 import { BendPointRenderer } from '../renderer/BendPointRenderer'
@@ -31,6 +32,7 @@ export function EditorCanvas() {
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
     const lines = useEditorStore((s) => s.lines)
+    const shapes = useEditorStore((s) => s.shapes)
 
     const viewport = useEditorStore((s) => s.viewport)
     const zoomInStore = useEditorStore((s) => s.zoomIn)
@@ -112,6 +114,10 @@ export function EditorCanvas() {
     const [renameDialogOpen, setRenameDialogOpen] = useState(false)
     const [renameStationId, setRenameStationId] = useState<string | null>(null)
 
+    // Shape-drawing state
+    const [shapePoints, setShapePoints] = useState<{ x: number; y: number }[]>([])
+    const [shapeColor, setShapeColor] = useState('#a8d5e2')
+
     const svgRef = useRef<SVGSVGElement>(null)
 
     const addSegment = useEditorStore(
@@ -131,6 +137,7 @@ export function EditorCanvas() {
     )
 
     const addLine = useEditorStore((s) => s.addLine)
+    const addShape = useEditorStore((s) => s.addShape)
 
     const undo = useEditorStore((s) => s.undo)
     const redo = useEditorStore((s) => s.redo)
@@ -165,6 +172,16 @@ export function EditorCanvas() {
         handlePointerCancel,
         handleClick,
     } = useCanvasInteractions({ spacePressed })
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && shapePoints.length > 0) {
+                setShapePoints([])
+            }
+        }
+        window.addEventListener('keydown', onKeyDown)
+        return () => window.removeEventListener('keydown', onKeyDown)
+    }, [shapePoints.length])
 
     const insertBendPoint = useEditorStore((s) => s.insertBendPoint)
     const removeBendPoint = useEditorStore((s) => s.removeBendPoint)
@@ -224,6 +241,14 @@ export function EditorCanvas() {
     }
 
     const handleDoubleClick = (event: React.MouseEvent<SVGSVGElement>) => {
+        if (activeTool === 'shape') {
+            if (shapePoints.length >= 3) {
+                addShape(shapePoints, shapeColor)
+                setShapePoints([])
+            }
+            return
+        }
+
         if (activeTool !== 'select') return
 
         const rect = event.currentTarget.getBoundingClientRect()
@@ -294,6 +319,8 @@ export function EditorCanvas() {
                 zoomIn={zoomIn}
                 zoomOut={zoomOut}
                 resetViewport={resetViewport}
+                shapeColor={shapeColor}
+                setShapeColor={setShapeColor}
             />
 
             <svg
@@ -312,7 +339,18 @@ export function EditorCanvas() {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerCancel={handlePointerCancel}
-                onClick={handleClick}
+                onClick={(event) => {
+                    if (activeTool === 'shape') {
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        const x = event.clientX - rect.left
+                        const y = event.clientY - rect.top
+                        const world = screenToWorld(x, y, viewport)
+                        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
+                        setShapePoints((prev) => [...prev, snapped])
+                        return
+                    }
+                    handleClick(event)
+                }}
                 onDoubleClick={handleDoubleClick}
             >
                 <rect
@@ -350,6 +388,32 @@ export function EditorCanvas() {
                         offsetX={viewport.offsetX}
                         offsetY={viewport.offsetY}
                     />
+
+                    <ShapeLayer shapes={shapes} />
+
+                    {shapePoints.length > 0 && (
+                        <>
+                            <polygon
+                                points={shapePoints.map((p) => `${p.x},${p.y}`).join(' ')}
+                                fill={shapeColor}
+                                fillOpacity={0.3}
+                                stroke={shapeColor}
+                                strokeWidth={2}
+                                strokeDasharray="4 4"
+                                style={{ pointerEvents: 'none' }}
+                            />
+                            {shapePoints.map((p, i) => (
+                                <circle
+                                    key={i}
+                                    cx={p.x}
+                                    cy={p.y}
+                                    r={5 / viewport.zoom}
+                                    fill={shapeColor}
+                                    style={{ pointerEvents: 'none' }}
+                                />
+                            ))}
+                        </>
+                    )}
 
                     <SegmentLayer
                         segments={Object.values(segments)}
