@@ -18,7 +18,7 @@ import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
 import { RenameDialog } from './RenameDialog'
-import { Menu, MenuItem, Divider } from '@mui/material'
+import { Menu, MenuItem, Divider, Checkbox, ListItemIcon, ListItemText } from '@mui/material'
 
 import './EditorCanvas.css'
 
@@ -147,6 +147,9 @@ export function EditorCanvas() {
 
     const setStationLabelPosition = useEditorStore(
         (s) => s.setStationLabelPosition
+    )
+    const setStationServices = useEditorStore(
+        (s) => s.setStationServices
     )
 
     const addLine = useEditorStore((s) => s.addLine)
@@ -683,6 +686,36 @@ export function EditorCanvas() {
                         }
                     >
                         Label {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                    </MenuItem>
+                ))}
+                <Divider />
+                {([
+                    { key: 'accessibility' as const, label: '♿ Accessibility' },
+                    { key: 'ferry' as const, label: '⛴ Ferry' },
+                    { key: 'rail' as const, label: '🚂 Rail' },
+                ]).map(({ key, label }) => (
+                    <MenuItem
+                        key={key}
+                        onClick={() => {
+                            if (contextMenuStationId) {
+                                const current = stations[contextMenuStationId]?.services ?? []
+                                const hasService = current.includes(key)
+                                const next = hasService
+                                    ? current.filter((s) => s !== key)
+                                    : [...current, key]
+                                setStationServices(contextMenuStationId, next)
+                            }
+                            setContextMenuStationId(null)
+                            setContextMenuPos(null)
+                        }}
+                    >
+                        <ListItemIcon>
+                            <Checkbox
+                                checked={stations[contextMenuStationId ?? '']?.services?.includes(key) ?? false}
+                                size="small"
+                            />
+                        </ListItemIcon>
+                        <ListItemText>{label}</ListItemText>
                     </MenuItem>
                 ))}
             </Menu>

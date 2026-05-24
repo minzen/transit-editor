@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand'
 import { nanoid } from 'nanoid'
-import type { Station, LabelPosition } from '../../model/station'
+import type { Station, LabelPosition, ServiceIcon } from '../../model/station'
 import type { Segment } from '../../model/segment'
 import type { Line, LineStyle, TransitMode } from '../../model/line'
 import type { Shape } from '../../model/shape'
@@ -55,6 +55,7 @@ export type DataSlice = {
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
     setStationLabelPosition: (id: string, position: LabelPosition) => void
+    setStationServices: (id: string, services: ServiceIcon[]) => void
     deleteStation: (id: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
     insertBendPoint: (segmentId: string, x: number, y: number) => void
@@ -281,6 +282,31 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     [id]: {
                         ...station,
                         labelPosition: position,
+                    },
+                },
+                segments: state.segments,
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setStationServices: (id, services) =>
+        set((state) => {
+            const station = state.stations[id]
+
+            if (!station) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: {
+                    ...state.stations,
+                    [id]: {
+                        ...station,
+                        services: services.length > 0 ? services : undefined,
                     },
                 },
                 segments: state.segments,

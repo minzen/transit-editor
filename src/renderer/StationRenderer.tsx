@@ -4,6 +4,13 @@ import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import type { EditorTool } from '../store/editorStore'
 import { STATION_RADIUS } from './stationConstants'
+import type { ServiceIcon } from '../model/station'
+
+const SERVICE_ICON_MAP: Record<ServiceIcon, string> = {
+    accessibility: '♿',
+    ferry: '⛴',
+    rail: '🚂',
+}
 
 type Props = {
     stations: Record<string, Station>
@@ -308,6 +315,24 @@ export function StationRenderer({
                                 )
                             })
                         })()}
+
+                        {/* Service icons: small symbols to the right of the station */}
+                        {s.services && s.services.length > 0 && (
+                            <g style={{ pointerEvents: 'none' }}>
+                                {s.services.map((service, i) => (
+                                    <text
+                                        key={`service-${s.id}-${service}`}
+                                        x={s.x + (isCapsule ? capsuleLength / 2 : STATION_RADIUS) + 6 + i * 16}
+                                        y={s.y}
+                                        textAnchor="start"
+                                        dominantBaseline="central"
+                                        fontSize={12}
+                                    >
+                                        {SERVICE_ICON_MAP[service]}
+                                    </text>
+                                ))}
+                            </g>
+                        )}
                     </g>
                 )
             })}

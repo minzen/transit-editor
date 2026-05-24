@@ -127,7 +127,7 @@ Use this section to record commit hashes when items are completed:
 | 3.2 Background features | ✅ Done | `dbebec5` |
 | 3.3 Selection/hover | ✅ Done | `b331f84` |
 | 4.1 Fare zones | Pending | — |
-| 4.2 Service icons | Pending | — |
+| 4.2 Service icons | ✅ Done | — |
 | 5.1 `??` lint fixes | ✅ Done | `19eda87` |
 | 5.2 Store slices | ✅ Done | `4c77220` |
 | 5.3 Versioned persistence | ✅ Done | — |

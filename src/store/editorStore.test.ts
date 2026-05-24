@@ -871,4 +871,25 @@ describe('editor store', () => {
     useEditorStore.getState().setShowLineCodes(true)
     expect(useEditorStore.getState().showLineCodes).toBe(true)
   })
+
+  it('sets station services', () => {
+    useEditorStore.getState().addStation(100, 200)
+    const stationId = Object.keys(useEditorStore.getState().stations)[0]
+
+    useEditorStore.getState().setStationServices(stationId, ['accessibility', 'rail'])
+    const updated = useEditorStore.getState().stations[stationId]
+    expect(updated.services).toEqual(['accessibility', 'rail'])
+
+    useEditorStore.getState().setStationServices(stationId, ['ferry'])
+    expect(useEditorStore.getState().stations[stationId].services).toEqual(['ferry'])
+
+    useEditorStore.getState().setStationServices(stationId, [])
+    expect(useEditorStore.getState().stations[stationId].services).toBeUndefined()
+  })
+
+  it('does nothing when setting services for non-existent station', () => {
+    const initialState = useEditorStore.getState()
+    useEditorStore.getState().setStationServices('non-existent', ['accessibility'])
+    expect(useEditorStore.getState()).toEqual(initialState)
+  })
 })
