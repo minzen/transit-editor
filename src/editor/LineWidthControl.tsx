@@ -1,4 +1,5 @@
 import { Box, TextField } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
     lineWidth: number
@@ -6,6 +7,7 @@ type Props = {
 }
 
 export function LineWidthControl({ lineWidth, setLineWidth }: Props) {
+    const { t } = useTranslation()
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         const numValue = Number(value)
@@ -21,7 +23,7 @@ export function LineWidthControl({ lineWidth, setLineWidth }: Props) {
     return (
         <Box className="editor-line-width-control" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TextField
-                label="Line Width"
+                label={t('lineWidthControl.label')}
                 type="number"
                 value={lineWidth}
                 onChange={handleChange}

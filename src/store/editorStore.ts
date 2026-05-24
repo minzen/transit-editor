@@ -31,6 +31,7 @@ export const useEditorStore = create<EditorState>()(
                 gridCellsWidth: state.gridCellsWidth,
                 gridCellsHeight: state.gridCellsHeight,
                 showLineCodes: state.showLineCodes,
+                language: state.language,
             }),
             migrate: (persistedState, version) => {
                 if (version === 0) {
@@ -48,6 +49,7 @@ export const useEditorStore = create<EditorState>()(
                         gridCellsWidth: typeof state.gridCellsWidth === 'number' ? state.gridCellsWidth : 80,
                         gridCellsHeight: typeof state.gridCellsHeight === 'number' ? state.gridCellsHeight : 80,
                         showLineCodes: state.showLineCodes ?? true,
+                        language: state.language ?? 'en',
                     }
                 }
                 return persistedState

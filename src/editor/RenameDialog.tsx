@@ -7,6 +7,7 @@ import {
     Button,
     TextField,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
     open: boolean
@@ -21,15 +22,16 @@ type Props = {
 
 export function RenameDialog({
     open,
-    title = 'Rename',
+    title,
     initialValue = '',
-    placeholder = 'Name',
-    confirmLabel = 'Save',
-    cancelLabel = 'Cancel',
+    placeholder,
+    confirmLabel,
+    cancelLabel,
     onConfirm,
     onCancel,
 }: Props) {
     const inputRef = useRef<HTMLInputElement>(null)
+    const { t } = useTranslation()
 
     const handleConfirm = () => {
         onConfirm(inputRef.current?.value ?? '')
@@ -50,22 +52,22 @@ export function RenameDialog({
             scroll="body"
             key={open ? initialValue : ''}
         >
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{title ?? t('common.rename')}</DialogTitle>
             <DialogContent>
                 <TextField
                     inputRef={inputRef}
                     defaultValue={initialValue}
                     onKeyDown={handleKeyDown}
-                    placeholder={placeholder}
+                    placeholder={placeholder ?? t('common.rename')}
                     fullWidth
                     autoFocus
                     margin="dense"
                 />
             </DialogContent>
             <DialogActions>
-                <Button onClick={onCancel}>{cancelLabel}</Button>
+                <Button onClick={onCancel}>{cancelLabel ?? t('common.cancel')}</Button>
                 <Button onClick={handleConfirm} variant="contained">
-                    {confirmLabel}
+                    {confirmLabel ?? t('common.save')}
                 </Button>
             </DialogActions>
         </Dialog>

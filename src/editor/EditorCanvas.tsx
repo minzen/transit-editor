@@ -19,6 +19,7 @@ import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
 import { EditorToolbar } from './EditorToolbar'
 import { RenameDialog } from './RenameDialog'
 import { Menu, MenuItem, Divider, Checkbox, ListItemIcon, ListItemText } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 import './EditorCanvas.css'
 
@@ -154,6 +155,8 @@ export function EditorCanvas() {
     const setStationFareZone = useEditorStore(
         (s) => s.setStationFareZone
     )
+
+    const { t } = useTranslation()
 
     const addLine = useEditorStore((s) => s.addLine)
     const setLineName = useEditorStore((s) => s.setLineName)
@@ -646,10 +649,10 @@ export function EditorCanvas() {
 
             <RenameDialog
                 open={renameDialogOpen}
-                title="Station Name"
+                title={t('editorCanvas.stationNameTitle')}
                 initialValue={renameStationId ? stations[renameStationId]?.name ?? '' : ''}
-                placeholder="Station name"
-                confirmLabel="Save"
+                placeholder={t('editorCanvas.stationNamePlaceholder')}
+                confirmLabel={t('common.save')}
                 onConfirm={handleRenameConfirm}
                 onCancel={() => {
                     setRenameDialogOpen(false)
@@ -670,8 +673,8 @@ export function EditorCanvas() {
                 }
                 transformOrigin={{ vertical: 'center', horizontal: 'center' }}
             >
-                <MenuItem onClick={handleRenameStation}>Rename</MenuItem>
-                <MenuItem onClick={handleDeleteStation}>Delete</MenuItem>
+                <MenuItem onClick={handleRenameStation}>{t('common.rename')}</MenuItem>
+                <MenuItem onClick={handleDeleteStation}>{t('common.delete')}</MenuItem>
                 <Divider />
                 {(['top', 'bottom', 'left', 'right'] as const).map((pos) => (
                     <MenuItem
@@ -688,15 +691,15 @@ export function EditorCanvas() {
                             (pos === 'top' && !stations[contextMenuStationId ?? '']?.labelPosition)
                         }
                     >
-                        Label {pos.charAt(0).toUpperCase() + pos.slice(1)}
+                        {t(`editorCanvas.label${pos.charAt(0).toUpperCase() + pos.slice(1)}` as const)}
                     </MenuItem>
                 ))}
                 <Divider />
                 {([
-                    { key: 'accessibility' as const, label: '♿ Accessibility' },
-                    { key: 'ferry' as const, label: '⛴ Ferry' },
-                    { key: 'rail' as const, label: '🚂 Rail' },
-                ]).map(({ key, label }) => (
+                    { key: 'accessibility' as const, labelKey: 'editorCanvas.accessibility' },
+                    { key: 'ferry' as const, labelKey: 'editorCanvas.ferry' },
+                    { key: 'rail' as const, labelKey: 'editorCanvas.rail' },
+                ]).map(({ key, labelKey }) => (
                     <MenuItem
                         key={key}
                         onClick={() => {
@@ -718,11 +721,11 @@ export function EditorCanvas() {
                                 size="small"
                             />
                         </ListItemIcon>
-                        <ListItemText>{label}</ListItemText>
+                        <ListItemText>{t(labelKey)}</ListItemText>
                     </MenuItem>
                 ))}
                 <Divider />
-                <MenuItem disabled>Zone</MenuItem>
+                <MenuItem disabled>{t('editorCanvas.zone')}</MenuItem>
                 {([1, 2, 3, 4, 5, 6] as const).map((zone) => (
                     <MenuItem
                         key={zone}
@@ -735,7 +738,7 @@ export function EditorCanvas() {
                         }}
                         selected={stations[contextMenuStationId ?? '']?.fareZone === zone}
                     >
-                        Zone {zone}
+                        {t('editorCanvas.zoneNumber', { zone })}
                     </MenuItem>
                 ))}
                 <MenuItem
@@ -748,7 +751,7 @@ export function EditorCanvas() {
                     }}
                     selected={stations[contextMenuStationId ?? '']?.fareZone === undefined}
                 >
-                    None
+                    {t('common.none')}
                 </MenuItem>
             </Menu>
 

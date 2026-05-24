@@ -1,4 +1,5 @@
 import { Button } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
     backgroundImage: string | null
@@ -13,6 +14,7 @@ export function BackgroundImageControl({
     setShowBackground,
     setBackgroundImage,
 }: Props) {
+    const { t } = useTranslation()
     const handleLoadImage = () => {
         const input = document.createElement('input')
         input.type = 'file'
@@ -33,7 +35,7 @@ export function BackgroundImageControl({
     return (
         <>
             <Button size="small" onClick={handleLoadImage}>
-                Load Image
+                {t('backgroundImageControl.loadImage')}
             </Button>
 
             {backgroundImage && (
@@ -42,7 +44,7 @@ export function BackgroundImageControl({
                     variant="outlined"
                     onClick={() => setShowBackground(!showBackground)}
                 >
-                    {showBackground ? 'Hide BG' : 'Show BG'}
+                    {showBackground ? t('backgroundImageControl.hideBG') : t('backgroundImageControl.showBG')}
                 </Button>
             )}
         </>

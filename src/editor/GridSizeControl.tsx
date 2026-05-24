@@ -1,4 +1,5 @@
 import { Box, TextField } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
     gridCellsWidth: number
@@ -8,6 +9,7 @@ type Props = {
 }
 
 export function GridSizeControl({ gridCellsWidth, setGridCellsWidth, gridCellsHeight, setGridCellsHeight }: Props) {
+    const { t } = useTranslation()
     const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         const numValue = Number(value)
@@ -43,7 +45,7 @@ export function GridSizeControl({ gridCellsWidth, setGridCellsWidth, gridCellsHe
     return (
         <Box className="editor-grid-size-control" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TextField
-                label="Width"
+                label={t('gridSizeControl.width')}
                 type="number"
                 value={gridCellsWidth}
                 onChange={handleWidthChange}
@@ -57,7 +59,7 @@ export function GridSizeControl({ gridCellsWidth, setGridCellsWidth, gridCellsHe
                 sx={{ width: 70 }}
             />
             <TextField
-                label="Height"
+                label={t('gridSizeControl.height')}
                 type="number"
                 value={gridCellsHeight}
                 onChange={handleHeightChange}

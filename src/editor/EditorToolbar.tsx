@@ -9,10 +9,13 @@ import { HelpDialog } from './HelpDialog'
 import { ConfirmDialog } from './ConfirmDialog'
 import { RenameDialog } from './RenameDialog'
 
-import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog } from '@mui/material'
+import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n/i18n.ts'
+import { useEditorStore } from '../store/editorStore'
 
 type Props = {
     activeTool: EditorTool
@@ -57,26 +60,11 @@ type Props = {
     setShapeColor?: (color: string) => void
 }
 
-const tools: {
-    id: EditorTool
-    label: string
-}[] = [
-    {
-        id: 'select',
-        label: 'Select',
-    },
-    {
-        id: 'station',
-        label: 'Station',
-    },
-    {
-        id: 'segment',
-        label: 'Segment',
-    },
-    {
-        id: 'shape',
-        label: 'Shape',
-    },
+const toolKeys: { id: EditorTool; key: string }[] = [
+    { id: 'select', key: 'toolbar.select' },
+    { id: 'station', key: 'toolbar.station' },
+    { id: 'segment', key: 'toolbar.segment' },
+    { id: 'shape', key: 'toolbar.shape' },
 ]
 
 const TRANSIT_MODE_LABEL: Record<TransitMode, string> = {
@@ -136,6 +124,9 @@ export function EditorToolbar({
     const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
     const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
     const [renameLineOpen, setRenameLineOpen] = useState(false)
+    const { t } = useTranslation()
+    const language = useEditorStore((s) => s.language)
+    const setLanguage = useEditorStore((s) => s.setLanguage)
 
     const handleClear = () => {
         clear()
@@ -146,13 +137,13 @@ export function EditorToolbar({
 
     return (
         <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, p: 1 }}>
-            <Tooltip title="Back to Home">
+            <Tooltip title={t('toolbar.backToHome')}>
                 <IconButton onClick={() => void navigate('/')}>
                     <Home />
                 </IconButton>
             </Tooltip>
 
-            <Tooltip title="Help">
+            <Tooltip title={t('toolbar.help')}>
                 <IconButton onClick={() => setHelpOpen(true)}>
                     <Help />
                 </IconButton>
@@ -162,19 +153,19 @@ export function EditorToolbar({
 
             <Divider orientation="vertical" flexItem />
 
-            <Tooltip title="Zoom In">
+            <Tooltip title={t('toolbar.zoomIn')}>
                 <IconButton onClick={zoomIn}>
                     <ZoomIn />
                 </IconButton>
             </Tooltip>
 
-            <Tooltip title="Zoom Out">
+            <Tooltip title={t('toolbar.zoomOut')}>
                 <IconButton onClick={zoomOut}>
                     <ZoomOut />
                 </IconButton>
             </Tooltip>
 
-            <Tooltip title="Reset View">
+            <Tooltip title={t('toolbar.resetView')}>
                 <IconButton onClick={resetViewport}>
                     <FitScreen />
                 </IconButton>
@@ -182,7 +173,7 @@ export function EditorToolbar({
 
             <Divider orientation="vertical" flexItem />
 
-            {tools.map((tool) => (
+            {toolKeys.map((tool) => (
                 <Button
                     key={tool.id}
                     variant={activeTool === tool.id ? 'contained' : 'outlined'}
@@ -192,7 +183,7 @@ export function EditorToolbar({
                         setPointerWorldPosition(null)
                     }}
                 >
-                    {tool.label}
+                    {t(tool.key)}
                 </Button>
             ))}
 
@@ -223,13 +214,13 @@ export function EditorToolbar({
 
             <Divider orientation="vertical" flexItem />
 
-            <Tooltip title="Undo">
+            <Tooltip title={t('toolbar.undo')}>
                 <IconButton onClick={undo} disabled={!canUndo}>
                     <Undo />
                 </IconButton>
             </Tooltip>
 
-            <Tooltip title="Redo">
+            <Tooltip title={t('toolbar.redo')}>
                 <IconButton onClick={redo} disabled={!canRedo}>
                     <Redo />
                 </IconButton>
@@ -237,7 +228,7 @@ export function EditorToolbar({
 
             {isMobile ? (
                 <>
-                    <Tooltip title="More">
+                    <Tooltip title={t('toolbar.more')}>
                         <IconButton onClick={(e) => setMoreAnchor(e.currentTarget)}>
                             <MoreVert />
                         </IconButton>
@@ -250,15 +241,15 @@ export function EditorToolbar({
                         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                     >
                         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, minWidth: 200 }}>
-                            <Button onClick={() => { exportAsSVG(); setMoreAnchor(null) }}>Export SVG</Button>
-                            <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>Export PNG</Button>
+                            <Button onClick={() => { exportAsSVG(); setMoreAnchor(null) }}>{t('toolbar.exportSVG')}</Button>
+                            <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>{t('toolbar.exportPNG')}</Button>
                             <Button
                                 onClick={() => {
                                     setClearConfirmOpen(true)
                                     setMoreAnchor(null)
                                 }}
                             >
-                                Clear
+                                {t('toolbar.clear')}
                             </Button>
                             <Divider />
                             <BackgroundImageControl
@@ -282,7 +273,7 @@ export function EditorToolbar({
                                 variant={showLineCodes ? 'contained' : 'outlined'}
                                 onClick={() => setShowLineCodes(!showLineCodes)}
                             >
-                                {showLineCodes ? 'Hide Line Codes' : 'Show Line Codes'}
+                                {showLineCodes ? t('toolbar.hideLineCodes') : t('toolbar.showLineCodes')}
                             </Button>
                         </Box>
                     </Popover>
@@ -291,15 +282,15 @@ export function EditorToolbar({
                 <>
                     <Divider orientation="vertical" flexItem />
 
-                    <Button onClick={exportAsSVG}>Export SVG</Button>
-                    <Button onClick={exportAsPNG}>Export PNG</Button>
+                    <Button onClick={exportAsSVG}>{t('toolbar.exportSVG')}</Button>
+                    <Button onClick={exportAsPNG}>{t('toolbar.exportPNG')}</Button>
 
                     <Divider orientation="vertical" flexItem />
 
                     <Button
                         onClick={() => setClearConfirmOpen(true)}
                     >
-                        Clear
+                        {t('toolbar.clear')}
                     </Button>
 
                     <Divider orientation="vertical" flexItem />
@@ -325,17 +316,35 @@ export function EditorToolbar({
                         setLineWidth={setLineWidth}
                     />
 
-                    <Tooltip title={showLineCodes ? 'Hide Line Codes' : 'Show Line Codes'}>
+                    <Tooltip title={showLineCodes ? t('toolbar.hideLineCodes') : t('toolbar.showLineCodes')}>
                         <Button
                             variant={showLineCodes ? 'contained' : 'outlined'}
                             onClick={() => setShowLineCodes(!showLineCodes)}
                             sx={{ minWidth: 40, px: 1 }}
                         >
-                            {showLineCodes ? 'Codes' : 'Codes'}
+                            {t('toolbar.codes')}
                         </Button>
                     </Tooltip>
                 </>
             )}
+
+            <FormControl size="small" sx={{ minWidth: 80 }}>
+                <InputLabel id="language-select-label" sx={{ fontSize: '0.75rem' }}>Lang</InputLabel>
+                <Select
+                    labelId="language-select-label"
+                    value={language}
+                    onChange={(e) => {
+                        const lang = e.target.value as 'en' | 'de'
+                        setLanguage(lang)
+                        void i18n.changeLanguage(lang)
+                    }}
+                    label="Lang"
+                    sx={{ fontSize: '0.75rem' }}
+                >
+                    <MenuItem value="en">EN</MenuItem>
+                    <MenuItem value="de">DE</MenuItem>
+                </Select>
+            </FormControl>
 
             {activeTool === 'segment' && (
                 <>
@@ -345,9 +354,9 @@ export function EditorToolbar({
                         onChange={(e) => setSelectedLineId(e.target.value || null)}
                         displayEmpty
                         renderValue={(value) => {
-                            if (!value) return 'Select line...'
+                            if (!value) return t('toolbar.selectLine')
                             const line = lines[value]
-                            if (!line) return 'Select line...'
+                            if (!line) return t('toolbar.selectLine')
                             return (
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Box
@@ -365,7 +374,7 @@ export function EditorToolbar({
                         }}
                         sx={{ minWidth: isMobile ? 80 : 140 }}
                     >
-                        <MenuItem value="">Select line...</MenuItem>
+                        <MenuItem value="">{t('toolbar.selectLine')}</MenuItem>
                         {Object.values(lines).map((line) => (
                             <MenuItem key={line.id} value={line.id}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -398,14 +407,14 @@ export function EditorToolbar({
                             </MenuItem>
                         ))}
                     </Select>
-                    <Button onClick={() => setIsCreatingLine(true)}>+ Line</Button>
+                    <Button onClick={() => setIsCreatingLine(true)}>{t('toolbar.addLine')}</Button>
                     {selectedLineId && (
                         <Button
                             variant="outlined"
                             size="small"
                             onClick={() => setRenameLineOpen(true)}
                         >
-                            Rename
+                            {t('common.rename')}
                         </Button>
                     )}
 
@@ -427,9 +436,10 @@ export function EditorToolbar({
 
                     <RenameDialog
                         open={renameLineOpen}
-                        title="Rename Line"
+                        title={t('toolbar.renameLine')}
                         initialValue={selectedLineId ? lines[selectedLineId]?.name : ''}
-                        placeholder="Line name"
+                        placeholder={t('toolbar.lineNamePlaceholder')}
+                        confirmLabel={t('common.save')}
                         onConfirm={(name) => {
                             if (selectedLineId) {
                                 setLineName(selectedLineId, name)
@@ -442,9 +452,9 @@ export function EditorToolbar({
             )}
             <ConfirmDialog
                 open={clearConfirmOpen}
-                title="Clear All Data"
-                message="Are you sure you want to clear all data? This cannot be undone."
-                confirmLabel="Clear"
+                title={t('toolbar.clearAllData')}
+                message={t('toolbar.clearAllDataMessage')}
+                confirmLabel={t('toolbar.clear')}
                 onConfirm={handleClear}
                 onCancel={() => setClearConfirmOpen(false)}
             />

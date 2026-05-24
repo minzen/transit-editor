@@ -52,7 +52,7 @@ describe('ConfirmDialog', () => {
             />
         )
 
-        expect(screen.getByText('Confirm')).toBeInTheDocument()
+        expect(screen.getAllByText('Confirm').length).toBe(2) // title + button
         expect(screen.getByText('Cancel')).toBeInTheDocument()
     })
 })

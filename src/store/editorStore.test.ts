@@ -912,4 +912,19 @@ describe('editor store', () => {
     useEditorStore.getState().setStationFareZone('non-existent', 3)
     expect(useEditorStore.getState()).toEqual(initialState)
   })
+
+  it('defaults language to en', () => {
+    expect(useEditorStore.getState().language).toBe('en')
+  })
+
+  it('sets language to de', () => {
+    useEditorStore.getState().setLanguage('de')
+    expect(useEditorStore.getState().language).toBe('de')
+  })
+
+  it('sets language back to en', () => {
+    useEditorStore.getState().setLanguage('de')
+    useEditorStore.getState().setLanguage('en')
+    expect(useEditorStore.getState().language).toBe('en')
+  })
 })

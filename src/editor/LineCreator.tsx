@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { TextField, Box, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { validateLineName, VALIDATION } from '../validation/constants'
 import type { LineStyle, TransitMode } from '../model/line'
 
@@ -30,6 +31,7 @@ export function LineCreator({
     setIsCreatingLine,
     colorPalette,
 }: Props) {
+    const { t } = useTranslation()
     const validation = validateLineName(newLineName)
     const [newLineCode, setNewLineCode] = useState('')
     const [lineStyle, setLineStyle] = useState<LineStyle>('solid')
@@ -65,7 +67,7 @@ export function LineCreator({
             <TextField
                 value={newLineName}
                 onChange={(e) => setNewLineName(e.target.value)}
-                placeholder="Line name"
+                placeholder={t('lineCreator.lineNamePlaceholder')}
                 size="small"
                 sx={{ minWidth: 120 }}
                 slotProps={{
@@ -106,13 +108,13 @@ export function LineCreator({
                             opacity: 0.8,
                         },
                     }}
-                    title={isCustomColor ? 'Custom color' : 'Select custom color'}
+                    title={isCustomColor ? t('lineCreator.customColor') : t('lineCreator.selectCustomColor')}
                 />
             </Stack>
             <TextField
                 value={newLineColor}
                 onChange={handleHexColorChange}
-                placeholder="#RRGGBB"
+                placeholder={t('lineCreator.hexPlaceholder')}
                 size="small"
                 sx={{ minWidth: 120 }}
                 slotProps={{
@@ -136,12 +138,12 @@ export function LineCreator({
                     },
                 }}
                 error={newLineColor !== '' && !isValidHexColor(newLineColor)}
-                helperText={newLineColor !== '' && !isValidHexColor(newLineColor) ? 'Invalid hex color (e.g., #ff0000)' : ''}
+                helperText={newLineColor !== '' && !isValidHexColor(newLineColor) ? t('lineCreator.invalidHex') : ''}
             />
             <TextField
                 value={newLineCode}
                 onChange={(e) => setNewLineCode(e.target.value)}
-                placeholder="Code (optional, e.g. M1)"
+                placeholder={t('lineCreator.codePlaceholder')}
                 size="small"
                 sx={{ minWidth: 120 }}
                 slotProps={{
@@ -149,32 +151,32 @@ export function LineCreator({
                         maxLength: MAX_LINE_CODE_LENGTH,
                     },
                 }}
-                helperText="Short badge shown on stations"
+                helperText={t('lineCreator.shortBadgeHint')}
             />
             <Stack direction="row" spacing={1}>
                 <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
-                    <InputLabel id="line-style-label">Style</InputLabel>
+                    <InputLabel id="line-style-label">{t('lineCreator.style')}</InputLabel>
                     <Select
                         labelId="line-style-label"
                         value={lineStyle}
-                        label="Style"
+                        label={t('lineCreator.style')}
                         onChange={(e) => setLineStyle(e.target.value)}
                     >
                         {LINE_STYLES.map((s) => (
-                            <MenuItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</MenuItem>
+                            <MenuItem key={s} value={s}>{t(`lineCreator.lineStyle_${s}`)}</MenuItem>
                         ))}
                     </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
-                    <InputLabel id="transit-mode-label">Mode</InputLabel>
+                    <InputLabel id="transit-mode-label">{t('lineCreator.mode')}</InputLabel>
                     <Select
                         labelId="transit-mode-label"
                         value={transitMode}
-                        label="Mode"
+                        label={t('lineCreator.mode')}
                         onChange={(e) => setTransitMode(e.target.value)}
                     >
                         {TRANSIT_MODES.map((m) => (
-                            <MenuItem key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</MenuItem>
+                            <MenuItem key={m} value={m}>{t(`lineCreator.transitMode_${m}`)}</MenuItem>
                         ))}
                     </Select>
                 </FormControl>
@@ -186,7 +188,7 @@ export function LineCreator({
                     onClick={handleCreate}
                     disabled={!validation.valid || newLineColor === '' || !isValidHexColor(newLineColor)}
                 >
-                    Create
+                    {t('common.create')}
                 </Button>
                 <Button
                     variant="outlined"
@@ -200,7 +202,7 @@ export function LineCreator({
                         setIsCreatingLine(false)
                     }}
                 >
-                    Cancel
+                    {t('common.cancel')}
                 </Button>
             </Stack>
         </Box>

@@ -8,6 +8,7 @@ import {
     useMediaQuery,
     useTheme,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 type Props = {
     open: boolean
@@ -21,26 +22,27 @@ type Props = {
 
 export function ConfirmDialog({
     open,
-    title = 'Confirm Action',
+    title,
     message,
-    confirmLabel = 'Confirm',
-    cancelLabel = 'Cancel',
+    confirmLabel,
+    cancelLabel,
     onConfirm,
     onCancel,
 }: Props) {
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const { t } = useTranslation()
 
     return (
         <Dialog open={open} onClose={onCancel} fullScreen={isMobile} maxWidth="xs" fullWidth>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>{title ?? t('common.confirm')}</DialogTitle>
             <DialogContent>
                 <DialogContentText>{message}</DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onCancel}>{cancelLabel}</Button>
+                <Button onClick={onCancel}>{cancelLabel ?? t('common.cancel')}</Button>
                 <Button onClick={onConfirm} variant="contained" color="error">
-                    {confirmLabel}
+                    {confirmLabel ?? t('common.confirm')}
                 </Button>
             </DialogActions>
         </Dialog>
