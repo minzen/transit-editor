@@ -7,6 +7,7 @@ import { GridSizeControl } from './GridSizeControl'
 import { LineWidthControl } from './LineWidthControl'
 import { HelpDialog } from './HelpDialog'
 import { ConfirmDialog } from './ConfirmDialog'
+import { RenameDialog } from './RenameDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
@@ -45,6 +46,7 @@ type Props = {
     newLineColor: string
     setNewLineColor: (color: string) => void
     addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
+    setLineName: (id: string, name: string) => void
     setPendingStationId: (id: string | null) => void
     setPointerWorldPosition: (point: { x: number; y: number } | null) => void
     colorPalette: string[]
@@ -117,6 +119,7 @@ export function EditorToolbar({
     newLineColor,
     setNewLineColor,
     addLine,
+    setLineName,
     setPendingStationId,
     setPointerWorldPosition,
     colorPalette,
@@ -132,6 +135,7 @@ export function EditorToolbar({
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
     const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
+    const [renameLineOpen, setRenameLineOpen] = useState(false)
 
     const handleClear = () => {
         clear()
@@ -395,6 +399,15 @@ export function EditorToolbar({
                         ))}
                     </Select>
                     <Button onClick={() => setIsCreatingLine(true)}>+ Line</Button>
+                    {selectedLineId && (
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            onClick={() => setRenameLineOpen(true)}
+                        >
+                            Rename
+                        </Button>
+                    )}
 
                     <Dialog
                         open={isCreatingLine}
@@ -411,6 +424,20 @@ export function EditorToolbar({
                             colorPalette={colorPalette}
                         />
                     </Dialog>
+
+                    <RenameDialog
+                        open={renameLineOpen}
+                        title="Rename Line"
+                        initialValue={selectedLineId ? lines[selectedLineId]?.name : ''}
+                        placeholder="Line name"
+                        onConfirm={(name) => {
+                            if (selectedLineId) {
+                                setLineName(selectedLineId, name)
+                            }
+                            setRenameLineOpen(false)
+                        }}
+                        onCancel={() => setRenameLineOpen(false)}
+                    />
                 </>
             )}
             <ConfirmDialog

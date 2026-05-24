@@ -150,6 +150,7 @@ export function EditorCanvas() {
     )
 
     const addLine = useEditorStore((s) => s.addLine)
+    const setLineName = useEditorStore((s) => s.setLineName)
     const addShape = useEditorStore((s) => s.addShape)
     const updateShape = useEditorStore((s) => s.updateShape)
     const deleteShape = useEditorStore((s) => s.deleteShape)
@@ -342,6 +343,7 @@ export function EditorCanvas() {
                 newLineColor={newLineColor}
                 setNewLineColor={setNewLineColor}
                 addLine={addLine}
+                setLineName={setLineName}
                 setPendingStationId={setPendingStationId}
                 setPointerWorldPosition={setPointerWorldPosition}
                 colorPalette={colorPalette}
