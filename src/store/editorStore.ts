@@ -19,6 +19,7 @@ export const useEditorStore = create<EditorState>()(
         }),
         {
             name: 'transit-editor-storage',
+            version: 1,
             partialize: (state) => ({
                 activeTool: state.activeTool,
                 stations: state.stations,
@@ -31,6 +32,26 @@ export const useEditorStore = create<EditorState>()(
                 gridCellsHeight: state.gridCellsHeight,
                 showLineCodes: state.showLineCodes,
             }),
+            migrate: (persistedState, version) => {
+                if (version === 0) {
+                    // Unversioned storage: ensure all newer fields have sensible defaults
+                    const state = (persistedState ?? {}) as Partial<EditorState>
+                    return {
+                        ...state,
+                        activeTool: state.activeTool ?? 'select',
+                        stations: state.stations ?? {},
+                        segments: state.segments ?? {},
+                        lines: state.lines ?? {},
+                        shapes: state.shapes ?? {},
+                        lineWidth: typeof state.lineWidth === 'number' ? state.lineWidth : 10,
+                        gridCellSize: typeof state.gridCellSize === 'number' ? state.gridCellSize : 50,
+                        gridCellsWidth: typeof state.gridCellsWidth === 'number' ? state.gridCellsWidth : 80,
+                        gridCellsHeight: typeof state.gridCellsHeight === 'number' ? state.gridCellsHeight : 80,
+                        showLineCodes: state.showLineCodes ?? true,
+                    }
+                }
+                return persistedState
+            },
             merge: (persistedState, currentState) => {
                 // Validate persisted grid values to prevent corrupted localStorage values
                 // from breaking grid snapping
