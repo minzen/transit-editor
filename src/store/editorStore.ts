@@ -29,6 +29,7 @@ export const useEditorStore = create<EditorState>()(
                 gridCellSize: state.gridCellSize,
                 gridCellsWidth: state.gridCellsWidth,
                 gridCellsHeight: state.gridCellsHeight,
+                showLineCodes: state.showLineCodes,
             }),
             merge: (persistedState, currentState) => {
                 // Validate persisted grid values to prevent corrupted localStorage values

@@ -34,6 +34,8 @@ type Props = {
     setGridCellsHeight: (height: number) => void
     lineWidth: number
     setLineWidth: (width: number) => void
+    showLineCodes: boolean
+    setShowLineCodes: (show: boolean) => void
     selectedLineId: string | null
     lines: Record<string, Line>
     isCreatingLine: boolean
@@ -96,6 +98,8 @@ export function EditorToolbar({
     setGridCellsHeight,
     lineWidth,
     setLineWidth,
+    showLineCodes,
+    setShowLineCodes,
     selectedLineId,
     lines,
     isCreatingLine,
@@ -262,6 +266,12 @@ export function EditorToolbar({
                                 lineWidth={lineWidth}
                                 setLineWidth={setLineWidth}
                             />
+                            <Button
+                                variant={showLineCodes ? 'contained' : 'outlined'}
+                                onClick={() => setShowLineCodes(!showLineCodes)}
+                            >
+                                {showLineCodes ? 'Hide Line Codes' : 'Show Line Codes'}
+                            </Button>
                         </Box>
                     </Popover>
                 </>
@@ -302,6 +312,16 @@ export function EditorToolbar({
                         lineWidth={lineWidth}
                         setLineWidth={setLineWidth}
                     />
+
+                    <Tooltip title={showLineCodes ? 'Hide Line Codes' : 'Show Line Codes'}>
+                        <Button
+                            variant={showLineCodes ? 'contained' : 'outlined'}
+                            onClick={() => setShowLineCodes(!showLineCodes)}
+                            sx={{ minWidth: 40, px: 1 }}
+                        >
+                            {showLineCodes ? 'Codes' : 'Codes'}
+                        </Button>
+                    </Tooltip>
                 </>
             )}
 

@@ -7,6 +7,7 @@ export type ViewSlice = {
     gridCellSize: number
     gridCellsWidth: number
     gridCellsHeight: number
+    showLineCodes: boolean
     setViewport: (viewport: Viewport) => void
     zoomIn: (centerX?: number, centerY?: number) => void
     zoomOut: (centerX?: number, centerY?: number) => void
@@ -15,6 +16,7 @@ export type ViewSlice = {
     setGridCellSize: (size: number) => void
     setGridCellsWidth: (width: number) => void
     setGridCellsHeight: (height: number) => void
+    setShowLineCodes: (show: boolean) => void
 }
 
 export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set) => ({
@@ -23,6 +25,7 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
     gridCellSize: 50,
     gridCellsWidth: 80,
     gridCellsHeight: 80,
+    showLineCodes: true,
 
     setViewport: (viewport) =>
         set({ viewport }),
@@ -97,4 +100,7 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
         set(() => ({
             gridCellsHeight: Math.max(10, Math.min(1000, height)),
         })),
+
+    setShowLineCodes: (show) =>
+        set({ showLineCodes: show }),
 })

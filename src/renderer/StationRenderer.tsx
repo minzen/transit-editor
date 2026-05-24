@@ -14,6 +14,7 @@ type Props = {
     selectedStationIds: string[]
     pendingStationId: string | null
     selectedLineId?: string | null
+    showLineCodes?: boolean
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
     onStationLongPress?: (stationId: string) => void
@@ -77,6 +78,7 @@ export function StationRenderer({
     selectedStationIds,
     pendingStationId,
     selectedLineId,
+    showLineCodes = true,
     onStationPointerDown,
     onStationDoubleClick,
     onStationLongPress,
@@ -269,7 +271,7 @@ export function StationRenderer({
                         )}
 
                         {/* Line code bullets: small coloured circles below the station */}
-                        {lines && (() => {
+                        {showLineCodes && lines && (() => {
                             const codedLines = getConnectedLineIds(s.id)
                                 .map((id) => lines[id])
                                 .filter((line): line is Line => Boolean(line?.code))

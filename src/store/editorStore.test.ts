@@ -858,4 +858,17 @@ describe('editor store', () => {
       expect(Object.keys(updatedState.segments).length).toBe(4)
     })
   })
+
+  it('defaults showLineCodes to true', () => {
+    const state = useEditorStore.getState()
+    expect(state.showLineCodes).toBe(true)
+  })
+
+  it('toggles showLineCodes', () => {
+    useEditorStore.getState().setShowLineCodes(false)
+    expect(useEditorStore.getState().showLineCodes).toBe(false)
+
+    useEditorStore.getState().setShowLineCodes(true)
+    expect(useEditorStore.getState().showLineCodes).toBe(true)
+  })
 })

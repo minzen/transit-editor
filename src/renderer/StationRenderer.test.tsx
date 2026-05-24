@@ -228,6 +228,33 @@ describe('StationRenderer', () => {
         expect(texts).toEqual(['A', 'B'])
     })
 
+    it('hides line code badges when showLineCodes is false', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A' },
+            s2: { id: 's2', x: 200, y: 100, name: 'B' },
+        }
+        const segments: Record<string, Segment> = {
+            seg1: {
+                id: 'seg1',
+                fromStationId: 's1',
+                toStationId: 's2',
+                lineIds: ['L1'],
+                points: [{ x: 100, y: 100 }, { x: 200, y: 100 }],
+            },
+        }
+        const lines = {
+            L1: { id: 'L1', name: 'Metro 1', color: '#1976d2', code: 'M1' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} segments={segments} lines={lines} showLineCodes={false} />
+        )
+
+        const texts = Array.from(container.querySelectorAll('text'))
+            .map((t) => t.textContent)
+        expect(texts).toEqual(['A', 'B'])
+        expect(texts).not.toContain('M1')
+    })
+
     it('positions label above station by default', () => {
         const stations: Record<string, Station> = {
             s1: { id: 's1', x: 100, y: 100, name: 'A' },

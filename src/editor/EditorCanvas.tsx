@@ -43,6 +43,8 @@ export function EditorCanvas() {
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
+    const showLineCodes = useEditorStore((s) => s.showLineCodes)
+    const setShowLineCodes = useEditorStore((s) => s.setShowLineCodes)
 
     // Wrapper functions to zoom around the center of the SVG element
     const zoomIn = () => {
@@ -329,6 +331,8 @@ export function EditorCanvas() {
                 setGridCellsHeight={useEditorStore((s) => s.setGridCellsHeight)}
                 lineWidth={lineWidth}
                 setLineWidth={setLineWidth}
+                showLineCodes={showLineCodes}
+                setShowLineCodes={setShowLineCodes}
                 selectedLineId={selectedLineId}
                 lines={lines}
                 isCreatingLine={isCreatingLine}
@@ -570,6 +574,7 @@ export function EditorCanvas() {
                         selectedStationIds={selectedStationIds}
                         pendingStationId={pendingStationId}
                         selectedLineId={selectedLineId}
+                        showLineCodes={showLineCodes}
                         onStationPointerDown={(stationId, event) => {
                             event.stopPropagation()
 
