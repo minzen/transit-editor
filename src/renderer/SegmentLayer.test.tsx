@@ -168,13 +168,19 @@ describe('SegmentLayer', () => {
 
         // Diagonal segment of length sqrt(50^2 + 50^2) ≈ 70.71.
         // Trim 8 px from each end => start ≈ (5.657, 5.657), end ≈ (94.343, 94.343).
-        // Interior bend point (50, 50) is preserved.
-        const match = d.match(/^M ([\d.]+) ([\d.]+) L 50 50 L ([\d.]+) ([\d.]+)$/)
+        // Interior bend point (50, 50) is preserved and rounded via quadratic bezier.
+        expect(d).toContain('Q 50 50')
+        const match = d.match(/^M ([\d.]+) ([\d.]+)/)
         expect(match).not.toBeNull()
         if (match) {
-            const [, sx, sy, ex, ey] = match
+            const [, sx, sy] = match
             expect(parseFloat(sx)).toBeCloseTo(5.66, 1)
             expect(parseFloat(sy)).toBeCloseTo(5.66, 1)
+        }
+        const endMatch = d.match(/L ([\d.]+) ([\d.]+)$/)
+        expect(endMatch).not.toBeNull()
+        if (endMatch) {
+            const [, ex, ey] = endMatch
             expect(parseFloat(ex)).toBeCloseTo(94.34, 1)
             expect(parseFloat(ey)).toBeCloseTo(94.34, 1)
         }

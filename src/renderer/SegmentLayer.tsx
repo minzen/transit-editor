@@ -2,6 +2,7 @@ import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import { offsetPath } from '../geometry/offsetPath'
 import { trimPolyline } from '../geometry/trimPolyline'
+import { buildRoundedPolylinePath } from '../geometry/buildRoundedPath'
 import { STATION_RADIUS } from './stationConstants'
 
 type Props = {
@@ -108,13 +109,7 @@ export function SegmentLayer({
           // Calculate the actual offset path points using our miter joints algorithm
           const offsetPoints = offsetPath(trimmed, offsetDistance)
 
-          const d = offsetPoints
-            .map((p, pIndex) =>
-              pIndex === 0
-                ? `M ${p.x} ${p.y}`
-                : `L ${p.x} ${p.y}`
-            )
-            .join(' ')
+          const d = buildRoundedPolylinePath(offsetPoints)
 
           return (
             <SegmentPath
