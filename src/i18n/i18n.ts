@@ -1,10 +1,11 @@
 import i18n from 'i18next'
+import type { Resource } from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import en from './locales/en.json'
 import de from './locales/de.json'
 
-const resources = {
+const resources: Resource = {
     en: { translation: en },
     de: { translation: de },
 }
@@ -24,6 +25,9 @@ i18n
             caches: ['localStorage'],
             lookupLocalStorage: 'i18nextLng',
         },
+    })
+    .catch((err) => {
+        console.error('i18n init failed', err)
     })
 
 export default i18n
