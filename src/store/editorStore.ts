@@ -1,123 +1,91 @@
 import { create } from 'zustand'
-import { nanoid } from 'nanoid'
-import type { Station } from '../model/station'
-import type { Segment } from '../model/segment'
+import { persist } from 'zustand/middleware'
+import type { DataSlice } from './slices/dataSlice'
+import type { ToolSlice } from './slices/toolSlice'
+import type { ViewSlice } from './slices/viewSlice'
+import { createDataSlice } from './slices/dataSlice'
+import { createToolSlice } from './slices/toolSlice'
+import { createViewSlice } from './slices/viewSlice'
 
-type EditorState = {
-    stations: Record<string, Station>
-    segments: Record<string, Segment>
+export type EditorState = DataSlice & ToolSlice & ViewSlice
+export type { EditorTool } from './slices/toolSlice'
 
-    addStation: (x: number, y: number) => void
-    moveStation: (id: string, x: number, y: number) => void
-    addSegment: (fromStationId: string, toStationId: string) => void
-}
-
-export const useEditorStore = create<EditorState>((set) => ({
-    stations: {},
-    segments: {},
-
-    addStation: (x, y) =>
-        set((state) => {
-            const id = nanoid()
-
-            return {
-                stations: {
-                    ...state.stations,
-                    [id]: {
-                        id,
-                        x,
-                        y,
-                    },
-                },
-            }
+export const useEditorStore = create<EditorState>()(
+    persist(
+        (...a) => ({
+            ...createDataSlice(...a),
+            ...createToolSlice(...a),
+            ...createViewSlice(...a),
         }),
-
-    moveStation: (id, x, y) =>
-        set((state) => {
-            const station = state.stations[id]
-
-            if (!station) {
-                return state
-            }
-
-            const segments = Object.fromEntries(
-                Object.entries(state.segments).map(
-                    ([segmentId, segment]) => {
-                        const points = [...segment.points]
-
-                        if (segment.fromStationId === id) {
-                            points[0] = { x, y }
-                        }
-
-                        if (segment.toStationId === id) {
-                            points[points.length - 1] = { x, y }
-                        }
-
-                        return [
-                            segmentId,
-                            {
-                                ...segment,
-                                points,
-                            },
-                        ]
+        {
+            name: 'transit-editor-storage',
+            version: 1,
+            partialize: (state) => ({
+                activeTool: state.activeTool,
+                stations: state.stations,
+                segments: state.segments,
+                lines: state.lines,
+                shapes: state.shapes,
+                lineWidth: state.lineWidth,
+                gridCellSize: state.gridCellSize,
+                gridCellsWidth: state.gridCellsWidth,
+                gridCellsHeight: state.gridCellsHeight,
+                showLineCodes: state.showLineCodes,
+                language: state.language,
+            }),
+            migrate: (persistedState, version) => {
+                // Handle cleared localStorage (null/undefined persistedState)
+                if (!persistedState) {
+                    return {
+                        activeTool: 'select',
+                        stations: {},
+                        segments: {},
+                        lines: {},
+                        shapes: {},
+                        lineWidth: 10,
+                        gridCellSize: 50,
+                        gridCellsWidth: 80,
+                        gridCellsHeight: 80,
+                        showLineCodes: true,
+                        language: 'en',
                     }
-                )
-            )
-
-            return {
-                stations: {
-                    ...state.stations,
-                    [id]: {
-                        ...station,
-                        x,
-                        y,
-                    },
-                },
-                segments,
-            }
-        }),
-
-    addSegment: (
-        fromStationId,
-        toStationId
-    ) =>
-        set((state) => {
-            const from =
-                state.stations[fromStationId]
-
-            const to =
-                state.stations[toStationId]
-
-            if (!from || !to) {
-                return state
-            }
-
-            const id = nanoid()
-
-            return {
-                segments: {
-                    ...state.segments,
-
-                    [id]: {
-                        id,
-
-                        fromStationId,
-                        toStationId,
-
-                        points: [
-                            {
-                                x: from.x,
-                                y: from.y,
-                            },
-
-                            {
-                                x: to.x,
-                                y: to.y,
-                            },
-                        ],
-                    },
-                },
-            }
-        }),
-
-}))
+                }
+                if (version === 0) {
+                    // Unversioned storage: ensure all newer fields have sensible defaults
+                    const state = persistedState as Partial<EditorState>
+                    return {
+                        ...state,
+                        activeTool: state.activeTool ?? 'select',
+                        stations: state.stations ?? {},
+                        segments: state.segments ?? {},
+                        lines: state.lines ?? {},
+                        shapes: state.shapes ?? {},
+                        lineWidth: typeof state.lineWidth === 'number' ? state.lineWidth : 10,
+                        gridCellSize: typeof state.gridCellSize === 'number' ? state.gridCellSize : 50,
+                        gridCellsWidth: typeof state.gridCellsWidth === 'number' ? state.gridCellsWidth : 80,
+                        gridCellsHeight: typeof state.gridCellsHeight === 'number' ? state.gridCellsHeight : 80,
+                        showLineCodes: state.showLineCodes ?? true,
+                        language: state.language ?? 'en',
+                    }
+                }
+                return persistedState
+            },
+            merge: (persistedState, currentState) => {
+                // Validate persisted grid values to prevent corrupted localStorage values
+                // from breaking grid snapping
+                const persisted = (persistedState ?? {}) as Partial<EditorState>
+                const clampGrid = (value: unknown, fallback: number): number => {
+                    const num = typeof value === 'number' && Number.isFinite(value) ? value : fallback
+                    return Math.max(10, Math.min(1000, num))
+                }
+                return {
+                    ...currentState,
+                    ...persisted,
+                    gridCellSize: clampGrid(persisted.gridCellSize, currentState.gridCellSize),
+                    gridCellsWidth: clampGrid(persisted.gridCellsWidth, currentState.gridCellsWidth),
+                    gridCellsHeight: clampGrid(persisted.gridCellsHeight, currentState.gridCellsHeight),
+                }
+            },
+        },
+    ),
+)
