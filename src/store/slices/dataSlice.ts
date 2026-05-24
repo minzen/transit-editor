@@ -56,6 +56,7 @@ export type DataSlice = {
     setStationName: (id: string, name: string) => void
     setStationLabelPosition: (id: string, position: LabelPosition) => void
     setStationServices: (id: string, services: ServiceIcon[]) => void
+    setStationFareZone: (id: string, zone: number | undefined) => void
     deleteStation: (id: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
     insertBendPoint: (segmentId: string, x: number, y: number) => void
@@ -307,6 +308,31 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     [id]: {
                         ...station,
                         services: services.length > 0 ? services : undefined,
+                    },
+                },
+                segments: state.segments,
+                lines: state.lines,
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setStationFareZone: (id, zone) =>
+        set((state) => {
+            const station = state.stations[id]
+
+            if (!station) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: {
+                    ...state.stations,
+                    [id]: {
+                        ...station,
+                        fareZone: zone,
                     },
                 },
                 segments: state.segments,

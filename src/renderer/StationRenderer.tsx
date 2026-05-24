@@ -277,6 +277,31 @@ export function StationRenderer({
                             </text>
                         )}
 
+                        {/* Fare zone badge: small circle above the station */}
+                        {s.fareZone !== undefined && (
+                            <g style={{ pointerEvents: 'none' }}>
+                                <circle
+                                    cx={s.x}
+                                    cy={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10}
+                                    r={7}
+                                    fill="#666"
+                                    stroke="#fff"
+                                    strokeWidth={1}
+                                />
+                                <text
+                                    x={s.x}
+                                    y={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10}
+                                    textAnchor="middle"
+                                    dominantBaseline="central"
+                                    fontSize={9}
+                                    fontWeight="bold"
+                                    fill="#fff"
+                                >
+                                    {s.fareZone}
+                                </text>
+                            </g>
+                        )}
+
                         {/* Line code bullets: small coloured circles below the station */}
                         {showLineCodes && lines && (() => {
                             const codedLines = getConnectedLineIds(s.id)

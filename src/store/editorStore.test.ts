@@ -892,4 +892,24 @@ describe('editor store', () => {
     useEditorStore.getState().setStationServices('non-existent', ['accessibility'])
     expect(useEditorStore.getState()).toEqual(initialState)
   })
+
+  it('sets and clears station fare zone', () => {
+    useEditorStore.getState().addStation(100, 200)
+    const stationId = Object.keys(useEditorStore.getState().stations)[0]
+
+    useEditorStore.getState().setStationFareZone(stationId, 2)
+    expect(useEditorStore.getState().stations[stationId].fareZone).toBe(2)
+
+    useEditorStore.getState().setStationFareZone(stationId, 5)
+    expect(useEditorStore.getState().stations[stationId].fareZone).toBe(5)
+
+    useEditorStore.getState().setStationFareZone(stationId, undefined)
+    expect(useEditorStore.getState().stations[stationId].fareZone).toBeUndefined()
+  })
+
+  it('does nothing when setting fare zone for non-existent station', () => {
+    const initialState = useEditorStore.getState()
+    useEditorStore.getState().setStationFareZone('non-existent', 3)
+    expect(useEditorStore.getState()).toEqual(initialState)
+  })
 })

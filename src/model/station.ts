@@ -9,4 +9,5 @@ export type Station = {
   name?: string
   labelPosition?: LabelPosition
   services?: ServiceIcon[]
+  fareZone?: number
 }

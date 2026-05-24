@@ -356,4 +356,30 @@ describe('StationRenderer', () => {
         const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
         expect(texts).toEqual(['A'])
     })
+
+    it('renders fare zone badge above station with fareZone', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A', fareZone: 3 },
+            s2: { id: 's2', x: 200, y: 100, name: 'B' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
+        expect(texts).toContain('3')
+        // s2 has no fareZone, so only 'A' and 'B' should appear
+        const stationNames = texts.filter((t) => t === 'A' || t === 'B')
+        expect(stationNames).toEqual(['A', 'B'])
+    })
+
+    it('does not render fare zone badge when fareZone is absent', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'A' },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
+        expect(texts).toEqual(['A'])
+    })
 })
