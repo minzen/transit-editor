@@ -123,11 +123,11 @@ Use this section to record commit hashes when items are completed:
 | 1.2 Bend point editing | ✅ Done | `0e92361` |
 | 2.1 Line bullet badges | ✅ Done | `7928bf2` |
 | 2.2 Configurable label placement | ✅ Done | `24215e5` |
-| 3.1 Line styles / transit modes | Pending | — |
+| 3.1 Line styles / transit modes | ✅ Done | `8834b2e` |
 | 3.2 Background features | ✅ Done | `dbebec5` |
 | 3.3 Selection/hover | ✅ Done | `b331f84` |
 | 4.1 Fare zones | Pending | — |
 | 4.2 Service icons | Pending | — |
 | 5.1 `??` lint fixes | ✅ Done | `19eda87` |
-| 5.2 Store slices | Pending | — |
+| 5.2 Store slices | ✅ Done | `4c77220` |
 | 5.3 Versioned persistence | Pending | — |

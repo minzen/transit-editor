@@ -77,6 +77,14 @@ const tools: {
     },
 ]
 
+const TRANSIT_MODE_LABEL: Record<TransitMode, string> = {
+    metro: 'M',
+    rail: 'R',
+    tram: 'T',
+    bus: 'B',
+    ferry: 'F',
+}
+
 export function EditorToolbar({
     activeTool,
     setActiveTool,
@@ -332,12 +340,57 @@ export function EditorToolbar({
                         value={selectedLineId ?? ''}
                         onChange={(e) => setSelectedLineId(e.target.value || null)}
                         displayEmpty
-                        sx={{ minWidth: isMobile ? 80 : 120 }}
+                        renderValue={(value) => {
+                            if (!value) return 'Select line...'
+                            const line = lines[value]
+                            if (!line) return 'Select line...'
+                            return (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            width: 12,
+                                            height: 12,
+                                            borderRadius: '50%',
+                                            backgroundColor: line.color,
+                                            border: '1px solid rgba(0,0,0,0.2)',
+                                        }}
+                                    />
+                                    <span>{line.name}</span>
+                                </Box>
+                            )
+                        }}
+                        sx={{ minWidth: isMobile ? 80 : 140 }}
                     >
                         <MenuItem value="">Select line...</MenuItem>
                         {Object.values(lines).map((line) => (
                             <MenuItem key={line.id} value={line.id}>
-                                {line.name}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            width: 12,
+                                            height: 12,
+                                            borderRadius: '50%',
+                                            backgroundColor: line.color,
+                                            border: '1px solid rgba(0,0,0,0.2)',
+                                        }}
+                                    />
+                                    <span>{line.name}</span>
+                                    <Box
+                                        component="span"
+                                        sx={{
+                                            ml: 'auto',
+                                            fontSize: 10,
+                                            fontWeight: 'bold',
+                                            px: 0.5,
+                                            py: 0.25,
+                                            borderRadius: 0.5,
+                                            backgroundColor: 'action.selected',
+                                            color: 'text.secondary',
+                                        }}
+                                    >
+                                        {TRANSIT_MODE_LABEL[line.transitMode ?? 'metro']}
+                                    </Box>
+                                </Box>
                             </MenuItem>
                         ))}
                     </Select>
