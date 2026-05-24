@@ -220,6 +220,45 @@ docker-compose up
 
 The editor will be available at `http://localhost:80`
 
+## Analytics (Optional)
+
+The project includes Plausible Analytics for privacy-focused visitor tracking.
+
+### Setup
+
+1. **Configure Plausible environment variables** in `plausible-conf.env`:
+   - Set `SECRET_KEY` to a random string
+   - Adjust `BASE_URL` to match your domain
+
+2. **Enable tracking in the app** by setting environment variables in `.env`:
+   ```bash
+   VITE_PLAUSIBLE_DOMAIN=your-domain.com
+   VITE_PLAUSIBLE_URL=http://localhost:8000
+   ```
+
+3. **Start Plausible containers**:
+   ```bash
+   docker-compose up plausible plausible-db plausible-events
+   ```
+
+4. **Access Plausible dashboard** at `http://localhost:8000`
+   - First login: register an admin account
+   - Create a new site with your domain
+   - Copy the tracking script URL (already configured in `index.html`)
+
+### Architecture
+
+- **Plausible**: Main analytics service (port 8000)
+- **PostgreSQL**: Stores user accounts and site configuration
+- **ClickHouse**: Stores analytics events for fast queries
+
+### Production Notes
+
+- Change `BASE_URL` in `plausible-conf.env` to your public domain
+- Set `DISABLE_REGISTRATION=true` to prevent public signups
+- Configure SMTP settings for password reset emails (optional)
+- For production, use reverse proxy (nginx) with SSL for Plausible
+
 ## Deploy to VPS
 
 The project includes a deploy.sh script for SSH-based deployment.
