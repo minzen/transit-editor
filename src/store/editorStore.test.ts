@@ -525,6 +525,19 @@ describe('editor store', () => {
     expect(useEditorStore.getState().shapes[shapeId]).toBeDefined()
   })
 
+  it('undo restores shape update', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }, { x: 100, y: 100 }], '#a8d5e2')
+    const shapeId = Object.keys(useEditorStore.getState().shapes)[0]
+    const originalPoints = useEditorStore.getState().shapes[shapeId].points
+
+    useEditorStore.getState().updateShape(shapeId, {
+      points: [{ x: 50, y: 50 }, { x: 150, y: 150 }],
+    })
+    useEditorStore.getState().undo()
+
+    expect(useEditorStore.getState().shapes[shapeId].points).toEqual(originalPoints)
+  })
+
   it('clears all data', () => {
     useEditorStore.getState().addStation(100, 200)
     useEditorStore.getState().addStation(300, 400)
