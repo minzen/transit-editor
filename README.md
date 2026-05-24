@@ -203,7 +203,7 @@ nvm use  # Reads .nvmrc file
 
 ## Technologies
 
-- React 18
+- React 19
 - TypeScript
 - Vite 8
 - Zustand

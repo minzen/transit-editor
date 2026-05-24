@@ -334,7 +334,7 @@ export function EditorToolbar({
                     labelId="language-select-label"
                     value={language}
                     onChange={(e) => {
-                        const lang = e.target.value as 'en' | 'de'
+                        const lang = e.target.value
                         setLanguage(lang)
                         void i18n.changeLanguage(lang)
                     }}
