@@ -34,9 +34,25 @@ export const useEditorStore = create<EditorState>()(
                 language: state.language,
             }),
             migrate: (persistedState, version) => {
+                // Handle cleared localStorage (null/undefined persistedState)
+                if (!persistedState) {
+                    return {
+                        activeTool: 'select',
+                        stations: {},
+                        segments: {},
+                        lines: {},
+                        shapes: {},
+                        lineWidth: 10,
+                        gridCellSize: 50,
+                        gridCellsWidth: 80,
+                        gridCellsHeight: 80,
+                        showLineCodes: true,
+                        language: 'en',
+                    }
+                }
                 if (version === 0) {
                     // Unversioned storage: ensure all newer fields have sensible defaults
-                    const state = (persistedState ?? {}) as Partial<EditorState>
+                    const state = persistedState as Partial<EditorState>
                     return {
                         ...state,
                         activeTool: state.activeTool ?? 'select',

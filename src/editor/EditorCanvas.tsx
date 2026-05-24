@@ -186,6 +186,10 @@ export function EditorCanvas() {
                 setSelectedShapeId(null)
             }
         },
+        onUndo: undo,
+        onRedo: redo,
+        canUndo: pastStates.length > 0,
+        canRedo: futureStates.length > 0,
     })
 
     const {
@@ -203,6 +207,19 @@ export function EditorCanvas() {
         handlePointerCancel,
         handleClick,
     } = useCanvasInteractions({ spacePressed })
+
+    // Attach wheel event listener with passive: false to allow preventDefault
+    useEffect(() => {
+        const svg = svgRef.current
+        if (!svg) return
+
+        const onWheel = (e: WheelEvent) => handleWheel(e as unknown as React.WheelEvent<SVGSVGElement>)
+        svg.addEventListener('wheel', onWheel, { passive: false })
+
+        return () => {
+            svg.removeEventListener('wheel', onWheel)
+        }
+    }, [handleWheel])
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
@@ -374,7 +391,6 @@ export function EditorCanvas() {
                             ? 'grab'
                             : 'default',
                 }}
-                onWheel={handleWheel}
                 onPointerDown={handlePointerDown}
                 onPointerMove={(event) => {
                     if (draggingShapeVertex) {
