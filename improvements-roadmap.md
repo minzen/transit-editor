@@ -1,133 +1,69 @@
 # Improvements Roadmap
 
-This document captures the next set of improvements that would push the editor toward producing professional-quality schematic transit maps. The original architectural plan is in `code-review-and-plan.md` (all milestones complete).
-
-Items are ordered by impact-to-effort ratio. Each item lists the rationale, the affected files, and a sketch of the technical approach.
+This document captures the next set of architectural, performance, and interaction improvements to push the editor toward an exceptionally performant, production-ready application. All previous milestones (layout rendering, geometry trimming, and basic interaction) have been successfully completed.
 
 ---
 
-## Priority 1 — Visual polish (small effort, high visual impact)
+## Priority 1 — Performance & React Render Optimization (High Impact, Medium Effort)
 
-### 1.1 Line endpoints meet the station capsule edge cleanly
+### 1.1 Transient Viewport Updates (Render-less Pan & Zoom)
 
-**Status**: ✅ Done (commit `d069b94`)
-
-**Problem**: `SegmentLayer` offsets the entire polyline (including endpoints) perpendicular to the segment direction. The station, however, stays at the original centerline. As a result, parallel lines appear to "float" through or beside the capsule rather than terminating cleanly at its edge.
+**Rationale**: Viewport pan/zoom changes are extremely high-frequency. Subscribing to `viewport` triggers full-tree React re-renders on every wheel event or pointer move, creating noticeable lag on dense maps.
 
 **Approach**:
-- For each rendered line in a segment, shorten its first and last vertex along the segment direction by `(capsuleLength / 2)` so the line terminates at the capsule edge.
-- For single-line stations (circles), shorten by `STATION_RADIUS` so the stroke just touches the circle.
-- Helper: `trimPolyline(points, startTrim, endTrim)` in `src/geometry/`.
+- Decouple high-frequency transformations from React state cycles.
+- Use a React `ref` pointing to the main SVG `<g class="viewport-layer">`.
+- Subscribe to viewport changes transiently via `useEditorStore.subscribe` and apply the SVG transform string directly to the DOM element (`transform="translate(x, y) scale(z)"`), bypassing React rendering passes completely.
 
-**Files**: `src/renderer/SegmentLayer.tsx`, new `src/geometry/trimPolyline.ts`.
+### 1.2 Fine-Grained Zustand Selectors
 
-### 1.2 Bend point editing (add / remove)
-
-**Status**: ✅ Done (commit `0e92361`)
-
-**Problem**: `BendPointRenderer.tsx` exists with tests, but it is **not** rendered by `EditorCanvas.tsx`. Users cannot add new bend points to an existing segment, nor remove existing ones.
+**Rationale**: `useCanvasInteractions.ts` and major rendering layers subscribe to broad store slices. A change in a single station's name or color causes everything else to recalculate.
 
 **Approach**:
-- Render `BendPointRenderer` inside `EditorCanvas.tsx`, wired to `setDraggingBendPoint` (already exposed by `useCanvasInteractions`).
-- Double-click on a segment path inserts a new bend point at the click location (snapped to grid).
-- Double-click on a bend point removes it.
-
-**Files**: `src/editor/EditorCanvas.tsx`, `src/renderer/BendPointRenderer.tsx`, `src/store/editorStore.ts` (add `insertBendPoint`, `removeBendPoint`).
+- Refactor hooks and layers to select only the exact primitive values they need (e.g. `useEditorStore((s) => s.stations[id].x)`).
+- Memoize expensive layout calculations (like offset path vertices and capsule alignment angles).
 
 ---
 
-## Priority 2 — Information density (medium effort, high visual impact)
+## Priority 2 — Architecture & Scalability (Medium-Large Effort)
 
-### 2.1 Line "bullet" badges next to stations
+### 2.1 Action-Based Delta History (Undo/Redo optimization)
 
-**Status**: ✅ Done (commit `7928bf2`)
-
-**Problem**: Lines are distinguishable only by colour. Real transit maps (NYC subway, Tokyo, Berlin) place small coloured circles or rounded squares with the line code (`6`, `M1`, `A`) next to stations.
+**Rationale**: Currently, every action takes a full state snapshot (`createSnapshot`). This is simple but doesn't scale as maps grow to hundreds of elements, leading to massive memory usage.
 
 **Approach**:
-- Add `code: string` to `Line` model (default empty).
-- In `StationRenderer`, render a small coloured pill per connected line beside the capsule/circle, with white text containing `line.code`.
+- Move from complete state snapshotting to an **action-based delta history** (Command pattern) or integrate Zustand's `zundo` middleware.
+- Only record the specific entities modified in each step to minimize memory footprint.
 
-**Files**: `src/model/line.ts`, `src/renderer/StationRenderer.tsx`, `src/editor/LineCreator.tsx` (input for code).
+### 2.2 Versioned Persisted Storage Migrations
 
-### 2.2 Configurable station label placement
-
-**Status**: Pending
-
-**Problem**: Station name text is hard-coded above the station (`y - 12`). Dense parts of a map quickly produce overlapping labels.
+**Rationale**: Adding new properties to lines or stations (such as label positions or services) can corrupt or mismatch older versions of maps stored in users' local storage.
 
 **Approach**:
-- Add `labelPosition: 'top' | 'bottom' | 'left' | 'right'` to `Station` model.
-- `StationRenderer` computes anchor and offset from `labelPosition` and capsule/circle dimensions.
-- Optionally add `labelAngle` for rotated labels.
-
-**Files**: `src/model/station.ts`, `src/renderer/StationRenderer.tsx`, UI control in inspector / context menu.
+- Add a `version` number to the Zustand storage configuration.
+- Implement a `migrate` callback in Zustand's persist options to automatically upgrade old map schemas safely.
 
 ---
 
-## Priority 3 — Map richness (medium-large effort)
+## Priority 3 — Polish & Mobile Enhancements (Medium Effort)
 
-### 3.1 Line styles and transit modes
+### 3.1 Gesture Event Deduplication on Mobile
 
-**Status**: Pending
-
-**Approach**: Add `lineStyle: 'solid' | 'dashed' | 'double'` and `transitMode: 'metro' | 'rail' | 'tram' | 'bus' | 'ferry'` to `Line`. Render dashed/double strokes accordingly.
-
-### 3.2 Background geographic features
-
-**Status**: Done
-
-**Approach**: New "shape" tool to draw filled polygons (water, parks). Persist as a shapes layer rendered below segments.
-
-### 3.3 Selection and hover affordances
-
-**Status**: ✅ Done (commit `b331f84`)
+**Rationale**: Dual-pointer touch zoom (pinch gestures) sometimes fire synthetic mouse clicks, causing accidental station creation or selection changes on mobile.
 
 **Approach**:
-- Multi-select stations (shift+click).
-- Hover highlight on segments with tooltip listing connected lines.
-- Selecting a line in the toolbar dims everything else.
+- Strictly call `preventDefault()` on touch events in `useCanvasInteractions.ts`.
+- Ensure touch drag thresholds prevent synthetic double-clicks/taps.
 
 ---
 
-## Priority 4 — Specialist features
+## Priority 4 — Testing & Visual Quality Assurance (Medium Effort)
 
-### 4.1 Fare / tariff zones overlay
-### 4.2 Accessibility & service icons (♿, ⛴, 🚂)
+### 4.1 Playwright E2E & Visual Regression Suite
 
----
+**Rationale**: Complex drag-and-drop interactions, octolinear snapping, and SVG rendering are difficult to mock realistically in JSDOM unit tests.
 
-## Priority 5 — Technical debt
+**Approach**:
+- Add a lightweight Playwright suite to test real mouse drags on the canvas.
+- Introduce visual snapshot testing to verify that canvas rendering matches expected layouts across edits.
 
-### 5.1 Replace remaining `||` defaults with `??`
-
-**Status**: ✅ Done
-
-### 5.2 Split `editorStore.ts` into slices
-
-The store is ~625 lines. Splitting into slices (stations, lines, viewport, history) would improve discoverability.
-
-### 5.3 Versioned persisted storage
-
-Adding new fields to `Station`, `Segment`, or `Line` will silently corrupt users' `localStorage`. Add `version` + `migrate` in the Zustand `persist` config so future migrations are safe.
-
----
-
-## Tracking
-
-Use this section to record commit hashes when items are completed:
-
-| Item | Status | Commit |
-|---|---|---|
-| 1.1 Line endpoint trimming | ✅ Done | `d069b94` |
-| 1.2 Bend point editing | ✅ Done | `0e92361` |
-| 2.1 Line bullet badges | ✅ Done | `7928bf2` |
-| 2.2 Configurable label placement | ✅ Done | `24215e5` |
-| 3.1 Line styles / transit modes | ✅ Done | `8834b2e` |
-| 3.2 Background features | ✅ Done | `dbebec5` |
-| 3.3 Selection/hover | ✅ Done | `b331f84` |
-| 4.1 Fare zones | ✅ Done | — |
-| 4.2 Service icons | ✅ Done | — |
-| 5.1 `??` lint fixes | ✅ Done | `19eda87` |
-| 5.2 Store slices | ✅ Done | `4c77220` |
-| 5.3 Versioned persistence | ✅ Done | — |
