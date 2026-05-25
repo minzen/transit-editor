@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToOctolinear } from '../geometry/octolinear'
@@ -35,6 +35,8 @@ export function EditorCanvas() {
     const segments = useEditorStore((s) => s.segments)
     const lines = useEditorStore((s) => s.lines)
     const shapes = useEditorStore((s) => s.shapes)
+
+    const segmentsList = useMemo(() => Object.values(segments), [segments])
 
     const viewportRef = useRef(useEditorStore.getState().viewport)
     const viewportLayerRef = useRef<SVGGElement>(null)
@@ -339,7 +341,7 @@ export function EditorCanvas() {
 
         // Hit-test against each segment polyline; threshold is in world units.
         const threshold = 10 / viewportRef.current.zoom
-        for (const segment of Object.values(segments)) {
+        for (const segment of segmentsList) {
             if (isPointNearPolyline(world, segment.points, threshold)) {
                 insertBendPoint(segment.id, snapped.x, snapped.y)
                 return
@@ -576,7 +578,7 @@ export function EditorCanvas() {
                     )}
 
                     <SegmentLayer
-                        segments={Object.values(segments)}
+                        segments={segmentsList}
                         lines={lines}
                         lineWidth={lineWidth}
                         selectedLineId={selectedLineId}
@@ -609,7 +611,7 @@ export function EditorCanvas() {
                         )}
 
                     <BendPointRenderer
-                        segments={Object.values(segments)}
+                        segments={segmentsList}
                         onBendPointDragStart={(segmentId, pointIndex) => {
                             setDraggingBendPoint({ segmentId, pointIndex })
                         }}

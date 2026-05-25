@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, memo } from 'react'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
@@ -78,7 +78,7 @@ function getStationAxisAngleDeg(
     return (axisAngleRad * 180) / Math.PI
 }
 
-export function StationRenderer({
+export const StationRenderer = memo(function StationRenderer({
     stations,
     segments,
     lines,
@@ -358,4 +358,4 @@ export function StationRenderer({
             })}
         </>
     )
-}
+})

@@ -1,10 +1,11 @@
+import { memo } from 'react'
 import type { Shape } from '../model/shape'
 
 type Props = {
     shapes: Record<string, Shape>
 }
 
-export function ShapeLayer({ shapes }: Props) {
+export const ShapeLayer = memo(function ShapeLayer({ shapes }: Props) {
     return (
         <>
             {Object.values(shapes).map((shape) => {
@@ -27,4 +28,4 @@ export function ShapeLayer({ shapes }: Props) {
             })}
         </>
     )
-}
+})
