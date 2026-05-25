@@ -66,6 +66,9 @@ export type DataSlice = {
     addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
     setLineName: (id: string, name: string) => void
     setLineCode: (id: string, code: string) => void
+    setLineColor: (id: string, color: string) => void
+    setLineStyle: (id: string, lineStyle: LineStyle) => void
+    setLineTransitMode: (id: string, transitMode: TransitMode) => void
     clear: () => void
     undo: () => void
     redo: () => void
@@ -640,6 +643,78 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     [id]: {
                         ...line,
                         name: validation.sanitized ?? name,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setLineColor: (id, color) =>
+        set((state) => {
+            const line = state.lines[id]
+            if (!line) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: state.stations,
+                segments: state.segments,
+                lines: {
+                    ...state.lines,
+                    [id]: {
+                        ...line,
+                        color,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setLineStyle: (id, lineStyle) =>
+        set((state) => {
+            const line = state.lines[id]
+            if (!line) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: state.stations,
+                segments: state.segments,
+                lines: {
+                    ...state.lines,
+                    [id]: {
+                        ...line,
+                        lineStyle,
+                    },
+                },
+                pastStates: [...state.pastStates, currentSnapshot],
+                futureStates: [],
+            }
+        }),
+
+    setLineTransitMode: (id, transitMode) =>
+        set((state) => {
+            const line = state.lines[id]
+            if (!line) {
+                return state
+            }
+
+            const currentSnapshot = createSnapshot(state)
+
+            return {
+                stations: state.stations,
+                segments: state.segments,
+                lines: {
+                    ...state.lines,
+                    [id]: {
+                        ...line,
+                        transitMode,
                     },
                 },
                 pastStates: [...state.pastStates, currentSnapshot],

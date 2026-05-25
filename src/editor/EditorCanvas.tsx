@@ -75,8 +75,6 @@ export function EditorCanvas() {
     const [selectedLineId, setSelectedLineId] = useState<string | null>(null)
 
     const [isCreatingLine, setIsCreatingLine] = useState(false)
-    const [newLineName, setNewLineName] = useState('')
-    const [newLineColor, setNewLineColor] = useState('#1976d2')
 
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
     const [showBackground, setShowBackground] = useState(true)
@@ -364,12 +362,12 @@ export function EditorCanvas() {
                 lines={lines}
                 isCreatingLine={isCreatingLine}
                 setIsCreatingLine={setIsCreatingLine}
-                newLineName={newLineName}
-                setNewLineName={setNewLineName}
-                newLineColor={newLineColor}
-                setNewLineColor={setNewLineColor}
                 addLine={addLine}
                 setLineName={setLineName}
+                setLineCode={useEditorStore((s) => s.setLineCode)}
+                setLineColor={useEditorStore((s) => s.setLineColor)}
+                setLineStyle={useEditorStore((s) => s.setLineStyle)}
+                setLineTransitMode={useEditorStore((s) => s.setLineTransitMode)}
                 setPendingStationId={setPendingStationId}
                 setPointerWorldPosition={setPointerWorldPosition}
                 colorPalette={colorPalette}
