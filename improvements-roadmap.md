@@ -27,7 +27,7 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 2 — Architecture & Scalability (Medium-Large Effort)
 
-### 2.1 Action-Based Delta History (Undo/Redo optimization)
+### 2.1 Action-Based Delta History (Undo/Redo optimization) — [COMPLETED]
 
 **Rationale**: Currently, every action takes a full state snapshot (`createSnapshot`). This is simple but doesn't scale as maps grow to hundreds of elements, leading to massive memory usage.
 
