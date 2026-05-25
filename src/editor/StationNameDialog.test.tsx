@@ -44,13 +44,13 @@ describe('StationNameDialog', () => {
         expect(defaultProps.onSave).toHaveBeenCalledWith('Central Station')
     })
 
-    it('does not call onSave when Create button is clicked with empty name', () => {
+    it('calls onSave with empty string when Create button is clicked with empty name', () => {
         render(<StationNameDialog {...defaultProps} />)
 
         const createButton = screen.getByText('Create')
         fireEvent.click(createButton)
 
-        expect(defaultProps.onSave).not.toHaveBeenCalled()
+        expect(defaultProps.onSave).toHaveBeenCalledWith('')
     })
 
     it('calls onCancel when Cancel button is clicked', () => {
@@ -73,11 +73,11 @@ describe('StationNameDialog', () => {
         expect(defaultProps.onCancel).toHaveBeenCalled()
     })
 
-    it('disables Create button when name is empty', () => {
+    it('keeps Create button enabled when name is empty', () => {
         render(<StationNameDialog {...defaultProps} />)
 
         const createButton = screen.getByText('Create')
-        expect(createButton).toBeDisabled()
+        expect(createButton).not.toBeDisabled()
     })
 
     it('enables Create button when name is valid', () => {
@@ -109,12 +109,12 @@ describe('StationNameDialog', () => {
         expect(defaultProps.onSave).toHaveBeenCalledWith('Test Station')
     })
 
-    it('does not call onSave when Enter key is pressed with empty name', () => {
+    it('calls onSave with empty string when Enter key is pressed with empty name', () => {
         render(<StationNameDialog {...defaultProps} />)
 
         const input = screen.getByLabelText('Station Name')
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
-        expect(defaultProps.onSave).not.toHaveBeenCalled()
+        expect(defaultProps.onSave).toHaveBeenCalledWith('')
     })
 })

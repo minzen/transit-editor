@@ -27,7 +27,7 @@ export function StationNameDialog({ open, onSave, onCancel }: Props) {
     const [name, setName] = useState('')
 
     const validation = validateStationName(name)
-    const canSave = validation.valid && name.trim().length > 0
+    const canSave = validation.valid
 
     const handleSave = () => {
         if (canSave) {
