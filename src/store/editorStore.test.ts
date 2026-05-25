@@ -554,6 +554,34 @@ describe('editor store', () => {
     expect(state.futureStates).toHaveLength(0)
   })
 
+  it('initializes with default state when localStorage is cleared', () => {
+    // Reset the store to simulate cleared localStorage
+    useEditorStore.setState({
+      activeTool: 'select',
+      stations: {},
+      segments: {},
+      lines: {},
+      shapes: {},
+      lineWidth: 10,
+      gridCellSize: 50,
+      gridCellsWidth: 80,
+      gridCellsHeight: 80,
+      showLineCodes: true,
+      language: 'en',
+      pastStates: [],
+      futureStates: [],
+    })
+
+    const state = useEditorStore.getState()
+    expect(state.activeTool).toBe('select')
+    expect(state.lineWidth).toBe(10)
+    expect(state.gridCellSize).toBe(50)
+    expect(state.gridCellsWidth).toBe(80)
+    expect(state.gridCellsHeight).toBe(80)
+    expect(state.showLineCodes).toBe(true)
+    expect(state.language).toBe('en')
+  })
+
   it('zooms in', () => {
     const state = useEditorStore.getState()
     const initialZoom = state.viewport.zoom

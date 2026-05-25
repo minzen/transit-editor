@@ -53,10 +53,10 @@ describe('LineCreator', () => {
       newLineName: 'Test Line',
     }
     render(<LineCreator {...props} />)
-    
+
     const createButton = screen.getByText('Create')
     fireEvent.click(createButton)
-    
+
     expect(props.addLine).toHaveBeenCalledWith('Test Line', '#1976d2', undefined, 'solid', 'metro')
     expect(props.setNewLineName).toHaveBeenCalledWith('')
     expect(props.setIsCreatingLine).toHaveBeenCalledWith(false)

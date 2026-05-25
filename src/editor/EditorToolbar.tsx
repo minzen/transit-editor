@@ -12,7 +12,7 @@ import { RenameDialog } from './RenameDialog'
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n/i18n.ts'
 import { useEditorStore } from '../store/editorStore'
@@ -127,6 +127,21 @@ export function EditorToolbar({
     const { t } = useTranslation()
     const language = useEditorStore((s) => s.language)
     const setLanguage = useEditorStore((s) => s.setLanguage)
+
+    // Track line creation to auto-select the new line
+    const prevLineCountRef = useRef(Object.keys(lines).length)
+
+    useEffect(() => {
+        if (!isCreatingLine && prevLineCountRef.current < Object.keys(lines).length) {
+            // Line was just created - select the most recently added line
+            const lineIds = Object.keys(lines)
+            const newLineId = lineIds[lineIds.length - 1]
+            if (newLineId) {
+                setSelectedLineId(newLineId)
+            }
+        }
+        prevLineCountRef.current = Object.keys(lines).length
+    }, [isCreatingLine, lines, setSelectedLineId])
 
     const handleClear = () => {
         clear()
