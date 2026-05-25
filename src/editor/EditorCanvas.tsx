@@ -36,7 +36,8 @@ export function EditorCanvas() {
     const lines = useEditorStore((s) => s.lines)
     const shapes = useEditorStore((s) => s.shapes)
 
-    const viewport = useEditorStore((s) => s.viewport)
+    const viewportRef = useRef(useEditorStore.getState().viewport)
+    const viewportLayerRef = useRef<SVGGElement>(null)
     const zoomInStore = useEditorStore((s) => s.zoomIn)
     const zoomOutStore = useEditorStore((s) => s.zoomOut)
     const resetViewport = useEditorStore((s) => s.resetViewport)
@@ -223,6 +224,29 @@ export function EditorCanvas() {
         }
     }, [handleWheel])
 
+    // Transient subscription to viewport changes to avoid react re-renders
+    useEffect(() => {
+        const unsubscribe = useEditorStore.subscribe((state) => {
+            viewportRef.current = state.viewport
+            if (viewportLayerRef.current) {
+                viewportLayerRef.current.setAttribute(
+                    'transform',
+                    `translate(${state.viewport.offsetX} ${state.viewport.offsetY}) scale(${state.viewport.zoom})`
+                )
+                // Dynamically scale vertex handles so they keep constant visual size
+                const vertexHandles = viewportLayerRef.current.querySelectorAll('.vertex-handle')
+                vertexHandles.forEach((handle) => {
+                    handle.setAttribute('r', (6 / state.viewport.zoom).toString())
+                })
+                const previewVertices = viewportLayerRef.current.querySelectorAll('.preview-vertex')
+                previewVertices.forEach((vertex) => {
+                    vertex.setAttribute('r', (5 / state.viewport.zoom).toString())
+                })
+            }
+        })
+        return unsubscribe
+    }, [])
+
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -249,7 +273,7 @@ export function EditorCanvas() {
     const handleStationLongPress = (stationId: string) => {
         const station = stations[stationId]
         if (!station) return
-        const { x: screenX, y: screenY } = worldToScreen(station.x, station.y, viewport)
+        const { x: screenX, y: screenY } = worldToScreen(station.x, station.y, viewportRef.current)
         // Approximate menu dimensions so it stays on-screen
         const menuWidth = 180
         const menuHeight = 320
@@ -310,11 +334,11 @@ export function EditorCanvas() {
         const rect = event.currentTarget.getBoundingClientRect()
         const x = event.clientX - rect.left
         const y = event.clientY - rect.top
-        const world = screenToWorld(x, y, viewport)
+        const world = screenToWorld(x, y, viewportRef.current)
         const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
 
         // Hit-test against each segment polyline; threshold is in world units.
-        const threshold = 10 / viewport.zoom
+        const threshold = 10 / viewportRef.current.zoom
         for (const segment of Object.values(segments)) {
             if (isPointNearPolyline(world, segment.points, threshold)) {
                 insertBendPoint(segment.id, snapped.x, snapped.y)
@@ -399,7 +423,7 @@ export function EditorCanvas() {
                         const rect = event.currentTarget.getBoundingClientRect()
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
-                        const world = screenToWorld(x, y, viewport)
+                        const world = screenToWorld(x, y, viewportRef.current)
                         const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
                         const shape = shapes[draggingShapeVertex.shapeId]
                         if (shape) {
@@ -430,7 +454,7 @@ export function EditorCanvas() {
                         const rect = event.currentTarget.getBoundingClientRect()
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
-                        const world = screenToWorld(x, y, viewport)
+                        const world = screenToWorld(x, y, viewportRef.current)
                         const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
                         setShapePoints((prev) => [...prev, snapped])
                         return
@@ -440,7 +464,7 @@ export function EditorCanvas() {
                         const rect = event.currentTarget.getBoundingClientRect()
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
-                        const world = screenToWorld(x, y, viewport)
+                        const world = screenToWorld(x, y, viewportRef.current)
                         for (const shape of Object.values(shapes)) {
                             if (isPointInPolygon(world, shape.points)) {
                                 setSelectedShapeId(shape.id)
@@ -468,9 +492,10 @@ export function EditorCanvas() {
                 />
 
                 <g
+                    ref={viewportLayerRef}
                     transform={`
-            translate(${viewport.offsetX} ${viewport.offsetY})
-            scale(${viewport.zoom})
+            translate(${useEditorStore.getState().viewport.offsetX} ${useEditorStore.getState().viewport.offsetY})
+            scale(${useEditorStore.getState().viewport.zoom})
           `}
                 >
                     {backgroundImage && showBackground && (
@@ -492,9 +517,6 @@ export function EditorCanvas() {
                         gridCellsWidth={gridCellsWidth}
                         gridCellsHeight={gridCellsHeight}
                         showGrid={showGridForExport}
-                        zoom={viewport.zoom}
-                        offsetX={viewport.offsetX}
-                        offsetY={viewport.offsetY}
                     />
 
                     <ShapeLayer shapes={shapes} />
@@ -511,9 +533,10 @@ export function EditorCanvas() {
                             {shapes[selectedShapeId].points.map((p, i) => (
                                 <circle
                                     key={`vertex-${selectedShapeId}-${i}`}
+                                    className="vertex-handle"
                                     cx={p.x}
                                     cy={p.y}
-                                    r={6 / viewport.zoom}
+                                    r={6 / useEditorStore.getState().viewport.zoom}
                                     fill="#fff"
                                     stroke="#1976d2"
                                     strokeWidth={2}
@@ -541,9 +564,10 @@ export function EditorCanvas() {
                             {shapePoints.map((p, i) => (
                                 <circle
                                     key={i}
+                                    className="preview-vertex"
                                     cx={p.x}
                                     cy={p.y}
-                                    r={5 / viewport.zoom}
+                                    r={5 / useEditorStore.getState().viewport.zoom}
                                     fill={shapeColor}
                                     style={{ pointerEvents: 'none' }}
                                 />

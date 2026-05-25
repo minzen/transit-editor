@@ -13,9 +13,6 @@ export function GridLayer({
   gridCellsWidth,
   gridCellsHeight,
   showGrid = true,
-  zoom = 1,
-  offsetX = 0,
-  offsetY = 0,
 }: Props) {
   if (!showGrid) {
     return null
@@ -27,42 +24,34 @@ export function GridLayer({
   const totalWidth = gridCellsWidth * gridCellSize
   const totalHeight = gridCellsHeight * gridCellSize
 
-  // Calculate the visible area in world coordinates
-  const startX = Math.floor((-offsetX / zoom) / gridCellSize) * gridCellSize
-  const startY = Math.floor((-offsetY / zoom) / gridCellSize) * gridCellSize
-  const endX = Math.ceil((totalWidth - offsetX) / zoom / gridCellSize) * gridCellSize + gridCellSize
-  const endY = Math.ceil((totalHeight - offsetY) / zoom / gridCellSize) * gridCellSize + gridCellSize
-
-  // Clamp to grid bounds
-  const clampedStartX = Math.max(0, startX)
-  const clampedStartY = Math.max(0, startY)
-  const clampedEndX = Math.min(totalWidth, endX)
-  const clampedEndY = Math.min(totalHeight, endY)
-
-  for (let x = clampedStartX; x < clampedEndX; x += gridCellSize) {
+  // Render vertical lines across the entire grid
+  for (let x = 0; x <= totalWidth; x += gridCellSize) {
     lines.push(
       <line
         key={`vx-${x}`}
         x1={x}
-        y1={clampedStartY}
+        y1={0}
         x2={x}
-        y2={clampedEndY}
+        y2={totalHeight}
         stroke="#e2e2e2"
-        strokeWidth={1 / zoom}
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
       />
     )
   }
 
-  for (let y = clampedStartY; y < clampedEndY; y += gridCellSize) {
+  // Render horizontal lines across the entire grid
+  for (let y = 0; y <= totalHeight; y += gridCellSize) {
     lines.push(
       <line
         key={`hy-${y}`}
-        x1={clampedStartX}
+        x1={0}
         y1={y}
-        x2={clampedEndX}
+        x2={totalWidth}
         y2={y}
         stroke="#e2e2e2"
-        strokeWidth={1 / zoom}
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
       />
     )
   }

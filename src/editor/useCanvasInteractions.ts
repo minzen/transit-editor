@@ -30,7 +30,6 @@ const clamp = (value: number, min: number, max: number): number =>
 export function useCanvasInteractions({ spacePressed }: Args) {
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
-    const viewport = useEditorStore((s) => s.viewport)
     const setViewport = useEditorStore((s) => s.setViewport)
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
@@ -87,6 +86,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
 
     const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
         event.preventDefault()
+        const viewport = useEditorStore.getState().viewport
 
         const rect = event.currentTarget.getBoundingClientRect()
 
@@ -143,6 +143,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     }
 
     const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+        const viewport = useEditorStore.getState().viewport
         if (activePointersRef.current.has(event.pointerId)) {
             activePointersRef.current.set(event.pointerId, {
                 x: event.clientX,
@@ -333,6 +334,8 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const handleClick = (event: React.MouseEvent<SVGSVGElement>) => {
         if (spacePressed) return
         if (activeTool !== 'station') return
+
+        const viewport = useEditorStore.getState().viewport
 
         if (suppressNextClickRef.current) {
             suppressNextClickRef.current = false
