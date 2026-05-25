@@ -80,6 +80,8 @@
     "accessibility": "♿ Barrierefreiheit",
     "ferry": "⛴ Fähre",
     "rail": "🚂 Bahn",
+    "airport": "✈ Flughafen",
+    "toilet": "🚻 Toilette",
     "zone": "Tarifzone",
     "zoneNumber": "Zone {{zone}}"
   },

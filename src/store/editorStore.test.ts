@@ -924,6 +924,9 @@ describe('editor store', () => {
     useEditorStore.getState().setStationServices(stationId, ['ferry'])
     expect(useEditorStore.getState().stations[stationId].services).toEqual(['ferry'])
 
+    useEditorStore.getState().setStationServices(stationId, ['airport', 'toilet'])
+    expect(useEditorStore.getState().stations[stationId].services).toEqual(['airport', 'toilet'])
+
     useEditorStore.getState().setStationServices(stationId, [])
     expect(useEditorStore.getState().stations[stationId].services).toBeUndefined()
   })

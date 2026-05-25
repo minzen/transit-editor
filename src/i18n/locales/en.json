@@ -80,6 +80,8 @@
     "accessibility": "♿ Accessibility",
     "ferry": "⛴ Ferry",
     "rail": "🚂 Rail",
+    "airport": "✈ Airport",
+    "toilet": "🚻 Toilet",
     "zone": "Zone",
     "zoneNumber": "Zone {{zone}}"
   },

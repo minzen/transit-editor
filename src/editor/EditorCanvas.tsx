@@ -723,6 +723,8 @@ export function EditorCanvas() {
                     { key: 'accessibility' as const, labelKey: 'editorCanvas.accessibility' },
                     { key: 'ferry' as const, labelKey: 'editorCanvas.ferry' },
                     { key: 'rail' as const, labelKey: 'editorCanvas.rail' },
+                    { key: 'airport' as const, labelKey: 'editorCanvas.airport' },
+                    { key: 'toilet' as const, labelKey: 'editorCanvas.toilet' },
                 ]).map(({ key, labelKey }) => (
                     <MenuItem
                         key={key}
