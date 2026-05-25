@@ -17,6 +17,7 @@ import { snapPointToGrid } from '../geometry/snap'
 import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
+import { StationNameDialog } from './StationNameDialog'
 import { RenameDialog } from './RenameDialog'
 import { Menu, MenuItem, Divider, Checkbox, ListItemIcon, ListItemText } from '@mui/material'
 import { useTranslation } from 'react-i18next'
@@ -204,6 +205,9 @@ export function EditorCanvas() {
         handlePointerUp,
         handlePointerCancel,
         handleClick,
+        stationNameDialogOpen,
+        handleStationNameSave,
+        handleStationNameCancel,
     } = useCanvasInteractions({ spacePressed })
 
     // Attach wheel event listener with passive: false to allow preventDefault
@@ -672,6 +676,12 @@ export function EditorCanvas() {
                     setRenameDialogOpen(false)
                     setRenameStationId(null)
                 }}
+            />
+
+            <StationNameDialog
+                open={stationNameDialogOpen}
+                onSave={handleStationNameSave}
+                onCancel={handleStationNameCancel}
             />
             <Menu
                 open={Boolean(contextMenuStationId)}

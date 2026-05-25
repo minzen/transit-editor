@@ -40,6 +40,9 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const moveStation = useEditorStore((s) => s.moveStation)
     const updateSegmentPoint = useEditorStore((s) => s.updateSegmentPoint)
 
+    const [stationNameDialogOpen, setStationNameDialogOpen] = useState(false)
+    const [pendingStationPosition, setPendingStationPosition] = useState<{ x: number; y: number } | null>(null)
+
     const worldWidth = gridCellsWidth * gridCellSize
     const worldHeight = gridCellsHeight * gridCellSize
 
@@ -373,7 +376,21 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             return
         }
 
-        addStation(snapped.x, snapped.y)
+        setPendingStationPosition(snapped)
+        setStationNameDialogOpen(true)
+    }
+
+    const handleStationNameSave = (name: string) => {
+        if (pendingStationPosition) {
+            addStation(pendingStationPosition.x, pendingStationPosition.y, name)
+        }
+        setStationNameDialogOpen(false)
+        setPendingStationPosition(null)
+    }
+
+    const handleStationNameCancel = () => {
+        setStationNameDialogOpen(false)
+        setPendingStationPosition(null)
     }
 
     return {
@@ -392,5 +409,8 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         handlePointerUp,
         handlePointerCancel: handlePointerUp,
         handleClick,
+        stationNameDialogOpen,
+        handleStationNameSave,
+        handleStationNameCancel,
     }
 }

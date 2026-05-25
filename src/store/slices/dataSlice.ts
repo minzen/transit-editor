@@ -51,7 +51,7 @@ export type DataSlice = {
     pastStates: DataSnapshot[]
     futureStates: DataSnapshot[]
 
-    addStation: (x: number, y: number) => void
+    addStation: (x: number, y: number, name?: string) => void
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
     setStationLabelPosition: (id: string, position: LabelPosition) => void
@@ -85,7 +85,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
     pastStates: [],
     futureStates: [],
 
-    addStation: (x, y) =>
+    addStation: (x, y, name) =>
         set((state) => {
             const id = nanoid()
             const currentSnapshot = createSnapshot(state)
@@ -105,7 +105,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     return {
                         stations: {
                             ...state.stations,
-                            [id]: { id, x, y },
+                            [id]: { id, x, y, name },
                         },
                         segments: state.segments,
                         lines: state.lines,
@@ -121,7 +121,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     return {
                         stations: {
                             ...state.stations,
-                            [id]: { id, x, y },
+                            [id]: { id, x, y, name },
                         },
                         segments: state.segments,
                         lines: state.lines,
@@ -130,7 +130,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     }
                 }
 
-                const newStation = { id, x, y }
+                const newStation = { id, x, y, name }
                 const path1 = createOctolinearPath(fromStation, newStation)
                 const path2 = createOctolinearPath(newStation, toStation)
 
@@ -174,6 +174,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         id,
                         x,
                         y,
+                        name,
                     },
                 },
                 segments: newSegments,
