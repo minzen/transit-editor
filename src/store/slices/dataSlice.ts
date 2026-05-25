@@ -10,13 +10,14 @@ import { isPointNearPolyline, pointToLineSegmentDistance } from '../../geometry/
 import { validateLineName, validateStationName } from '../../validation/constants'
 import type { ToolSlice } from './toolSlice'
 import type { ViewSlice } from './viewSlice'
+import {
+    createDelta,
+    applyDelta,
+    hasChanges,
+} from '../utils/history'
+import type { HistoryStep, DataSnapshot } from '../utils/history'
 
-export type DataSnapshot = {
-    stations: Record<string, Station>
-    segments: Record<string, Segment>
-    lines: Record<string, Line>
-    shapes: Record<string, Shape>
-}
+export type { DataSnapshot }
 
 type FullState = DataSlice & ToolSlice & ViewSlice
 
@@ -48,8 +49,8 @@ export type DataSlice = {
     segments: Record<string, Segment>
     lines: Record<string, Line>
     shapes: Record<string, Shape>
-    pastStates: DataSnapshot[]
-    futureStates: DataSnapshot[]
+    pastStates: HistoryStep[]
+    futureStates: HistoryStep[]
 
     addStation: (x: number, y: number, name?: string) => void
     moveStation: (id: string, x: number, y: number) => void
@@ -77,6 +78,28 @@ export type DataSlice = {
     deleteShape: (id: string) => void
 }
 
+const setWithDelta = (
+    state: DataSlice,
+    nextStateData: Partial<DataSlice>
+): Partial<DataSlice> => {
+    const prev = createSnapshot(state)
+    const next = {
+        stations: nextStateData.stations ?? state.stations,
+        segments: nextStateData.segments ?? state.segments,
+        lines: nextStateData.lines ?? state.lines,
+        shapes: nextStateData.shapes ?? state.shapes,
+    }
+    const step = createDelta(prev, next)
+    if (hasChanges(step.redo)) {
+        return {
+            ...next,
+            pastStates: [...state.pastStates, step],
+            futureStates: [],
+        }
+    }
+    return nextStateData
+}
+
 export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set) => ({
     stations: {},
     segments: {},
@@ -88,7 +111,6 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
     addStation: (x, y, name) =>
         set((state) => {
             const id = nanoid()
-            const currentSnapshot = createSnapshot(state)
 
             const pointOnSegment = { x, y }
             const segmentToSplit = Object.values(state.segments).find(
@@ -102,32 +124,24 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 const validLines = lineIds.map(lineId => state.lines[lineId]).filter(line => line !== undefined)
 
                 if (validLines.length === 0) {
-                    return {
+                    return setWithDelta(state, {
                         stations: {
                             ...state.stations,
                             [id]: { id, x, y, name },
                         },
-                        segments: state.segments,
-                        lines: state.lines,
-                        pastStates: [...state.pastStates, currentSnapshot],
-                        futureStates: [],
-                    }
+                    })
                 }
 
                 const fromStation = state.stations[segmentToSplit.fromStationId]
                 const toStation = state.stations[segmentToSplit.toStationId]
 
                 if (!fromStation || !toStation) {
-                    return {
+                    return setWithDelta(state, {
                         stations: {
                             ...state.stations,
                             [id]: { id, x, y, name },
                         },
-                        segments: state.segments,
-                        lines: state.lines,
-                        pastStates: [...state.pastStates, currentSnapshot],
-                        futureStates: [],
-                    }
+                    })
                 }
 
                 const newStation = { id, x, y, name }
@@ -167,7 +181,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 )
             }
 
-            return {
+            return setWithDelta(state, {
                 stations: {
                     ...state.stations,
                     [id]: {
@@ -178,10 +192,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     },
                 },
                 segments: newSegments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     moveStation: (id, x, y) =>
@@ -191,8 +202,6 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             if (!station) {
                 return state
             }
-
-            const currentSnapshot = createSnapshot(state)
 
             const segments = Object.fromEntries(
                 Object.entries(state.segments).map(
@@ -225,7 +234,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 )
             )
 
-            return {
+            return setWithDelta(state, {
                 stations: {
                     ...state.stations,
                     [id]: {
@@ -235,10 +244,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     },
                 },
                 segments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setStationName: (id, name) =>
@@ -254,9 +260,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
+            return setWithDelta(state, {
                 stations: {
                     ...state.stations,
                     [id]: {
@@ -264,11 +268,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         name: validation.sanitized ?? name,
                     },
                 },
-                segments: state.segments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setStationLabelPosition: (id, position) =>
@@ -279,9 +279,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
+            return setWithDelta(state, {
                 stations: {
                     ...state.stations,
                     [id]: {
@@ -289,11 +287,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         labelPosition: position,
                     },
                 },
-                segments: state.segments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setStationServices: (id, services) =>
@@ -304,9 +298,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
+            return setWithDelta(state, {
                 stations: {
                     ...state.stations,
                     [id]: {
@@ -314,11 +306,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         services: services.length > 0 ? services : undefined,
                     },
                 },
-                segments: state.segments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setStationFareZone: (id, zone) =>
@@ -329,9 +317,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
+            return setWithDelta(state, {
                 stations: {
                     ...state.stations,
                     [id]: {
@@ -339,11 +325,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         fareZone: zone,
                     },
                 },
-                segments: state.segments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     deleteStation: (id) =>
@@ -354,8 +336,6 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
             const { [id]: _removedStation, ...remainingStations } = state.stations
             const remainingSegments = Object.fromEntries(
                 Object.entries(state.segments).filter(
@@ -364,13 +344,10 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 )
             )
 
-            return {
+            return setWithDelta(state, {
                 stations: remainingStations,
                 segments: remainingSegments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     updateSegmentPoint: (segmentId, pointIndex, x, y) =>
@@ -385,13 +362,10 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
             const newPoints = [...segment.points]
             newPoints[pointIndex] = { x, y }
 
-            return {
-                stations: state.stations,
+            return setWithDelta(state, {
                 segments: {
                     ...state.segments,
                     [segmentId]: {
@@ -399,10 +373,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         points: newPoints,
                     },
                 },
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     insertBendPoint: (segmentId, x, y) =>
@@ -434,10 +405,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 ...segment.points.slice(insertAt),
             ]
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
+            return setWithDelta(state, {
                 segments: {
                     ...state.segments,
                     [segmentId]: {
@@ -445,10 +413,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         points: newPoints,
                     },
                 },
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     removeBendPoint: (segmentId, pointIndex) =>
@@ -467,10 +432,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 ...segment.points.slice(pointIndex + 1),
             ]
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
+            return setWithDelta(state, {
                 segments: {
                     ...state.segments,
                     [segmentId]: {
@@ -478,10 +440,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         points: newPoints,
                     },
                 },
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     addSegment: (fromStationId, toStationId, lineId) =>
@@ -497,10 +456,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             const id = nanoid()
             const points = createOctolinearPath(from, to)
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
+            return setWithDelta(state, {
                 segments: {
                     ...state.segments,
                     [id]: {
@@ -511,10 +467,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         points,
                     },
                 },
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     deleteSegment: (id) =>
@@ -525,17 +478,11 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
             const { [id]: _removedSegment, ...remainingSegments } = state.segments
 
-            return {
-                stations: state.stations,
+            return setWithDelta(state, {
                 segments: remainingSegments,
-                lines: state.lines,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     undo: () =>
@@ -544,14 +491,14 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentState = createSnapshot(state)
-            const previousState = state.pastStates[state.pastStates.length - 1]
+            const step = state.pastStates[state.pastStates.length - 1]
+            const current = createSnapshot(state)
+            const undone = applyDelta(current, step.undo)
 
             return {
-                activeTool: state.activeTool,
-                ...previousState,
+                ...undone,
                 pastStates: state.pastStates.slice(0, -1),
-                futureStates: [currentState, ...state.futureStates],
+                futureStates: [step, ...state.futureStates],
             }
         }),
 
@@ -561,13 +508,13 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentState = createSnapshot(state)
-            const nextState = state.futureStates[0]
+            const step = state.futureStates[0]
+            const current = createSnapshot(state)
+            const redone = applyDelta(current, step.redo)
 
             return {
-                activeTool: state.activeTool,
-                ...nextState,
-                pastStates: [...state.pastStates, currentState],
+                ...redone,
+                pastStates: [...state.pastStates, step],
                 futureStates: state.futureStates.slice(1),
             }
         }),
@@ -575,11 +522,8 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
     addLine: (name, color, code, lineStyle, transitMode) =>
         set((state) => {
             const id = nanoid()
-            const currentSnapshot = createSnapshot(state)
 
-            return {
-                stations: state.stations,
-                segments: state.segments,
+            return setWithDelta(state, {
                 lines: {
                     ...state.lines,
                     [id]: {
@@ -591,9 +535,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         transitMode: transitMode ?? 'metro',
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setLineCode: (id, code) =>
@@ -604,11 +546,8 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             }
 
             const trimmed = code.trim().slice(0, 4)
-            const currentSnapshot = createSnapshot(state)
 
-            return {
-                stations: state.stations,
-                segments: state.segments,
+            return setWithDelta(state, {
                 lines: {
                     ...state.lines,
                     [id]: {
@@ -616,9 +555,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         code: trimmed.length > 0 ? trimmed : undefined,
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setLineName: (id, name) =>
@@ -634,11 +571,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
-                segments: state.segments,
+            return setWithDelta(state, {
                 lines: {
                     ...state.lines,
                     [id]: {
@@ -646,9 +579,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         name: validation.sanitized ?? name,
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setLineColor: (id, color) =>
@@ -658,11 +589,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
-                segments: state.segments,
+            return setWithDelta(state, {
                 lines: {
                     ...state.lines,
                     [id]: {
@@ -670,9 +597,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         color,
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setLineStyle: (id, lineStyle) =>
@@ -682,11 +607,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
-                segments: state.segments,
+            return setWithDelta(state, {
                 lines: {
                     ...state.lines,
                     [id]: {
@@ -694,9 +615,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         lineStyle,
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     setLineTransitMode: (id, transitMode) =>
@@ -706,11 +625,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 return state
             }
 
-            const currentSnapshot = createSnapshot(state)
-
-            return {
-                stations: state.stations,
-                segments: state.segments,
+            return setWithDelta(state, {
                 lines: {
                     ...state.lines,
                     [id]: {
@@ -718,9 +633,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         transitMode,
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     clear: () =>
@@ -736,8 +649,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
     addShape: (points, color, name, opacity) =>
         set((state) => {
             const id = nanoid()
-            const currentSnapshot = createSnapshot(state)
-            return {
+            return setWithDelta(state, {
                 shapes: {
                     ...state.shapes,
                     [id]: {
@@ -748,35 +660,27 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                         opacity: opacity ?? 0.5,
                     },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     updateShape: (id, updates) =>
         set((state) => {
             const shape = state.shapes[id]
             if (!shape) return state
-            const currentSnapshot = createSnapshot(state)
-            return {
+            return setWithDelta(state, {
                 shapes: {
                     ...state.shapes,
                     [id]: { ...shape, ...updates },
                 },
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 
     deleteShape: (id) =>
         set((state) => {
             if (!state.shapes[id]) return state
-            const currentSnapshot = createSnapshot(state)
             const { [id]: _removed, ...remainingShapes } = state.shapes
-            return {
+            return setWithDelta(state, {
                 shapes: remainingShapes,
-                pastStates: [...state.pastStates, currentSnapshot],
-                futureStates: [],
-            }
+            })
         }),
 })

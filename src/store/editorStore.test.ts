@@ -351,7 +351,7 @@ describe('editor store', () => {
     expect(Object.keys(undoneState.stations)).toHaveLength(0)
     expect(undoneState.pastStates).toHaveLength(0)
     expect(undoneState.futureStates).toHaveLength(1)
-    expect(undoneState.futureStates[0].stations[stationId]).toBeDefined()
+    expect(undoneState.futureStates[0].redo.stations[stationId]).toBeDefined()
   })
 
   it('redo restores undone state', () => {
