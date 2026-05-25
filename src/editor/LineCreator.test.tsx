@@ -46,6 +46,22 @@ describe('LineCreator', () => {
     })
   })
 
+  it('calls onSave when Enter key is pressed with valid name', () => {
+    render(<LineCreator {...defaultProps} />)
+
+    const input = screen.getByPlaceholderText('Line name')
+    fireEvent.change(input, { target: { value: 'Test Line' } })
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
+
+    expect(defaultProps.onSave).toHaveBeenCalledWith({
+      name: 'Test Line',
+      color: '#1976d2',
+      code: undefined,
+      lineStyle: 'solid',
+      transitMode: 'metro',
+    })
+  })
+
   it('does not call onSave when Create button is clicked with empty name', () => {
     render(<LineCreator {...defaultProps} />)
 

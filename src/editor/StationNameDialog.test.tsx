@@ -98,4 +98,23 @@ describe('StationNameDialog', () => {
 
         expect(screen.getByText(/Station name cannot exceed/)).toBeInTheDocument()
     })
+
+    it('calls onSave when Enter key is pressed with valid name', () => {
+        render(<StationNameDialog {...defaultProps} />)
+
+        const input = screen.getByLabelText('Station Name')
+        fireEvent.change(input, { target: { value: 'Test Station' } })
+        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
+
+        expect(defaultProps.onSave).toHaveBeenCalledWith('Test Station')
+    })
+
+    it('does not call onSave when Enter key is pressed with empty name', () => {
+        render(<StationNameDialog {...defaultProps} />)
+
+        const input = screen.getByLabelText('Station Name')
+        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
+
+        expect(defaultProps.onSave).not.toHaveBeenCalled()
+    })
 })

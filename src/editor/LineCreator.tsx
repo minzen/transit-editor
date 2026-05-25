@@ -47,6 +47,12 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
         }
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSave()
+        }
+    }
+
     const handleHexColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
         if (value.length <= 7) {
@@ -61,6 +67,7 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
             <TextField
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={t('lineCreator.lineNamePlaceholder')}
                 size={isMobile ? 'small' : 'medium'}
                 fullWidth

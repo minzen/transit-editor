@@ -41,6 +41,12 @@ export function StationNameDialog({ open, onSave, onCancel }: Props) {
         onCancel()
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSave()
+        }
+    }
+
     return (
         <Dialog
             open={open}
@@ -56,6 +62,7 @@ export function StationNameDialog({ open, onSave, onCancel }: Props) {
                         label={t('toolbar.stationName')}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder={t('toolbar.stationNamePlaceholder')}
                         fullWidth
                         autoFocus
