@@ -6,7 +6,7 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 1 — Performance & React Render Optimization (High Impact, Medium Effort)
 
-### 1.1 Transient Viewport Updates (Render-less Pan & Zoom)
+### 1.1 Transient Viewport Updates (Render-less Pan & Zoom) — [COMPLETED]
 
 **Rationale**: Viewport pan/zoom changes are extremely high-frequency. Subscribing to `viewport` triggers full-tree React re-renders on every wheel event or pointer move, creating noticeable lag on dense maps.
 
@@ -15,7 +15,7 @@ This document captures the next set of architectural, performance, and interacti
 - Use a React `ref` pointing to the main SVG `<g class="viewport-layer">`.
 - Subscribe to viewport changes transiently via `useEditorStore.subscribe` and apply the SVG transform string directly to the DOM element (`transform="translate(x, y) scale(z)"`), bypassing React rendering passes completely.
 
-### 1.2 Fine-Grained Zustand Selectors
+### 1.2 Fine-Grained Zustand Selectors — [COMPLETED]
 
 **Rationale**: `useCanvasInteractions.ts` and major rendering layers subscribe to broad store slices. A change in a single station's name or color causes everything else to recalculate.
 
