@@ -47,7 +47,7 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 3 — Polish & Mobile Enhancements (Medium Effort)
 
-### 3.1 Gesture Event Deduplication on Mobile
+### 3.1 Gesture Event Deduplication on Mobile — [COMPLETED]
 
 **Rationale**: Dual-pointer touch zoom (pinch gestures) sometimes fire synthetic mouse clicks, causing accidental station creation or selection changes on mobile.
 
