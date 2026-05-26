@@ -35,7 +35,7 @@ This document captures the next set of architectural, performance, and interacti
 - Move from complete state snapshotting to an **action-based delta history** (Command pattern) or integrate Zustand's `zundo` middleware.
 - Only record the specific entities modified in each step to minimize memory footprint.
 
-### 2.2 Versioned Persisted Storage Migrations
+### 2.2 Versioned Persisted Storage Migrations — [COMPLETED]
 
 **Rationale**: Adding new properties to lines or stations (such as label positions or services) can corrupt or mismatch older versions of maps stored in users' local storage.
 
