@@ -135,7 +135,7 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 7 — Quality & Tooling (Low–Medium Effort)
 
-### 7.1 CI Pipeline for Tests + E2E + Visual
+### 7.1 CI Pipeline for Tests + E2E + Visual — [COMPLETED]
 
 **Rationale**: Tests and visual baselines only run locally; regressions can slip into `develop`/`main`.
 
@@ -143,6 +143,19 @@ This document captures the next set of architectural, performance, and interacti
 - Add a GitHub Actions workflow that runs `lint`, `test`, `build`, and `e2e` (with cached Playwright browsers) on every PR.
 - Upload the Playwright HTML report and any diff images as artifacts on failure.
 - Optionally gate merges on a green pipeline.
+
+**Implementation Notes**:
+- New `.github/workflows/ci.yml` with 7 jobs orchestrated via `needs`:
+  - `lint-test-build`: lint → test → build
+  - `e2e`: depends on lint-test-build; installs Playwright browsers with deps; runs smoke + visual regression; uploads report + diffs on failure
+  - `status`: posts `ci/all` commit status; blocks merge on failure
+  - `report-pr-comment`: updates PR with CI results table
+  - `deploy-preview`: uploads build artifact on green PRs
+  - `deploy-production`: deploys to GitHub Pages + creates commit status + auto-releases on main push
+  - `notify`: commit statuses for `ci/merge` gate
+- Node version read from `.nvmrc`; npm cache enabled.
+- Concurrency group cancels in-progress runs for the same branch.
+- **Manual setup required**: Enable branch protection in GitHub repo settings → Branches → `main` and `develop` → Require status checks → `ci/all` and `ci/merge`.
 
 ### 7.2 Performance Benchmark Harness
 
