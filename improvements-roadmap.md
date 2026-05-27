@@ -59,11 +59,18 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 4 — Testing & Visual Quality Assurance (Medium Effort)
 
-### 4.1 Playwright E2E & Visual Regression Suite
+### 4.1 Playwright E2E & Visual Regression Suite — [COMPLETED]
 
 **Rationale**: Complex drag-and-drop interactions, octolinear snapping, and SVG rendering are difficult to mock realistically in JSDOM unit tests.
 
 **Approach**:
 - Add a lightweight Playwright suite to test real mouse drags on the canvas.
 - Introduce visual snapshot testing to verify that canvas rendering matches expected layouts across edits.
+
+**Implementation Notes**:
+- Playwright configured in `playwright.config.ts` with auto-started dev server on `http://localhost:5173` and a `Desktop Chrome` (1280×800) project.
+- Smoke E2E suite in `e2e/smoke.spec.ts` covers: landing page navigation, station creation via canvas, line creation dialog, zoom/reset toolbar buttons, and undo enablement.
+- Visual regression suite in `e2e/visual.spec.ts` captures the landing page, empty editor, and editor with a single station; baselines are stored under `e2e/visual.spec.ts-snapshots/`.
+- npm scripts: `e2e`, `e2e:ui`, `e2e:update-snapshots`, `e2e:report`.
+- `data-testid="editor-canvas"` added to the main SVG to give tests a stable canvas selector.
 

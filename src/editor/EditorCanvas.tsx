@@ -410,6 +410,7 @@ export function EditorCanvas() {
 
             <svg
                 ref={svgRef}
+                data-testid="editor-canvas"
                 width="100%"
                 height="100%"
                 style={{
