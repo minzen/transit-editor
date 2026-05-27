@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   createOctolinearPath,
+  createSmartOctolinearPath,
   isOctolinear,
   snapPointToOctolinear,
   findLineIntersection,
@@ -102,5 +103,60 @@ describe('findLineIntersection', () => {
     expect(intersection).not.toBeNull()
     expect(intersection?.x).toBeCloseTo(0)
     expect(intersection?.y).toBeCloseTo(0)
+  })
+})
+
+describe('createSmartOctolinearPath', () => {
+  it('returns a direct path for octolinear endpoints', () => {
+    const from = { x: 0, y: 0 }
+    const to = { x: 100, y: 100 }
+    expect(createSmartOctolinearPath(from, to)).toEqual([from, to])
+  })
+
+  it('with no obstacles returns same as createOctolinearPath', () => {
+    const from = { x: 0, y: 0 }
+    const to = { x: 120, y: 80 }
+    expect(createSmartOctolinearPath(from, to)).toEqual(
+      createOctolinearPath(from, to)
+    )
+  })
+
+  it('picks V-shape when horizontal leg would hit an obstacle', () => {
+    // from (0,0) to (100,80) is NOT octolinear.
+    // Default HV path goes (0,0)->(100,0)->(100,80).
+    // Place an obstacle at (50, 0) right on the horizontal leg.
+    const obstacles = [{ x: 50, y: 0 }]
+    const path = createSmartOctolinearPath({ x: 0, y: 0 }, { x: 100, y: 80 }, obstacles)
+    // The V-shape goes (0,0)->(0,80)->(100,80) — avoid the obstacle.
+    expect(path).toEqual([
+      { x: 0, y: 0 },
+      { x: 0, y: 80 },
+      { x: 100, y: 80 },
+    ])
+  })
+
+  it('picks HV when vertical leg would hit an obstacle', () => {
+    // from (0,0) to (100,80). Default V-shape goes (0,0)->(0,80)->(100,80).
+    // Place obstacle at (0, 40) on the vertical leg.
+    const obstacles = [{ x: 0, y: 40 }]
+    const path = createSmartOctolinearPath({ x: 0, y: 0 }, { x: 100, y: 80 }, obstacles)
+    expect(path).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 80 },
+    ])
+  })
+
+  it('prefers shorter path when both orientations have equal collisions', () => {
+    // from (0,0) to (100,80). Place obstacle far away so both have 0 collisions.
+    // HV length = 100 + 80 = 180; VH length = 80 + 100 = 180 (same).
+    // HV wins by tie-break.
+    const obstacles = [{ x: 500, y: 500 }]
+    const path = createSmartOctolinearPath({ x: 0, y: 0 }, { x: 100, y: 80 }, obstacles)
+    expect(path).toEqual([
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 80 },
+    ])
   })
 })

@@ -1,4 +1,5 @@
 import type { Point } from '../types/geometry'
+import { pointToLineSegmentDistance } from './distance'
 
 // Helper function to find intersection of two lines
 // Given two lines defined by points (p1, p2) and (p3, p4),
@@ -89,4 +90,68 @@ export function createOctolinearPath(
     },
     to,
   ]
+}
+
+/**
+ * Count how many obstacle points lie within `clearance` of any edge of the
+ * given polyline path. Obstacles closer than `clearance` are treated as
+ * collisions.
+ */
+function countObstacleCollisions(
+  path: Point[],
+  obstacles: Point[],
+  clearance: number
+): number {
+  let count = 0
+  for (const obs of obstacles) {
+    for (let i = 0; i < path.length - 1; i++) {
+      const d = pointToLineSegmentDistance(obs, path[i], path[i + 1])
+      if (d < clearance) {
+        count++
+        break
+      }
+    }
+  }
+  return count
+}
+
+function pathLength(path: Point[]): number {
+  let len = 0
+  for (let i = 0; i < path.length - 1; i++) {
+    len += Math.hypot(path[i + 1].x - path[i].x, path[i + 1].y - path[i].y)
+  }
+  return len
+}
+
+/**
+ * Like createOctolinearPath, but chooses between the two L-shape orientations
+ * (horizontal-then-vertical vs vertical-then-horizontal) to minimize collisions
+ * with the supplied obstacle points (typically other station centres). Ties are
+ * broken by total path length, then by a stable preference for HV.
+ *
+ * `clearance` is the minimum distance an obstacle must keep from the path to
+ * not be counted as a collision.
+ */
+export function createSmartOctolinearPath(
+  from: Point,
+  to: Point,
+  obstacles: Point[] = [],
+  clearance: number = 12
+): Point[] {
+  if (isOctolinear(from, to)) {
+    return [from, to]
+  }
+
+  const hv: Point[] = [from, { x: to.x, y: from.y }, to]
+  const vh: Point[] = [from, { x: from.x, y: to.y }, to]
+
+  const hvCollisions = countObstacleCollisions(hv, obstacles, clearance)
+  const vhCollisions = countObstacleCollisions(vh, obstacles, clearance)
+
+  if (hvCollisions !== vhCollisions) {
+    return hvCollisions < vhCollisions ? hv : vh
+  }
+
+  // Tie-break: shorter path wins; HV wins on exact tie for stability.
+  return pathLength(hv) <= pathLength(vh) ? hv : vh
 }

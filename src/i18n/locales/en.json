@@ -37,7 +37,8 @@
     "clearAllData": "Clear All Data",
     "clearAllDataMessage": "Are you sure you want to clear all data? This cannot be undone.",
     "renameLine": "Rename Line",
-    "lineNamePlaceholder": "Line name"
+    "lineNamePlaceholder": "Line name",
+    "autoPlaceLabels": "Auto-place Labels"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Line name",

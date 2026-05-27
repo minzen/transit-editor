@@ -103,7 +103,7 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 6 — Layout Intelligence (Large Effort)
 
-### 6.1 Automatic Station Label Placement
+### 6.1 Automatic Station Label Placement — [COMPLETED]
 
 **Rationale**: Station labels currently use a single configurable position per station and can collide with neighbouring stations and segments on dense maps.
 
@@ -111,13 +111,25 @@ This document captures the next set of architectural, performance, and interacti
 - Implement a force-based or heuristic label placer that picks one of the 8 compass positions to minimize overlap with other labels and segments.
 - Run the placer on demand (button) and incrementally after `moveStation` for the affected neighbourhood only.
 
-### 6.2 Segment Auto-Routing Suggestions
+**Implementation Notes**:
+- New `src/geometry/labelPlacement.ts` with `chooseBestLabelPositions(stations, segments)`.
+- Greedy algorithm scores each of the 4 cardinal positions for every station, penalizing overlap with other stations, existing labels, and nearby segment edges.
+- `autoPlaceLabels` action added to `dataSlice.ts` that applies the chosen positions in a single delta history step.
+- Toolbar button "Auto-place Labels" wired in both mobile (more menu) and desktop layouts; i18n strings added for EN and DE.
+
+### 6.2 Segment Auto-Routing Suggestions — [COMPLETED]
 
 **Rationale**: Octolinear routing of new segments requires manual bend-point placement to avoid crossings.
 
 **Approach**:
 - When creating a segment between two stations, propose a default octolinear path that avoids known obstacles (other stations, shapes).
 - Allow the user to accept (Enter) or refine via bend dragging.
+
+**Implementation Notes**:
+- New `createSmartOctolinearPath(from, to, obstacles, clearance)` in `src/geometry/octolinear.ts`.
+- Evaluates both L-shape orientations (horizontal-then-vertical vs vertical-then-horizontal), counting collisions with obstacle points within `clearance` distance.
+- Chooses the orientation with fewer collisions; ties broken by total path length and a stable HV preference.
+- `addSegment` in `dataSlice.ts` now passes all other station centres as obstacles, so newly created segments automatically avoid running through unrelated stations.
 
 ---
 

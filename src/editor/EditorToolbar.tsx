@@ -55,6 +55,7 @@ type Props = {
     zoomIn: () => void
     zoomOut: () => void
     resetViewport: () => void
+    autoPlaceLabels: () => void
     shapeColor?: string
     setShapeColor?: (color: string) => void
 }
@@ -113,6 +114,7 @@ export function EditorToolbar({
     zoomIn,
     zoomOut,
     resetViewport,
+    autoPlaceLabels,
     shapeColor,
     setShapeColor,
 }: Props) {
@@ -289,6 +291,10 @@ export function EditorToolbar({
                             >
                                 {showLineCodes ? t('toolbar.hideLineCodes') : t('toolbar.showLineCodes')}
                             </Button>
+                            <Divider />
+                            <Button onClick={() => { autoPlaceLabels(); setMoreAnchor(null) }}>
+                                {t('toolbar.autoPlaceLabels')}
+                            </Button>
                         </Box>
                     </Popover>
                 </>
@@ -305,6 +311,10 @@ export function EditorToolbar({
                         onClick={() => setClearConfirmOpen(true)}
                     >
                         {t('toolbar.clear')}
+                    </Button>
+
+                    <Button onClick={autoPlaceLabels}>
+                        {t('toolbar.autoPlaceLabels')}
                     </Button>
 
                     <Divider orientation="vertical" flexItem />

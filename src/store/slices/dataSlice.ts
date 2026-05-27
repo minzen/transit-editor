@@ -5,7 +5,8 @@ import type { Segment } from '../../model/segment'
 import type { Line, LineStyle, TransitMode } from '../../model/line'
 import type { Shape } from '../../model/shape'
 import type { Point } from '../../types/geometry'
-import { createOctolinearPath } from '../../geometry/octolinear'
+import { createOctolinearPath, createSmartOctolinearPath } from '../../geometry/octolinear'
+import { chooseBestLabelPositions } from '../../geometry/labelPlacement'
 import { isPointNearPolyline, pointToLineSegmentDistance } from '../../geometry/distance'
 import { validateLineName, validateStationName } from '../../validation/constants'
 import type { ToolSlice } from './toolSlice'
@@ -56,6 +57,7 @@ export type DataSlice = {
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
     setStationLabelPosition: (id: string, position: LabelPosition) => void
+    autoPlaceLabels: () => void
     setStationServices: (id: string, services: ServiceIcon[]) => void
     setStationFareZone: (id: string, zone: number | undefined) => void
     deleteStation: (id: string) => void
@@ -290,6 +292,20 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             })
         }),
 
+    autoPlaceLabels: () =>
+        set((state) => {
+            const placed = chooseBestLabelPositions(state.stations, state.segments)
+            const nextStations: Record<string, Station> = { ...state.stations }
+            for (const [id, position] of Object.entries(placed)) {
+                const station = nextStations[id]
+                if (!station) continue
+                if (station.labelPosition === position) continue
+                nextStations[id] = { ...station, labelPosition: position }
+            }
+            if (nextStations === state.stations) return state
+            return setWithDelta(state, { stations: nextStations })
+        }),
+
     setStationServices: (id, services) =>
         set((state) => {
             const station = state.stations[id]
@@ -454,7 +470,10 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             }
 
             const id = nanoid()
-            const points = createOctolinearPath(from, to)
+            const obstacles: Point[] = Object.values(state.stations)
+                .filter((s) => s.id !== fromStationId && s.id !== toStationId)
+                .map((s) => ({ x: s.x, y: s.y }))
+            const points = createSmartOctolinearPath(from, to, obstacles)
 
             return setWithDelta(state, {
                 segments: {

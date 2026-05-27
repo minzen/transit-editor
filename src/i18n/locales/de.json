@@ -37,7 +37,8 @@
     "clearAllData": "Alle Daten löschen",
     "clearAllDataMessage": "Sind Sie sicher, dass Sie alle Daten löschen möchten? Dies kann nicht rückgängig gemacht werden.",
     "renameLine": "Linie umbenennen",
-    "lineNamePlaceholder": "Linienname"
+    "lineNamePlaceholder": "Linienname",
+    "autoPlaceLabels": "Beschriftungen automatisch platzieren"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Linienname",

@@ -43,6 +43,7 @@ export function EditorCanvas() {
     const zoomInStore = useEditorStore((s) => s.zoomIn)
     const zoomOutStore = useEditorStore((s) => s.zoomOut)
     const resetViewport = useEditorStore((s) => s.resetViewport)
+    const autoPlaceLabels = useEditorStore((s) => s.autoPlaceLabels)
     const lineWidth = useEditorStore((s) => s.lineWidth)
     const setLineWidth = useEditorStore((s) => s.setLineWidth)
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
@@ -404,6 +405,7 @@ export function EditorCanvas() {
                 zoomIn={zoomIn}
                 zoomOut={zoomOut}
                 resetViewport={resetViewport}
+                autoPlaceLabels={autoPlaceLabels}
                 shapeColor={shapeColor}
                 setShapeColor={setShapeColor}
             />
