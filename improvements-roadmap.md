@@ -74,3 +74,76 @@ This document captures the next set of architectural, performance, and interacti
 - npm scripts: `e2e`, `e2e:ui`, `e2e:update-snapshots`, `e2e:report`.
 - `data-testid="editor-canvas"` added to the main SVG to give tests a stable canvas selector.
 
+---
+
+# Next Iteration — Proposed Improvements
+
+## Priority 5 — Accessibility & Keyboard Navigation (Medium Effort)
+
+### 5.1 Canvas Keyboard Navigation
+
+**Rationale**: The editor is currently mouse/touch only. Keyboard-only users cannot create or select stations, segments, or shapes, which blocks accessibility compliance.
+
+**Approach**:
+- Make the canvas focusable (`tabindex="0"`) with a visible focus ring.
+- Arrow keys move the selection (station, bend point, shape vertex) by one grid step; Shift+arrow moves by 10.
+- Enter activates the current tool at the keyboard cursor; Escape clears selection.
+- Tab cycles through stations in spatial reading order.
+
+### 5.2 ARIA Labels and Screen Reader Support
+
+**Rationale**: IconButtons rely on Tooltip `title` attributes and the SVG canvas exposes no semantics to assistive tech.
+
+**Approach**:
+- Add explicit `aria-label` to all `IconButton`s instead of relying on `title`.
+- Give the canvas `role="application"` with an `aria-label` describing the current map.
+- Announce structural changes (station added, line created, undo/redo) via an `aria-live` region.
+
+---
+
+## Priority 6 — Layout Intelligence (Large Effort)
+
+### 6.1 Automatic Station Label Placement
+
+**Rationale**: Station labels currently use a single configurable position per station and can collide with neighbouring stations and segments on dense maps.
+
+**Approach**:
+- Implement a force-based or heuristic label placer that picks one of the 8 compass positions to minimize overlap with other labels and segments.
+- Run the placer on demand (button) and incrementally after `moveStation` for the affected neighbourhood only.
+
+### 6.2 Segment Auto-Routing Suggestions
+
+**Rationale**: Octolinear routing of new segments requires manual bend-point placement to avoid crossings.
+
+**Approach**:
+- When creating a segment between two stations, propose a default octolinear path that avoids known obstacles (other stations, shapes).
+- Allow the user to accept (Enter) or refine via bend dragging.
+
+---
+
+## Priority 7 — Quality & Tooling (Low–Medium Effort)
+
+### 7.1 CI Pipeline for Tests + E2E + Visual
+
+**Rationale**: Tests and visual baselines only run locally; regressions can slip into `develop`/`main`.
+
+**Approach**:
+- Add a GitHub Actions workflow that runs `lint`, `test`, `build`, and `e2e` (with cached Playwright browsers) on every PR.
+- Upload the Playwright HTML report and any diff images as artifacts on failure.
+- Optionally gate merges on a green pipeline.
+
+### 7.2 Performance Benchmark Harness
+
+**Rationale**: Recent perf work (transient viewport, memoization, delta history) has no automated regression guard. Future refactors may silently slow things down.
+
+**Approach**:
+- Create a benchmark script (or Vitest bench) that builds a synthetic 500-station / 50-line map and measures pan, zoom, and undo timings.
+- Record baseline numbers in the repo and fail CI if a metric regresses by more than a configurable threshold.
+
+### 7.3 Map Import/Export Schema with Validation
+
+**Rationale**: Exported JSON has no schema; importing a hand-edited or older file can corrupt state despite the persist migration layer.
+
+**Approach**:
+- Define a Zod (or hand-rolled) schema for the exported map document.
+- Validate on import; surface a friendly error dialog listing invalid fields instead of crashing the editor.
