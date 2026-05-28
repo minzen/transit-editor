@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
  
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -43,6 +45,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
  
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -168,6 +172,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
  
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -219,26 +225,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
- 
-      - name: Setup Node
-        uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          fetch-depth: 0
  
-      - name: Install dependencies
-        run: npm ci
- 
-      - name: Build
-        run: npm run build
- 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
-          force_orphan: true
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add VPS to known hosts
+        run: ssh-keyscan -H ghast.feetunyrhinen.de >> ~/.ssh/known_hosts
+
+      - name: Copy source to VPS
+        run: |
+          tar --exclude='node_modules' \
+              --exclude='.git' \
+              --exclude='dist' \
+              --exclude='.env' \
+              --exclude='test-results' \
+              --exclude='playwright-report' \
+              -czf - . | ssh deploy@ghast.feetunyrhinen.de "mkdir -p /opt/transit-editor && cd /opt/transit-editor && tar -xzf -"
+
+      - name: Build and restart on VPS
+        run: |
+          VERSION=$(git describe --tags --always 2>/dev/null || echo "${{ github.sha }}")
+          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
+          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION docker compose up -d --force-recreate"
  
       - name: Notify deployment
         uses: actions/github-script@v7
@@ -250,8 +263,8 @@ jobs:
               sha: context.sha,
               state: 'success',
               context: 'deploy/production',
-              description: 'Deployed to GitHub Pages',
-              target_url: `https://${context.repo.owner}.github.io/${context.repo.repo}`,
+              description: 'Deployed to ghast.feetunyrhinen.de',
+              target_url: 'https://ghast.feetunyrhinen.de',
             });
  
       - name: Create release
