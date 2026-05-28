@@ -172,6 +172,7 @@ jobs:
     needs: [lint-test-build, e2e]
     if: github.event_name == 'pull_request' && needs.lint-test-build.result == 'success' && needs.e2e.result == 'success'
     permissions:
+      contents: read
       pull-requests: write
     steps:
       - name: Checkout
