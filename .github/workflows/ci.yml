@@ -250,8 +250,9 @@ jobs:
         run: |
           VERSION=$(git describe --tags --always 2>/dev/null || echo "${{ github.sha }}")
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && docker compose down || true"
           ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
-          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION docker compose up -d --force-recreate"
+          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION docker compose up -d"
  
       - name: Notify deployment
         uses: actions/github-script@v7
