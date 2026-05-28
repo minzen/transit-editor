@@ -30,7 +30,6 @@ const clamp = (value: number, min: number, max: number): number =>
 export function useCanvasInteractions({ spacePressed }: Args) {
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
-    const viewport = useEditorStore((s) => s.viewport)
     const setViewport = useEditorStore((s) => s.setViewport)
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
@@ -39,6 +38,9 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const addStation = useEditorStore((s) => s.addStation)
     const moveStation = useEditorStore((s) => s.moveStation)
     const updateSegmentPoint = useEditorStore((s) => s.updateSegmentPoint)
+
+    const [stationNameDialogOpen, setStationNameDialogOpen] = useState(false)
+    const [pendingStationPosition, setPendingStationPosition] = useState<{ x: number; y: number } | null>(null)
 
     const worldWidth = gridCellsWidth * gridCellSize
     const worldHeight = gridCellsHeight * gridCellSize
@@ -84,6 +86,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
 
     const handleWheel = (event: React.WheelEvent<SVGSVGElement>) => {
         event.preventDefault()
+        const viewport = useEditorStore.getState().viewport
 
         const rect = event.currentTarget.getBoundingClientRect()
 
@@ -140,6 +143,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     }
 
     const handlePointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+        const viewport = useEditorStore.getState().viewport
         if (activePointersRef.current.has(event.pointerId)) {
             activePointersRef.current.set(event.pointerId, {
                 x: event.clientX,
@@ -331,6 +335,8 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         if (spacePressed) return
         if (activeTool !== 'station') return
 
+        const viewport = useEditorStore.getState().viewport
+
         if (suppressNextClickRef.current) {
             suppressNextClickRef.current = false
             return
@@ -373,7 +379,21 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             return
         }
 
-        addStation(snapped.x, snapped.y)
+        setPendingStationPosition(snapped)
+        setStationNameDialogOpen(true)
+    }
+
+    const handleStationNameSave = (name: string) => {
+        if (pendingStationPosition) {
+            addStation(pendingStationPosition.x, pendingStationPosition.y, name)
+        }
+        setStationNameDialogOpen(false)
+        setPendingStationPosition(null)
+    }
+
+    const handleStationNameCancel = () => {
+        setStationNameDialogOpen(false)
+        setPendingStationPosition(null)
     }
 
     return {
@@ -392,5 +412,8 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         handlePointerUp,
         handlePointerCancel: handlePointerUp,
         handleClick,
+        stationNameDialogOpen,
+        handleStationNameSave,
+        handleStationNameCancel,
     }
 }

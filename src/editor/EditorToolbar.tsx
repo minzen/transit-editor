@@ -7,12 +7,11 @@ import { GridSizeControl } from './GridSizeControl'
 import { LineWidthControl } from './LineWidthControl'
 import { HelpDialog } from './HelpDialog'
 import { ConfirmDialog } from './ConfirmDialog'
-import { RenameDialog } from './RenameDialog'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n/i18n.ts'
 import { useEditorStore } from '../store/editorStore'
@@ -44,18 +43,19 @@ type Props = {
     lines: Record<string, Line>
     isCreatingLine: boolean
     setIsCreatingLine: (creating: boolean) => void
-    newLineName: string
-    setNewLineName: (name: string) => void
-    newLineColor: string
-    setNewLineColor: (color: string) => void
     addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
     setLineName: (id: string, name: string) => void
+    setLineCode: (id: string, code: string) => void
+    setLineColor: (id: string, color: string) => void
+    setLineStyle: (id: string, lineStyle: LineStyle) => void
+    setLineTransitMode: (id: string, transitMode: TransitMode) => void
     setPendingStationId: (id: string | null) => void
     setPointerWorldPosition: (point: { x: number; y: number } | null) => void
     colorPalette: string[]
     zoomIn: () => void
     zoomOut: () => void
     resetViewport: () => void
+    autoPlaceLabels: () => void
     shapeColor?: string
     setShapeColor?: (color: string) => void
 }
@@ -102,18 +102,19 @@ export function EditorToolbar({
     lines,
     isCreatingLine,
     setIsCreatingLine,
-    newLineName,
-    setNewLineName,
-    newLineColor,
-    setNewLineColor,
     addLine,
     setLineName,
+    setLineCode,
+    setLineColor,
+    setLineStyle,
+    setLineTransitMode,
     setPendingStationId,
     setPointerWorldPosition,
     colorPalette,
     zoomIn,
     zoomOut,
     resetViewport,
+    autoPlaceLabels,
     shapeColor,
     setShapeColor,
 }: Props) {
@@ -123,10 +124,25 @@ export function EditorToolbar({
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
     const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
-    const [renameLineOpen, setRenameLineOpen] = useState(false)
+    const [editLineOpen, setEditLineOpen] = useState(false)
     const { t } = useTranslation()
     const language = useEditorStore((s) => s.language)
     const setLanguage = useEditorStore((s) => s.setLanguage)
+
+    // Track line creation to auto-select the new line
+    const prevLineCountRef = useRef(Object.keys(lines).length)
+
+    useEffect(() => {
+        if (!isCreatingLine && prevLineCountRef.current < Object.keys(lines).length) {
+            // Line was just created - select the most recently added line
+            const lineIds = Object.keys(lines)
+            const newLineId = lineIds[lineIds.length - 1]
+            if (newLineId) {
+                setSelectedLineId(newLineId)
+            }
+        }
+        prevLineCountRef.current = Object.keys(lines).length
+    }, [isCreatingLine, lines, setSelectedLineId])
 
     const handleClear = () => {
         clear()
@@ -275,6 +291,10 @@ export function EditorToolbar({
                             >
                                 {showLineCodes ? t('toolbar.hideLineCodes') : t('toolbar.showLineCodes')}
                             </Button>
+                            <Divider />
+                            <Button onClick={() => { autoPlaceLabels(); setMoreAnchor(null) }}>
+                                {t('toolbar.autoPlaceLabels')}
+                            </Button>
                         </Box>
                     </Popover>
                 </>
@@ -291,6 +311,10 @@ export function EditorToolbar({
                         onClick={() => setClearConfirmOpen(true)}
                     >
                         {t('toolbar.clear')}
+                    </Button>
+
+                    <Button onClick={autoPlaceLabels}>
+                        {t('toolbar.autoPlaceLabels')}
                     </Button>
 
                     <Divider orientation="vertical" flexItem />
@@ -412,9 +436,9 @@ export function EditorToolbar({
                         <Button
                             variant="outlined"
                             size="small"
-                            onClick={() => setRenameLineOpen(true)}
+                            onClick={() => setEditLineOpen(true)}
                         >
-                            {t('common.rename')}
+                            {t('common.edit')}
                         </Button>
                     )}
 
@@ -422,32 +446,42 @@ export function EditorToolbar({
                         open={isCreatingLine}
                         onClose={() => setIsCreatingLine(false)}
                         fullScreen={isMobile}
+                        maxWidth="md"
+                        fullWidth
                     >
                         <LineCreator
-                            newLineName={newLineName}
-                            setNewLineName={setNewLineName}
-                            newLineColor={newLineColor}
-                            setNewLineColor={setNewLineColor}
-                            addLine={addLine}
-                            setIsCreatingLine={setIsCreatingLine}
                             colorPalette={colorPalette}
+                            onSave={(values) => {
+                                addLine(values.name, values.color, values.code, values.lineStyle, values.transitMode)
+                                setIsCreatingLine(false)
+                            }}
+                            onCancel={() => setIsCreatingLine(false)}
                         />
                     </Dialog>
 
-                    <RenameDialog
-                        open={renameLineOpen}
-                        title={t('toolbar.renameLine')}
-                        initialValue={selectedLineId ? lines[selectedLineId]?.name : ''}
-                        placeholder={t('toolbar.lineNamePlaceholder')}
-                        confirmLabel={t('common.save')}
-                        onConfirm={(name) => {
-                            if (selectedLineId) {
-                                setLineName(selectedLineId, name)
-                            }
-                            setRenameLineOpen(false)
-                        }}
-                        onCancel={() => setRenameLineOpen(false)}
-                    />
+                    <Dialog
+                        open={editLineOpen}
+                        onClose={() => setEditLineOpen(false)}
+                        fullScreen={isMobile}
+                        maxWidth="md"
+                        fullWidth
+                    >
+                        <LineCreator
+                            colorPalette={colorPalette}
+                            initialLine={selectedLineId ? lines[selectedLineId] : undefined}
+                            onSave={(values) => {
+                                if (selectedLineId) {
+                                    setLineName(selectedLineId, values.name)
+                                    setLineCode(selectedLineId, values.code ?? '')
+                                    setLineColor(selectedLineId, values.color)
+                                    setLineStyle(selectedLineId, values.lineStyle)
+                                    setLineTransitMode(selectedLineId, values.transitMode)
+                                }
+                                setEditLineOpen(false)
+                            }}
+                            onCancel={() => setEditLineOpen(false)}
+                        />
+                    </Dialog>
                 </>
             )}
             <ConfirmDialog

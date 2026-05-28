@@ -142,9 +142,47 @@ The editor will be available at `http://localhost:5173`
 
 ### Tests
 
+Run unit tests with Vitest:
+
 ```bash
 npm run test
 ```
+
+### End-to-End and Visual Regression Tests
+
+The project uses [Playwright](https://playwright.dev/) for E2E and visual regression tests located in `e2e/`.
+
+Install browser binaries (first time only):
+
+```bash
+npx playwright install chromium
+```
+
+Run all E2E tests headless against an auto-started dev server:
+
+```bash
+npm run e2e
+```
+
+Open the interactive UI runner:
+
+```bash
+npm run e2e:ui
+```
+
+Update visual snapshot baselines after intentional UI changes:
+
+```bash
+npm run e2e:update-snapshots
+```
+
+View the last HTML report:
+
+```bash
+npm run e2e:report
+```
+
+Snapshots are stored next to their spec files under `e2e/*.spec.ts-snapshots/` and are committed to the repository. The `playwright-report/` and `test-results/` folders are git-ignored.
 
 ## Docker Containerization
 
@@ -210,6 +248,7 @@ nvm use  # Reads .nvmrc file
 - React Router
 - Vitest
 - React Testing Library
+- Playwright (E2E + visual regression)
 - SVG
 - Docker
 - Nginx (in production)

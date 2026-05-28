@@ -1,17 +1,14 @@
 import { useState } from 'react'
-import { TextField, Box, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
+import { TextField, Box, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem, useMediaQuery, useTheme } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { validateLineName, VALIDATION } from '../validation/constants'
-import type { LineStyle, TransitMode } from '../model/line'
+import type { Line, LineStyle, TransitMode } from '../model/line'
 
 type Props = {
-    newLineName: string
-    setNewLineName: (name: string) => void
-    newLineColor: string
-    setNewLineColor: (color: string) => void
-    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
-    setIsCreatingLine: (creating: boolean) => void
     colorPalette: string[]
+    onSave: (values: { name: string; color: string; code?: string; lineStyle: LineStyle; transitMode: TransitMode }) => void
+    onCancel: () => void
+    initialLine?: Line
 }
 
 const MAX_LINE_CODE_LENGTH = 4
@@ -22,87 +19,91 @@ function isValidHexColor(hex: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(hex)
 }
 
-export function LineCreator({
-    newLineName,
-    setNewLineName,
-    newLineColor,
-    setNewLineColor,
-    addLine,
-    setIsCreatingLine,
-    colorPalette,
-}: Props) {
+export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Props) {
     const { t } = useTranslation()
-    const validation = validateLineName(newLineName)
-    const [newLineCode, setNewLineCode] = useState('')
-    const [lineStyle, setLineStyle] = useState<LineStyle>('solid')
-    const [transitMode, setTransitMode] = useState<TransitMode>('metro')
+    const theme = useTheme()
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'))
 
-    const handleCreate = () => {
-        if (validation.valid) {
-            addLine(
-                validation.sanitized ?? newLineName,
-                newLineColor,
-                newLineCode.trim() || undefined,
+    const [name, setName] = useState(initialLine?.name ?? '')
+    const [color, setColor] = useState(initialLine?.color ?? '#1976d2')
+    const [code, setCode] = useState(initialLine?.code ?? '')
+    const [lineStyle, setLineStyle] = useState<LineStyle>(initialLine?.lineStyle ?? 'solid')
+    const [transitMode, setTransitMode] = useState<TransitMode>(initialLine?.transitMode ?? 'metro')
+
+    const validation = validateLineName(name)
+    const isColorValid = isValidHexColor(color)
+    const canSave = validation.valid && isColorValid
+
+    const handleSave = () => {
+        if (canSave) {
+            onSave({
+                name: validation.sanitized ?? name,
+                color,
+                code: code.trim() || undefined,
                 lineStyle,
-                transitMode
-            )
-            setNewLineName('')
-            setNewLineColor('#1976d2')
-            setNewLineCode('')
-            setLineStyle('solid')
-            setTransitMode('metro')
-            setIsCreatingLine(false)
+                transitMode,
+            })
+        }
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleSave()
         }
     }
 
     const handleHexColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
-        setNewLineColor(value)
+        if (value.length <= 7) {
+            setColor(value)
+        }
     }
 
-    const isCustomColor = !colorPalette.includes(newLineColor)
+    const isCustomColor = !colorPalette.includes(color)
 
     return (
-        <Box className="editor-line-creator" sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 1 }}>
+        <Box className="editor-line-creator" sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: isMobile ? 1 : 2 }}>
             <TextField
-                value={newLineName}
-                onChange={(e) => setNewLineName(e.target.value)}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder={t('lineCreator.lineNamePlaceholder')}
-                size="small"
-                sx={{ minWidth: 120 }}
+                size={isMobile ? 'small' : 'medium'}
+                fullWidth
                 slotProps={{
                     htmlInput: {
                         maxLength: VALIDATION.MAX_LINE_NAME_LENGTH,
                     },
                 }}
-                error={!validation.valid && newLineName.length > 0}
-                helperText={!validation.valid && newLineName.length > 0 ? validation.error : ''}
+                error={!validation.valid && name.length > 0}
+                helperText={!validation.valid && name.length > 0 ? validation.error : ''}
             />
-            <Stack direction="row" spacing={0.5} className="editor-color-palette">
-                {colorPalette.map((color) => (
+            <Stack direction={isMobile ? 'row' : 'row'} spacing={0.5} sx={{ flexWrap: 'wrap' }}>
+                {colorPalette.map((paletteColor) => (
                     <IconButton
-                        key={color}
+                        key={paletteColor}
                         sx={{
-                            backgroundColor: color,
-                            width: 24,
-                            height: 24,
-                            border: newLineColor === color ? 2 : 1,
-                            borderColor: newLineColor === color ? 'primary.main' : 'grey.300',
+                            backgroundColor: paletteColor,
+                            width: isMobile ? 28 : 36,
+                            height: isMobile ? 28 : 36,
+                            border: color === paletteColor ? 3 : 1,
+                            borderColor: color === paletteColor ? 'primary.main' : 'grey.300',
                             '&:hover': {
-                                backgroundColor: color,
+                                backgroundColor: paletteColor,
                                 opacity: 0.8,
                             },
                         }}
-                        onClick={() => setNewLineColor(color)}
-                        title={color}
+                        onClick={() => setColor(paletteColor)}
+                        title={paletteColor}
                     />
                 ))}
                 <IconButton
                     sx={{
-                        backgroundColor: newLineColor,
-                        width: 24,
-                        height: 24,
-                        border: isCustomColor ? 2 : 1,
+                        backgroundColor: color,
+                        width: isMobile ? 28 : 36,
+                        height: isMobile ? 28 : 36,
+                        border: isCustomColor ? 3 : 1,
                         borderColor: isCustomColor ? 'primary.main' : 'grey.300',
                         '&:hover': {
                             opacity: 0.8,
@@ -111,50 +112,55 @@ export function LineCreator({
                     title={isCustomColor ? t('lineCreator.customColor') : t('lineCreator.selectCustomColor')}
                 />
             </Stack>
-            <TextField
-                value={newLineColor}
-                onChange={handleHexColorChange}
-                placeholder={t('lineCreator.hexPlaceholder')}
-                size="small"
-                sx={{ minWidth: 120 }}
-                slotProps={{
-                    htmlInput: {
-                        maxLength: 7,
-                    },
-                    input: {
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <Box
-                                    sx={{
-                                        width: 16,
-                                        height: 16,
-                                        backgroundColor: newLineColor,
-                                        border: '1px solid #ccc',
-                                        borderRadius: 1,
-                                    }}
-                                />
-                            </InputAdornment>
-                        ),
-                    },
-                }}
-                error={newLineColor !== '' && !isValidHexColor(newLineColor)}
-                helperText={newLineColor !== '' && !isValidHexColor(newLineColor) ? t('lineCreator.invalidHex') : ''}
-            />
-            <TextField
-                value={newLineCode}
-                onChange={(e) => setNewLineCode(e.target.value)}
-                placeholder={t('lineCreator.codePlaceholder')}
-                size="small"
-                sx={{ minWidth: 120 }}
-                slotProps={{
-                    htmlInput: {
-                        maxLength: MAX_LINE_CODE_LENGTH,
-                    },
-                }}
-                helperText={t('lineCreator.shortBadgeHint')}
-            />
-            <Stack direction="row" spacing={1}>
-                <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
+            <Stack direction={isTablet ? 'column' : 'row'} spacing={2}>
+                <TextField
+                    value={color}
+                    onChange={handleHexColorChange}
+                    placeholder={t('lineCreator.hexPlaceholder')}
+                    size={isMobile ? 'small' : 'medium'}
+                    fullWidth={!isTablet}
+                    slotProps={{
+                        htmlInput: {
+                            maxLength: 7,
+                        },
+                        input: {
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Box
+                                        sx={{
+                                            width: isMobile ? 20 : 24,
+                                            height: isMobile ? 20 : 24,
+                                            backgroundColor: isColorValid ? color : '#ccc',
+                                            border: '1px solid #ccc',
+                                            borderRadius: '50%',
+                                        }}
+                                    />
+                                </InputAdornment>
+                            ),
+                        },
+                    }}
+                    error={color !== '' && !isColorValid}
+                    helperText={color !== '' && !isColorValid ? t('lineCreator.invalidHex') : ''}
+                />
+                <TextField
+                    value={code}
+                    onChange={(e) => {
+                        const value = e.target.value.toUpperCase().slice(0, MAX_LINE_CODE_LENGTH)
+                        setCode(value)
+                    }}
+                    placeholder={t('lineCreator.codePlaceholder')}
+                    size={isMobile ? 'small' : 'medium'}
+                    fullWidth={!isTablet}
+                    slotProps={{
+                        htmlInput: {
+                            maxLength: MAX_LINE_CODE_LENGTH,
+                        },
+                    }}
+                    helperText={t('lineCreator.shortBadgeHint')}
+                />
+            </Stack>
+            <Stack direction={isTablet ? 'column' : 'row'} spacing={2}>
+                <FormControl size={isMobile ? 'small' : 'medium'} fullWidth={!isTablet}>
                     <InputLabel id="line-style-label">{t('lineCreator.style')}</InputLabel>
                     <Select
                         labelId="line-style-label"
@@ -167,7 +173,7 @@ export function LineCreator({
                         ))}
                     </Select>
                 </FormControl>
-                <FormControl size="small" sx={{ minWidth: 100, flex: 1 }}>
+                <FormControl size={isMobile ? 'small' : 'medium'} fullWidth={!isTablet}>
                     <InputLabel id="transit-mode-label">{t('lineCreator.mode')}</InputLabel>
                     <Select
                         labelId="transit-mode-label"
@@ -181,26 +187,21 @@ export function LineCreator({
                     </Select>
                 </FormControl>
             </Stack>
-            <Stack direction="row" spacing={0.5}>
+            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
                 <Button
                     variant="contained"
-                    size="small"
-                    onClick={handleCreate}
-                    disabled={!validation.valid || newLineColor === '' || !isValidHexColor(newLineColor)}
+                    size={isMobile ? 'small' : 'medium'}
+                    onClick={handleSave}
+                    disabled={!canSave}
+                    fullWidth={isMobile}
                 >
-                    {t('common.create')}
+                    {initialLine ? t('common.save') : t('common.create')}
                 </Button>
                 <Button
                     variant="outlined"
-                    size="small"
-                    onClick={() => {
-                        setNewLineName('')
-                        setNewLineColor('#1976d2')
-                        setNewLineCode('')
-                        setLineStyle('solid')
-                        setTransitMode('metro')
-                        setIsCreatingLine(false)
-                    }}
+                    size={isMobile ? 'small' : 'medium'}
+                    onClick={onCancel}
+                    fullWidth={isMobile}
                 >
                     {t('common.cancel')}
                 </Button>

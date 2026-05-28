@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { Segment } from '../model/segment'
 
 type Props = {
@@ -8,7 +9,7 @@ type Props = {
 
 const BEND_POINT_RADIUS = 6
 
-export function BendPointRenderer({
+export const BendPointRenderer = memo(function BendPointRenderer({
     segments,
     onBendPointDragStart,
     onBendPointDoubleClick,
@@ -46,4 +47,4 @@ export function BendPointRenderer({
             })}
         </>
     )
-}
+})

@@ -351,7 +351,7 @@ describe('editor store', () => {
     expect(Object.keys(undoneState.stations)).toHaveLength(0)
     expect(undoneState.pastStates).toHaveLength(0)
     expect(undoneState.futureStates).toHaveLength(1)
-    expect(undoneState.futureStates[0].stations[stationId]).toBeDefined()
+    expect(undoneState.futureStates[0].redo.stations[stationId]).toBeDefined()
   })
 
   it('redo restores undone state', () => {
@@ -552,6 +552,34 @@ describe('editor store', () => {
     expect(Object.keys(state.shapes)).toHaveLength(0)
     expect(state.pastStates).toHaveLength(0)
     expect(state.futureStates).toHaveLength(0)
+  })
+
+  it('initializes with default state when localStorage is cleared', () => {
+    // Reset the store to simulate cleared localStorage
+    useEditorStore.setState({
+      activeTool: 'select',
+      stations: {},
+      segments: {},
+      lines: {},
+      shapes: {},
+      lineWidth: 10,
+      gridCellSize: 50,
+      gridCellsWidth: 80,
+      gridCellsHeight: 80,
+      showLineCodes: true,
+      language: 'en',
+      pastStates: [],
+      futureStates: [],
+    })
+
+    const state = useEditorStore.getState()
+    expect(state.activeTool).toBe('select')
+    expect(state.lineWidth).toBe(10)
+    expect(state.gridCellSize).toBe(50)
+    expect(state.gridCellsWidth).toBe(80)
+    expect(state.gridCellsHeight).toBe(80)
+    expect(state.showLineCodes).toBe(true)
+    expect(state.language).toBe('en')
   })
 
   it('zooms in', () => {
@@ -895,6 +923,9 @@ describe('editor store', () => {
 
     useEditorStore.getState().setStationServices(stationId, ['ferry'])
     expect(useEditorStore.getState().stations[stationId].services).toEqual(['ferry'])
+
+    useEditorStore.getState().setStationServices(stationId, ['airport', 'toilet'])
+    expect(useEditorStore.getState().stations[stationId].services).toEqual(['airport', 'toilet'])
 
     useEditorStore.getState().setStationServices(stationId, [])
     expect(useEditorStore.getState().stations[stationId].services).toBeUndefined()

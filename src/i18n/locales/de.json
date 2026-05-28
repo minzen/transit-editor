@@ -5,6 +5,7 @@
     "confirm": "Bestätigen",
     "close": "Schließen",
     "create": "Erstellen",
+    "edit": "Bearbeiten",
     "rename": "Umbenennen",
     "delete": "Löschen",
     "none": "Keine"
@@ -30,10 +31,14 @@
     "codes": "Codes",
     "selectLine": "Linie auswählen...",
     "addLine": "+ Linie",
+    "addStation": "Station hinzufügen",
+    "stationName": "Stationsname",
+    "stationNamePlaceholder": "Stationsname",
     "clearAllData": "Alle Daten löschen",
     "clearAllDataMessage": "Sind Sie sicher, dass Sie alle Daten löschen möchten? Dies kann nicht rückgängig gemacht werden.",
     "renameLine": "Linie umbenennen",
-    "lineNamePlaceholder": "Linienname"
+    "lineNamePlaceholder": "Linienname",
+    "autoPlaceLabels": "Beschriftungen automatisch platzieren"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Linienname",
@@ -76,6 +81,8 @@
     "accessibility": "♿ Barrierefreiheit",
     "ferry": "⛴ Fähre",
     "rail": "🚂 Bahn",
+    "airport": "✈ Flughafen",
+    "toilet": "🚻 Toilette",
     "zone": "Tarifzone",
     "zoneNumber": "Zone {{zone}}"
   },

@@ -332,7 +332,7 @@ describe('StationRenderer', () => {
         expect(groups[1]).toHaveAttribute('opacity', '0.25')
     })
 
-    it('renders service icons next to stations with services', () => {
+    it('renders service icons in parentheses after station name', () => {
         const stations: Record<string, Station> = {
             s1: { id: 's1', x: 100, y: 100, name: 'A', services: ['accessibility', 'rail'] },
             s2: { id: 's2', x: 200, y: 100, name: 'B' },
@@ -341,9 +341,20 @@ describe('StationRenderer', () => {
             <StationRenderer {...defaultProps} stations={stations} />
         )
         const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
-        expect(texts).toContain('♿')
-        expect(texts).toContain('🚂')
+        expect(texts).toContain('A • ♿ 🚂')
+        expect(texts).toContain('B')
         expect(texts).not.toContain('⛴')
+    })
+
+    it('renders new service icons (airport and toilet)', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, name: 'Airport Station', services: ['airport', 'toilet'] },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
+        expect(texts).toContain('Airport Station • ✈ 🚻')
     })
 
     it('does not render service icons when services array is empty', () => {

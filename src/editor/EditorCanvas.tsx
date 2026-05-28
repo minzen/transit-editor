@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 
 import { useEditorStore } from '../store/editorStore'
 import { snapPointToOctolinear } from '../geometry/octolinear'
@@ -17,6 +17,7 @@ import { snapPointToGrid } from '../geometry/snap'
 import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
 
 import { EditorToolbar } from './EditorToolbar'
+import { StationNameDialog } from './StationNameDialog'
 import { RenameDialog } from './RenameDialog'
 import { Menu, MenuItem, Divider, Checkbox, ListItemIcon, ListItemText } from '@mui/material'
 import { useTranslation } from 'react-i18next'
@@ -35,10 +36,14 @@ export function EditorCanvas() {
     const lines = useEditorStore((s) => s.lines)
     const shapes = useEditorStore((s) => s.shapes)
 
-    const viewport = useEditorStore((s) => s.viewport)
+    const segmentsList = useMemo(() => Object.values(segments), [segments])
+
+    const viewportRef = useRef(useEditorStore.getState().viewport)
+    const viewportLayerRef = useRef<SVGGElement>(null)
     const zoomInStore = useEditorStore((s) => s.zoomIn)
     const zoomOutStore = useEditorStore((s) => s.zoomOut)
     const resetViewport = useEditorStore((s) => s.resetViewport)
+    const autoPlaceLabels = useEditorStore((s) => s.autoPlaceLabels)
     const lineWidth = useEditorStore((s) => s.lineWidth)
     const setLineWidth = useEditorStore((s) => s.setLineWidth)
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
@@ -75,8 +80,6 @@ export function EditorCanvas() {
     const [selectedLineId, setSelectedLineId] = useState<string | null>(null)
 
     const [isCreatingLine, setIsCreatingLine] = useState(false)
-    const [newLineName, setNewLineName] = useState('')
-    const [newLineColor, setNewLineColor] = useState('#1976d2')
 
     const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
     const [showBackground, setShowBackground] = useState(true)
@@ -206,6 +209,9 @@ export function EditorCanvas() {
         handlePointerUp,
         handlePointerCancel,
         handleClick,
+        stationNameDialogOpen,
+        handleStationNameSave,
+        handleStationNameCancel,
     } = useCanvasInteractions({ spacePressed })
 
     // Attach wheel event listener with passive: false to allow preventDefault
@@ -220,6 +226,29 @@ export function EditorCanvas() {
             svg.removeEventListener('wheel', onWheel)
         }
     }, [handleWheel])
+
+    // Transient subscription to viewport changes to avoid react re-renders
+    useEffect(() => {
+        const unsubscribe = useEditorStore.subscribe((state) => {
+            viewportRef.current = state.viewport
+            if (viewportLayerRef.current) {
+                viewportLayerRef.current.setAttribute(
+                    'transform',
+                    `translate(${state.viewport.offsetX} ${state.viewport.offsetY}) scale(${state.viewport.zoom})`
+                )
+                // Dynamically scale vertex handles so they keep constant visual size
+                const vertexHandles = viewportLayerRef.current.querySelectorAll('.vertex-handle')
+                vertexHandles.forEach((handle) => {
+                    handle.setAttribute('r', (6 / state.viewport.zoom).toString())
+                })
+                const previewVertices = viewportLayerRef.current.querySelectorAll('.preview-vertex')
+                previewVertices.forEach((vertex) => {
+                    vertex.setAttribute('r', (5 / state.viewport.zoom).toString())
+                })
+            }
+        })
+        return unsubscribe
+    }, [])
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
@@ -247,7 +276,7 @@ export function EditorCanvas() {
     const handleStationLongPress = (stationId: string) => {
         const station = stations[stationId]
         if (!station) return
-        const { x: screenX, y: screenY } = worldToScreen(station.x, station.y, viewport)
+        const { x: screenX, y: screenY } = worldToScreen(station.x, station.y, viewportRef.current)
         // Approximate menu dimensions so it stays on-screen
         const menuWidth = 180
         const menuHeight = 320
@@ -308,12 +337,12 @@ export function EditorCanvas() {
         const rect = event.currentTarget.getBoundingClientRect()
         const x = event.clientX - rect.left
         const y = event.clientY - rect.top
-        const world = screenToWorld(x, y, viewport)
+        const world = screenToWorld(x, y, viewportRef.current)
         const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
 
         // Hit-test against each segment polyline; threshold is in world units.
-        const threshold = 10 / viewport.zoom
-        for (const segment of Object.values(segments)) {
+        const threshold = 10 / viewportRef.current.zoom
+        for (const segment of segmentsList) {
             if (isPointNearPolyline(world, segment.points, threshold)) {
                 insertBendPoint(segment.id, snapped.x, snapped.y)
                 return
@@ -364,24 +393,26 @@ export function EditorCanvas() {
                 lines={lines}
                 isCreatingLine={isCreatingLine}
                 setIsCreatingLine={setIsCreatingLine}
-                newLineName={newLineName}
-                setNewLineName={setNewLineName}
-                newLineColor={newLineColor}
-                setNewLineColor={setNewLineColor}
                 addLine={addLine}
                 setLineName={setLineName}
+                setLineCode={useEditorStore((s) => s.setLineCode)}
+                setLineColor={useEditorStore((s) => s.setLineColor)}
+                setLineStyle={useEditorStore((s) => s.setLineStyle)}
+                setLineTransitMode={useEditorStore((s) => s.setLineTransitMode)}
                 setPendingStationId={setPendingStationId}
                 setPointerWorldPosition={setPointerWorldPosition}
                 colorPalette={colorPalette}
                 zoomIn={zoomIn}
                 zoomOut={zoomOut}
                 resetViewport={resetViewport}
+                autoPlaceLabels={autoPlaceLabels}
                 shapeColor={shapeColor}
                 setShapeColor={setShapeColor}
             />
 
             <svg
                 ref={svgRef}
+                data-testid="editor-canvas"
                 width="100%"
                 height="100%"
                 style={{
@@ -397,7 +428,7 @@ export function EditorCanvas() {
                         const rect = event.currentTarget.getBoundingClientRect()
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
-                        const world = screenToWorld(x, y, viewport)
+                        const world = screenToWorld(x, y, viewportRef.current)
                         const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
                         const shape = shapes[draggingShapeVertex.shapeId]
                         if (shape) {
@@ -428,7 +459,7 @@ export function EditorCanvas() {
                         const rect = event.currentTarget.getBoundingClientRect()
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
-                        const world = screenToWorld(x, y, viewport)
+                        const world = screenToWorld(x, y, viewportRef.current)
                         const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
                         setShapePoints((prev) => [...prev, snapped])
                         return
@@ -438,7 +469,7 @@ export function EditorCanvas() {
                         const rect = event.currentTarget.getBoundingClientRect()
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
-                        const world = screenToWorld(x, y, viewport)
+                        const world = screenToWorld(x, y, viewportRef.current)
                         for (const shape of Object.values(shapes)) {
                             if (isPointInPolygon(world, shape.points)) {
                                 setSelectedShapeId(shape.id)
@@ -466,9 +497,10 @@ export function EditorCanvas() {
                 />
 
                 <g
+                    ref={viewportLayerRef}
                     transform={`
-            translate(${viewport.offsetX} ${viewport.offsetY})
-            scale(${viewport.zoom})
+            translate(${useEditorStore.getState().viewport.offsetX} ${useEditorStore.getState().viewport.offsetY})
+            scale(${useEditorStore.getState().viewport.zoom})
           `}
                 >
                     {backgroundImage && showBackground && (
@@ -490,9 +522,6 @@ export function EditorCanvas() {
                         gridCellsWidth={gridCellsWidth}
                         gridCellsHeight={gridCellsHeight}
                         showGrid={showGridForExport}
-                        zoom={viewport.zoom}
-                        offsetX={viewport.offsetX}
-                        offsetY={viewport.offsetY}
                     />
 
                     <ShapeLayer shapes={shapes} />
@@ -509,9 +538,10 @@ export function EditorCanvas() {
                             {shapes[selectedShapeId].points.map((p, i) => (
                                 <circle
                                     key={`vertex-${selectedShapeId}-${i}`}
+                                    className="vertex-handle"
                                     cx={p.x}
                                     cy={p.y}
-                                    r={6 / viewport.zoom}
+                                    r={6 / useEditorStore.getState().viewport.zoom}
                                     fill="#fff"
                                     stroke="#1976d2"
                                     strokeWidth={2}
@@ -539,9 +569,10 @@ export function EditorCanvas() {
                             {shapePoints.map((p, i) => (
                                 <circle
                                     key={i}
+                                    className="preview-vertex"
                                     cx={p.x}
                                     cy={p.y}
-                                    r={5 / viewport.zoom}
+                                    r={5 / useEditorStore.getState().viewport.zoom}
                                     fill={shapeColor}
                                     style={{ pointerEvents: 'none' }}
                                 />
@@ -550,7 +581,7 @@ export function EditorCanvas() {
                     )}
 
                     <SegmentLayer
-                        segments={Object.values(segments)}
+                        segments={segmentsList}
                         lines={lines}
                         lineWidth={lineWidth}
                         selectedLineId={selectedLineId}
@@ -583,7 +614,7 @@ export function EditorCanvas() {
                         )}
 
                     <BendPointRenderer
-                        segments={Object.values(segments)}
+                        segments={segmentsList}
                         onBendPointDragStart={(segmentId, pointIndex) => {
                             setDraggingBendPoint({ segmentId, pointIndex })
                         }}
@@ -675,6 +706,12 @@ export function EditorCanvas() {
                     setRenameStationId(null)
                 }}
             />
+
+            <StationNameDialog
+                open={stationNameDialogOpen}
+                onSave={handleStationNameSave}
+                onCancel={handleStationNameCancel}
+            />
             <Menu
                 open={Boolean(contextMenuStationId)}
                 onClose={() => {
@@ -715,6 +752,8 @@ export function EditorCanvas() {
                     { key: 'accessibility' as const, labelKey: 'editorCanvas.accessibility' },
                     { key: 'ferry' as const, labelKey: 'editorCanvas.ferry' },
                     { key: 'rail' as const, labelKey: 'editorCanvas.rail' },
+                    { key: 'airport' as const, labelKey: 'editorCanvas.airport' },
+                    { key: 'toilet' as const, labelKey: 'editorCanvas.toilet' },
                 ]).map(({ key, labelKey }) => (
                     <MenuItem
                         key={key}

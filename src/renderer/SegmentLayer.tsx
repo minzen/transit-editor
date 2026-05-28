@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import { offsetPath } from '../geometry/offsetPath'
@@ -74,7 +75,7 @@ function SegmentPath({
   )
 }
 
-export function SegmentLayer({
+export const SegmentLayer = memo(function SegmentLayer({
   segments,
   lines,
   lineWidth,
@@ -136,4 +137,4 @@ export function SegmentLayer({
       })}
     </>
   )
-}
+})
