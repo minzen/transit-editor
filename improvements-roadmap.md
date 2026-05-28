@@ -155,7 +155,7 @@ This document captures the next set of architectural, performance, and interacti
   - `notify`: commit statuses for `ci/merge` gate
 - Node version read from `.nvmrc`; npm cache enabled.
 - Concurrency group cancels in-progress runs for the same branch.
-- **Manual setup required**: Enable branch protection in GitHub repo settings → Branches → `main` and `develop` → Require status checks → `ci/all` and `ci/merge`.
+- **Limitation**: Protected-branch required-status-checks enforcement is only available on public repos or GitHub Team/Enterprise. On a free private repo the statuses post but do not mechanically block merges — rely on team discipline until you go public or upgrade.
 
 ### 7.2 Performance Benchmark Harness
 
