@@ -151,7 +151,7 @@ This document captures the next set of architectural, performance, and interacti
   - `status`: posts `ci/all` commit status; blocks merge on failure
   - `report-pr-comment`: updates PR with CI results table
   - `deploy-preview`: uploads build artifact on green PRs
-  - `deploy-production`: deploys to GitHub Pages + creates commit status + auto-releases on main push
+  - `deploy-production`: deploys to VPS (`ghast.feetunyrhinen.de`) via SSH tar + Docker Compose build/up; creates commit status + auto-releases on main push
   - `notify`: commit statuses for `ci/merge` gate
 - Node version read from `.nvmrc`; npm cache enabled.
 - Concurrency group cancels in-progress runs for the same branch.
