@@ -123,6 +123,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-test-build, e2e]
     if: github.event_name == 'pull_request' && always()
+    permissions:
+      pull-requests: write
     steps:
       - name: Comment on PR
         uses: actions/github-script@v7
@@ -169,6 +171,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-test-build, e2e]
     if: github.event_name == 'pull_request' && needs.lint-test-build.result == 'success' && needs.e2e.result == 'success'
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
