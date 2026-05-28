@@ -250,9 +250,13 @@ jobs:
         run: |
           VERSION=$(git describe --tags --always 2>/dev/null || echo "${{ github.sha }}")
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && docker compose down || true"
-          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build"
-          ssh deploy@ghast.feetunyrhinen.de "cd /opt/transit-editor && VERSION=$VERSION docker compose up -d"
+          ssh deploy@ghast.feetunyrhinen.de "
+            cd /opt/transit-editor &&
+            docker compose down --remove-orphans -v 2>/dev/null || true &&
+            docker rm -f transit-editor-web-1 2>/dev/null || true &&
+            VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build &&
+            VERSION=$VERSION docker compose up -d
+          "
  
       - name: Notify deployment
         uses: actions/github-script@v7
