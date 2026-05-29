@@ -413,7 +413,10 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         handlePointerCancel: handlePointerUp,
         handleClick,
         stationNameDialogOpen,
+        setStationNameDialogOpen,
         handleStationNameSave,
         handleStationNameCancel,
+        pendingStationPosition,
+        setPendingStationPosition,
     }
 }

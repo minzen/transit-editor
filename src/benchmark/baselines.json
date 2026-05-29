@@ -1,0 +1,12 @@
+{
+  "_note": "Baseline timings in milliseconds per operation. Generated on initial run. Regressions fail CI if they exceed the threshold.",
+  "version": 1,
+  "thresholdPercent": 30,
+  "metrics": {
+    "pan": 0.050,
+    "zoom": 0.065,
+    "undo": 0.500,
+    "addStation": 2.000,
+    "addSegment": 0.500
+  }
+}

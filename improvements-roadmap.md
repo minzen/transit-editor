@@ -80,15 +80,20 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 5 — Accessibility & Keyboard Navigation (Medium Effort)
 
-### 5.1 Canvas Keyboard Navigation
+### 5.1 Canvas Keyboard Navigation ✅
 
 **Rationale**: The editor is currently mouse/touch only. Keyboard-only users cannot create or select stations, segments, or shapes, which blocks accessibility compliance.
 
-**Approach**:
-- Make the canvas focusable (`tabindex="0"`) with a visible focus ring.
-- Arrow keys move the selection (station, bend point, shape vertex) by one grid step; Shift+arrow moves by 10.
-- Enter activates the current tool at the keyboard cursor; Escape clears selection.
-- Tab cycles through stations in spatial reading order.
+**Implementation**:
+- `src/editor/useCanvasKeyboardNavigation.ts`: hook managing keyboard cursor, arrow-key movement, Tab cycling, Enter tool activation, Escape clearing
+- SVG canvas is focusable (`tabIndex={0}`) with `role="application"` and `aria-label`
+- Focus ring styled in `EditorCanvas.css`
+- Arrow keys move selected stations/shapes by `gridCellSize` (Shift = 10×)
+- Tab cycles stations in spatial reading order (top-to-bottom, left-to-right)
+- Enter activates current tool at keyboard cursor: add station (station tool), start/complete segment (segment tool), add shape point / close shape with Shift+Enter (shape tool), select nearest station/shape (select tool)
+- Escape clears all selections (stations, shapes, shape points)
+- Keyboard cursor rendered as crosshair inside the viewport layer, counter-scaled to stay constant size at all zoom levels
+- 14 unit tests in `src/editor/useCanvasKeyboardNavigation.test.tsx`
 
 ### 5.2 ARIA Labels and Screen Reader Support
 
@@ -157,13 +162,20 @@ This document captures the next set of architectural, performance, and interacti
 - Concurrency group cancels in-progress runs for the same branch.
 - **Limitation**: Protected-branch required-status-checks enforcement is only available on public repos or GitHub Team/Enterprise. On a free private repo the statuses post but do not mechanically block merges — rely on team discipline until you go public or upgrade.
 
-### 7.2 Performance Benchmark Harness
+### 7.2 Performance Benchmark Harness ✅
 
 **Rationale**: Recent perf work (transient viewport, memoization, delta history) has no automated regression guard. Future refactors may silently slow things down.
 
-**Approach**:
-- Create a benchmark script (or Vitest bench) that builds a synthetic 500-station / 50-line map and measures pan, zoom, and undo timings.
-- Record baseline numbers in the repo and fail CI if a metric regresses by more than a configurable threshold.
+**Implementation**:
+- `src/benchmark/generator.ts`: synthetic 500-station / 50-line map generator
+- `src/benchmark/benchmarkStore.ts`: raw Zustand store (no persist) for clean measurements
+- `src/benchmark/benchmark.ts`: Vitest benchmark suite measuring pan, zoom, undo, addStation, addSegment as batch totals to amortise GC noise
+- `src/benchmark/baselines.json`: baseline per-op timings with 30% regression threshold
+- `vitest.benchmark.config.ts`: separate Vitest config so benchmarks don't run with regular tests
+- CI: `npm run benchmark` runs in the `lint-test-build` job; regressions fail the build
+
+**Baselines** (ms/op, generous for CI variance):
+- pan: 0.050, zoom: 0.065, undo: 0.500, addStation: 2.000, addSegment: 0.500
 
 ### 7.3 Map Import/Export Schema with Validation
 

@@ -5,6 +5,7 @@ import { snapPointToOctolinear } from '../geometry/octolinear'
 import { useMapExport } from './useMapExport'
 import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
 import { useCanvasInteractions } from './useCanvasInteractions'
+import { useCanvasKeyboardNavigation } from './useCanvasKeyboardNavigation'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
@@ -210,9 +211,37 @@ export function EditorCanvas() {
         handlePointerCancel,
         handleClick,
         stationNameDialogOpen,
+        setStationNameDialogOpen,
         handleStationNameSave,
         handleStationNameCancel,
+        setPendingStationPosition,
     } = useCanvasInteractions({ spacePressed })
+
+    const [svgHasFocus, setSvgHasFocus] = useState(false)
+
+    const { keyboardCursor, handleKeyDown: handleCanvasKeyDown } = useCanvasKeyboardNavigation({
+        svgRef,
+        selectedStationIds,
+        setSelectedStationIds,
+        selectedShapeId,
+        setSelectedShapeId,
+        shapePoints,
+        setShapePoints,
+        selectedLineId,
+        pendingStationId,
+        setPendingStationId,
+        setPointerWorldPosition,
+        setStationNameDialogOpen,
+        setPendingStationPosition,
+    })
+
+    // Sync pointer world position with keyboard cursor so the segment preview
+    // line follows the cursor when navigating by keyboard.
+    useEffect(() => {
+        if (keyboardCursor) {
+            setPointerWorldPosition(keyboardCursor)
+        }
+    }, [keyboardCursor, setPointerWorldPosition])
 
     // Attach wheel event listener with passive: false to allow preventDefault
     useEffect(() => {
@@ -259,6 +288,9 @@ export function EditorCanvas() {
                 if (selectedShapeId) {
                     setSelectedShapeId(null)
                 }
+                if (selectedStationIds.length > 0) {
+                    setSelectedStationIds([])
+                }
             }
             if ((e.key === 'Backspace' || e.key === 'Delete') && activeTool === 'shape' && shapePoints.length > 0) {
                 setShapePoints((prev) => prev.slice(0, -1))
@@ -266,7 +298,7 @@ export function EditorCanvas() {
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [shapePoints.length, selectedShapeId, activeTool])
+    }, [shapePoints.length, selectedShapeId, activeTool, selectedStationIds, setSelectedStationIds, setSelectedShapeId, setShapePoints])
 
     const insertBendPoint = useEditorStore((s) => s.insertBendPoint)
     const removeBendPoint = useEditorStore((s) => s.removeBendPoint)
@@ -413,6 +445,9 @@ export function EditorCanvas() {
             <svg
                 ref={svgRef}
                 data-testid="editor-canvas"
+                tabIndex={0}
+                role="application"
+                aria-label="Transit map canvas"
                 width="100%"
                 height="100%"
                 style={{
@@ -422,6 +457,9 @@ export function EditorCanvas() {
                             ? 'grab'
                             : 'default',
                 }}
+                onFocus={() => setSvgHasFocus(true)}
+                onBlur={() => setSvgHasFocus(false)}
+                onKeyDown={handleCanvasKeyDown}
                 onPointerDown={handlePointerDown}
                 onPointerMove={(event) => {
                     if (draggingShapeVertex) {
@@ -578,6 +616,41 @@ export function EditorCanvas() {
                                 />
                             ))}
                         </>
+                    )}
+
+                    {/* Keyboard cursor */}
+                    {svgHasFocus && (
+                        <g transform={`translate(${keyboardCursor.x} ${keyboardCursor.y})`}>
+                            <circle
+                                r={8 / useEditorStore.getState().viewport.zoom}
+                                fill="none"
+                                stroke="#1976d2"
+                                strokeWidth={2 / useEditorStore.getState().viewport.zoom}
+                                strokeDasharray="4 2"
+                                opacity={0.8}
+                                style={{ pointerEvents: 'none' }}
+                            />
+                            <line
+                                x1={-12 / useEditorStore.getState().viewport.zoom}
+                                y1={0}
+                                x2={12 / useEditorStore.getState().viewport.zoom}
+                                y2={0}
+                                stroke="#1976d2"
+                                strokeWidth={1 / useEditorStore.getState().viewport.zoom}
+                                opacity={0.8}
+                                style={{ pointerEvents: 'none' }}
+                            />
+                            <line
+                                x1={0}
+                                y1={-12 / useEditorStore.getState().viewport.zoom}
+                                x2={0}
+                                y2={12 / useEditorStore.getState().viewport.zoom}
+                                stroke="#1976d2"
+                                strokeWidth={1 / useEditorStore.getState().viewport.zoom}
+                                opacity={0.8}
+                                style={{ pointerEvents: 'none' }}
+                            />
+                        </g>
                     )}
 
                     <SegmentLayer
