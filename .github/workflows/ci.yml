@@ -35,6 +35,9 @@ jobs:
       - name: Unit tests
         run: npm run test
  
+      - name: Benchmarks
+        run: npm run benchmark
+ 
       - name: Build
         run: npm run build
  

@@ -157,13 +157,20 @@ This document captures the next set of architectural, performance, and interacti
 - Concurrency group cancels in-progress runs for the same branch.
 - **Limitation**: Protected-branch required-status-checks enforcement is only available on public repos or GitHub Team/Enterprise. On a free private repo the statuses post but do not mechanically block merges — rely on team discipline until you go public or upgrade.
 
-### 7.2 Performance Benchmark Harness
+### 7.2 Performance Benchmark Harness ✅
 
 **Rationale**: Recent perf work (transient viewport, memoization, delta history) has no automated regression guard. Future refactors may silently slow things down.
 
-**Approach**:
-- Create a benchmark script (or Vitest bench) that builds a synthetic 500-station / 50-line map and measures pan, zoom, and undo timings.
-- Record baseline numbers in the repo and fail CI if a metric regresses by more than a configurable threshold.
+**Implementation**:
+- `src/benchmark/generator.ts`: synthetic 500-station / 50-line map generator
+- `src/benchmark/benchmarkStore.ts`: raw Zustand store (no persist) for clean measurements
+- `src/benchmark/benchmark.ts`: Vitest benchmark suite measuring pan, zoom, undo, addStation, addSegment as batch totals to amortise GC noise
+- `src/benchmark/baselines.json`: baseline per-op timings with 30% regression threshold
+- `vitest.benchmark.config.ts`: separate Vitest config so benchmarks don't run with regular tests
+- CI: `npm run benchmark` runs in the `lint-test-build` job; regressions fail the build
+
+**Baselines** (ms/op, generous for CI variance):
+- pan: 0.050, zoom: 0.065, undo: 0.500, addStation: 2.000, addSegment: 0.500
 
 ### 7.3 Map Import/Export Schema with Validation
 
