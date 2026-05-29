@@ -32,7 +32,7 @@ test.describe('Editor smoke tests', () => {
         await expect(dialog).toBeHidden()
 
         // A station <circle> should now exist in the SVG canvas
-        await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
+        await expect(canvas.locator('circle[fill="#111"]')).toHaveCount(1, { timeout: 5000 })
     })
 
     test('can add a line via the toolbar', async ({ page }) => {
