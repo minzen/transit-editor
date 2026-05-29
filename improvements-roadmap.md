@@ -80,15 +80,20 @@ This document captures the next set of architectural, performance, and interacti
 
 ## Priority 5 — Accessibility & Keyboard Navigation (Medium Effort)
 
-### 5.1 Canvas Keyboard Navigation
+### 5.1 Canvas Keyboard Navigation ✅
 
 **Rationale**: The editor is currently mouse/touch only. Keyboard-only users cannot create or select stations, segments, or shapes, which blocks accessibility compliance.
 
-**Approach**:
-- Make the canvas focusable (`tabindex="0"`) with a visible focus ring.
-- Arrow keys move the selection (station, bend point, shape vertex) by one grid step; Shift+arrow moves by 10.
-- Enter activates the current tool at the keyboard cursor; Escape clears selection.
-- Tab cycles through stations in spatial reading order.
+**Implementation**:
+- `src/editor/useCanvasKeyboardNavigation.ts`: hook managing keyboard cursor, arrow-key movement, Tab cycling, Enter tool activation, Escape clearing
+- SVG canvas is focusable (`tabIndex={0}`) with `role="application"` and `aria-label`
+- Focus ring styled in `EditorCanvas.css`
+- Arrow keys move selected stations/shapes by `gridCellSize` (Shift = 10×)
+- Tab cycles stations in spatial reading order (top-to-bottom, left-to-right)
+- Enter activates current tool at keyboard cursor: add station (station tool), start/complete segment (segment tool), add shape point / close shape with Shift+Enter (shape tool), select nearest station/shape (select tool)
+- Escape clears all selections (stations, shapes, shape points)
+- Keyboard cursor rendered as crosshair inside the viewport layer, counter-scaled to stay constant size at all zoom levels
+- 14 unit tests in `src/editor/useCanvasKeyboardNavigation.test.tsx`
 
 ### 5.2 ARIA Labels and Screen Reader Support
 
