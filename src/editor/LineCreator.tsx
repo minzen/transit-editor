@@ -95,6 +95,7 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
                             },
                         }}
                         onClick={() => setColor(paletteColor)}
+                        aria-label={paletteColor}
                         title={paletteColor}
                     />
                 ))}
@@ -109,6 +110,7 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
                             opacity: 0.8,
                         },
                     }}
+                    aria-label={isCustomColor ? t('lineCreator.customColor') : t('lineCreator.selectCustomColor')}
                     title={isCustomColor ? t('lineCreator.customColor') : t('lineCreator.selectCustomColor')}
                 />
             </Stack>

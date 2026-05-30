@@ -69,7 +69,14 @@
   "backgroundImageControl": {
     "loadImage": "Bild laden",
     "hideBG": "HG ausblenden",
-    "showBG": "HG anzeigen"
+    "showBG": "HG anzeigen",
+    "removeImage": "Entfernen",
+    "placement": "Position",
+    "x": "X",
+    "y": "Y",
+    "width": "Breite",
+    "height": "Höhe",
+    "opacity": "Deckkraft"
   },
   "editorCanvas": {
     "stationNameTitle": "Stationsname",

@@ -69,7 +69,14 @@
   "backgroundImageControl": {
     "loadImage": "Load Image",
     "hideBG": "Hide BG",
-    "showBG": "Show BG"
+    "showBG": "Show BG",
+    "removeImage": "Remove",
+    "placement": "Placement",
+    "x": "X",
+    "y": "Y",
+    "width": "Width",
+    "height": "Height",
+    "opacity": "Opacity"
   },
   "editorCanvas": {
     "stationNameTitle": "Station Name",

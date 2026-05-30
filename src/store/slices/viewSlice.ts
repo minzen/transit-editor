@@ -9,6 +9,13 @@ export type ViewSlice = {
     gridCellsHeight: number
     showLineCodes: boolean
     language: 'en' | 'de'
+    backgroundImageUrl: string | null
+    showBackgroundImage: boolean
+    backgroundImageX: number
+    backgroundImageY: number
+    backgroundImageWidth: number
+    backgroundImageHeight: number
+    backgroundImageOpacity: number
     setViewport: (viewport: Viewport) => void
     zoomIn: (centerX?: number, centerY?: number) => void
     zoomOut: (centerX?: number, centerY?: number) => void
@@ -19,6 +26,13 @@ export type ViewSlice = {
     setGridCellsHeight: (height: number) => void
     setShowLineCodes: (show: boolean) => void
     setLanguage: (lang: 'en' | 'de') => void
+    setBackgroundImageUrl: (url: string | null) => void
+    setShowBackgroundImage: (show: boolean) => void
+    setBackgroundImageX: (x: number) => void
+    setBackgroundImageY: (y: number) => void
+    setBackgroundImageWidth: (width: number) => void
+    setBackgroundImageHeight: (height: number) => void
+    setBackgroundImageOpacity: (opacity: number) => void
 }
 
 export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set) => ({
@@ -29,6 +43,13 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
     gridCellsHeight: 80,
     showLineCodes: true,
     language: 'en',
+    backgroundImageUrl: null,
+    showBackgroundImage: true,
+    backgroundImageX: 0,
+    backgroundImageY: 0,
+    backgroundImageWidth: 4000,
+    backgroundImageHeight: 4000,
+    backgroundImageOpacity: 0.3,
 
     setViewport: (viewport) =>
         set({ viewport }),
@@ -109,4 +130,31 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
 
     setLanguage: (lang) =>
         set({ language: lang }),
+
+    setBackgroundImageUrl: (url) =>
+        set({ backgroundImageUrl: url }),
+
+    setShowBackgroundImage: (show) =>
+        set({ showBackgroundImage: show }),
+
+    setBackgroundImageX: (x) =>
+        set({ backgroundImageX: x }),
+
+    setBackgroundImageY: (y) =>
+        set({ backgroundImageY: y }),
+
+    setBackgroundImageWidth: (width) =>
+        set(() => ({
+            backgroundImageWidth: Math.max(1, width),
+        })),
+
+    setBackgroundImageHeight: (height) =>
+        set(() => ({
+            backgroundImageHeight: Math.max(1, height),
+        })),
+
+    setBackgroundImageOpacity: (opacity) =>
+        set(() => ({
+            backgroundImageOpacity: Math.max(0, Math.min(1, opacity)),
+        })),
 })

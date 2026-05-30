@@ -55,6 +55,19 @@ This document captures the next set of architectural, performance, and interacti
 - Strictly call `preventDefault()` on touch events in `useCanvasInteractions.ts`.
 - Ensure touch drag thresholds prevent synthetic double-clicks/taps.
 
+### 3.2 Background Image Import & Controls — [COMPLETED]
+
+**Rationale**: The editor already supports loading a background image, but lacked controls for placement, sizing, opacity, and removal.
+
+**Implementation**:
+- Moved background image state from local `useState` in `EditorCanvas.tsx` to `ViewSlice` in the Zustand store
+- Added controls in `BackgroundImageControl.tsx`: Load Image, Show/Hide, Remove
+- Added sliders for X/Y placement, Width, Height, and Opacity
+- Updated `EditorCanvas.tsx` to render the SVG `<image>` with dynamic properties from store
+- Removed prop drilling through `EditorToolbar.tsx`
+- i18n strings added for EN and DE
+- Tests updated in `src/editor/BackgroundImageControl.test.tsx`
+
 ---
 
 ## Priority 4 — Testing & Visual Quality Assurance (Medium Effort)
@@ -95,14 +108,17 @@ This document captures the next set of architectural, performance, and interacti
 - Keyboard cursor rendered as crosshair inside the viewport layer, counter-scaled to stay constant size at all zoom levels
 - 14 unit tests in `src/editor/useCanvasKeyboardNavigation.test.tsx`
 
-### 5.2 ARIA Labels and Screen Reader Support
+### 5.2 ARIA Labels and Screen Reader Support ✅
 
 **Rationale**: IconButtons rely on Tooltip `title` attributes and the SVG canvas exposes no semantics to assistive tech.
 
-**Approach**:
-- Add explicit `aria-label` to all `IconButton`s instead of relying on `title`.
-- Give the canvas `role="application"` with an `aria-label` describing the current map.
-- Announce structural changes (station added, line created, undo/redo) via an `aria-live` region.
+**Implementation**:
+- Added explicit `aria-label` to all `IconButton`s in `EditorToolbar.tsx` and `LineCreator.tsx`
+- Canvas already has `role="application"` and `aria-label="Transit map canvas"` from 5.1
+- Created `src/store/slices/accessibilitySlice.ts` with `announcement`, `setAnnouncement`, and `clearAnnouncement`
+- Added visually hidden `aria-live="polite"` region in `App.tsx` that announces structural changes
+- Wired announcements into key data slice actions: `addStation`, `deleteStation`, `addSegment`, `addLine`, `addShape`, `deleteShape`, `undo`, `redo`, `clear`
+- 8 unit tests in `src/store/slices/accessibilitySlice.test.ts`
 
 ---
 
