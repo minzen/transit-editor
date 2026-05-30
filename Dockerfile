@@ -6,6 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+ARG VITE_PLAUSIBLE_DOMAIN
+ARG VITE_PLAUSIBLE_URL
 COPY . .
 RUN npm run build
 

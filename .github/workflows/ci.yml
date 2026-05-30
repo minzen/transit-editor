@@ -269,7 +269,8 @@ jobs:
             cd /opt/transit-editor &&
             docker compose down --remove-orphans -v 2>/dev/null || true &&
             docker rm -f transit-editor-web-1 2>/dev/null || true &&
-            VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build &&
+            set -a && source .env && set +a &&
+            VERSION=$VERSION BUILD_DATE=$BUILD_DATE docker compose build --no-cache &&
             VERSION=$VERSION docker compose up -d
           "
  
