@@ -14,7 +14,7 @@ services:
       - plausible-conf.env
     environment:
       - DATABASE_URL=postgres://plausible:plausible@plausible-db:5432/plausible
-      - CLICKHOUSE_DATABASE_URL=http://default:plausible@plausible-events:8123/plausible
+      - CLICKHOUSE_DATABASE_URL=http://plausible-events:8123/plausible
     volumes:
       - plausible-data:/var/lib/plausible
     networks:
@@ -37,10 +37,11 @@ services:
     image: clickhouse/clickhouse-server:latest
     container_name: plausible-events
     restart: unless-stopped
+    environment:
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=0
     volumes:
       - plausible-events-data:/var/lib/clickhouse
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
-      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
     networks:
       - plausible-network
 
