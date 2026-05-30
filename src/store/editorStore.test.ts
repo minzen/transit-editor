@@ -96,6 +96,62 @@ describe('editor store', () => {
     expect(segment.points).toHaveLength(3)
   })
 
+  it('adds a second line to an existing segment (corridor)', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+
+    const state = useEditorStore.getState()
+    const stationIds = Object.keys(state.stations)
+
+    useEditorStore.getState().addLine('Line 1', '#ff0000')
+    useEditorStore.getState().addLine('Line 2', '#00ff00')
+    const lineIds = Object.keys(useEditorStore.getState().lines)
+
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineIds[0])
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineIds[1])
+
+    const segments = useEditorStore.getState().segments
+    expect(Object.keys(segments)).toHaveLength(1)
+
+    const segment = segments[Object.keys(segments)[0]]
+    expect(segment.lineIds).toEqual([lineIds[0], lineIds[1]])
+  })
+
+  it('is a no-op when adding a line already on the segment', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+
+    useEditorStore.getState().addLine('Line 1', '#ff0000')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segments = useEditorStore.getState().segments
+    expect(Object.keys(segments)).toHaveLength(1)
+    expect(segments[Object.keys(segments)[0]].lineIds).toEqual([lineId])
+  })
+
+  it('reuses segment in reverse direction for corridors', () => {
+    useEditorStore.getState().addStation(0, 0)
+    useEditorStore.getState().addStation(200, 0)
+
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+
+    useEditorStore.getState().addLine('Line 1', '#ff0000')
+    useEditorStore.getState().addLine('Line 2', '#00ff00')
+    const lineIds = Object.keys(useEditorStore.getState().lines)
+
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineIds[0])
+    useEditorStore.getState().addSegment(stationIds[1], stationIds[0], lineIds[1])
+
+    const segments = useEditorStore.getState().segments
+    expect(Object.keys(segments)).toHaveLength(1)
+    expect(segments[Object.keys(segments)[0]].lineIds).toEqual([lineIds[0], lineIds[1]])
+  })
+
   it('updates segment points when a station is moved', () => {
     useEditorStore.getState().addStation(100, 200)
     useEditorStore.getState().addStation(300, 400)

@@ -480,6 +480,30 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                 return state
             }
 
+            // Check if a segment already connects these two stations (in either direction)
+            const existingSegment = Object.values(state.segments).find(
+                (seg) =>
+                    (seg.fromStationId === fromStationId && seg.toStationId === toStationId) ||
+                    (seg.fromStationId === toStationId && seg.toStationId === fromStationId)
+            )
+
+            if (existingSegment) {
+                // If the line is already on this segment, do nothing
+                if (existingSegment.lineIds.includes(lineId)) {
+                    return state
+                }
+                // Add the new line to the existing shared segment
+                return setWithDelta(state, {
+                    segments: {
+                        ...state.segments,
+                        [existingSegment.id]: {
+                            ...existingSegment,
+                            lineIds: [...existingSegment.lineIds, lineId],
+                        },
+                    },
+                })
+            }
+
             const id = nanoid()
             const obstacles: Point[] = Object.values(state.stations)
                 .filter((s) => s.id !== fromStationId && s.id !== toStationId)
