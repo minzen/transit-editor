@@ -6,19 +6,23 @@ services:
     container_name: plausible
     restart: unless-stopped
     depends_on:
-      - plausible-db
-      - plausible-events
+      plausible-db:
+        condition: service_healthy
+      plausible-events:
+        condition: service_started
     ports:
       - "8002:8000"
     env_file:
       - plausible-conf.env
     environment:
       - DATABASE_URL=postgres://plausible:plausible@plausible-db:5432/plausible
-      - CLICKHOUSE_DATABASE_URL=http://plausible-events:8123/plausible
+      - CLICKHOUSE_DATABASE_URL=http://default:plausible@plausible-events:8123/plausible
     volumes:
       - plausible-data:/var/lib/plausible
     networks:
       - plausible-network
+    command: >
+      sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
 
   plausible-db:
     image: postgres:15-alpine
@@ -32,16 +36,22 @@ services:
       - plausible-db-data:/var/lib/postgresql/data
     networks:
       - plausible-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plausible -d plausible"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   plausible-events:
     image: clickhouse/clickhouse-server:latest
     container_name: plausible-events
     restart: unless-stopped
     environment:
-      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=0
+      - CLICKHOUSE_PASSWORD=plausible
     volumes:
       - plausible-events-data:/var/lib/clickhouse
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/default.xml:ro
     networks:
       - plausible-network
 
