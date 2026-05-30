@@ -57,6 +57,26 @@ export function HelpDialog({ open, onClose }: Props) {
                 <Divider sx={{ mb: 2 }} />
 
                 <Box sx={{ mb: 3 }}>
+                    <Typography variant="h6" gutterBottom>{t('helpDialog.stationDetails')}</Typography>
+                    <List dense>
+                        <ListItem>
+                            <ListItemText
+                                primary={t('helpDialog.fareZones')}
+                                secondary={t('helpDialog.fareZonesDesc')}
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText
+                                primary={t('helpDialog.serviceIcons')}
+                                secondary={t('helpDialog.serviceIconsDesc')}
+                            />
+                        </ListItem>
+                    </List>
+                </Box>
+
+                <Divider sx={{ mb: 2 }} />
+
+                <Box sx={{ mb: 3 }}>
                     <Typography variant="h6" gutterBottom>{t('helpDialog.creatingLines')}</Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
                         {t('helpDialog.creatingLinesBody')}
@@ -129,6 +149,9 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText primary={t('helpDialog.panControl')} secondary={t('helpDialog.panControlDesc')} />
                         </ListItem>
+                        <ListItem>
+                            <ListItemText primary={t('helpDialog.themeToggleControl')} secondary={t('helpDialog.themeToggleControlDesc')} />
+                        </ListItem>
                     </List>
                 </Box>
 
@@ -138,6 +161,9 @@ export function HelpDialog({ open, onClose }: Props) {
                     <Typography variant="h6" gutterBottom>{t('helpDialog.export')}</Typography>
                     <Typography variant="body2" sx={{ mb: 2 }}>
                         {t('helpDialog.exportBody')}
+                    </Typography>
+                    <Typography variant="body2" sx={{ mb: 2 }}>
+                        {t('helpDialog.importExportJSONBody')}
                     </Typography>
                 </Box>
 
@@ -185,7 +211,7 @@ export function HelpDialog({ open, onClose }: Props) {
                 <Box>
                     <Typography variant="h6" gutterBottom>{t('helpDialog.tips')}</Typography>
                     <List dense>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
                             <ListItem key={n}>
                                 <ListItemText primary={t(`helpDialog.tip${n}`)} />
                             </ListItem>
