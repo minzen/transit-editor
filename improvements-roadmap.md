@@ -193,10 +193,19 @@ This document captures the next set of architectural, performance, and interacti
 **Baselines** (ms/op, generous for CI variance):
 - pan: 0.050, zoom: 0.065, undo: 0.500, addStation: 2.000, addSegment: 0.500
 
-### 7.3 Map Import/Export Schema with Validation
+### 7.3 Map Import/Export Schema with Validation — [COMPLETED]
 
 **Rationale**: Exported JSON has no schema; importing a hand-edited or older file can corrupt state despite the persist migration layer.
 
-**Approach**:
-- Define a Zod (or hand-rolled) schema for the exported map document.
-- Validate on import; surface a friendly error dialog listing invalid fields instead of crashing the editor.
+**Implementation**:
+- Installed `zod` as a dependency
+- Created `src/validation/mapSchema.ts` with Zod schemas for `Point`, `Station`, `Segment`, `Line`, `Shape`, and `MapDocument`
+- `validateMapDocument()` returns `{ success: true; data: MapDocument } | { success: false; errors: string[] }` with human-readable error paths
+- Added `importMap` action to `DataSlice` that bulk-loads stations, segments, lines, shapes and resets history
+- Created `src/editor/useMapJSON.ts` hook with `exportAsJSON` and `triggerImport` functions
+- Export includes all map data + view settings (viewport, grid, language, etc.)
+- Import validates with Zod, applies validated data to store, and surfaces errors via `ImportErrorDialog`
+- Added `Export JSON` and `Import JSON` buttons to `EditorToolbar` (both desktop and mobile layouts)
+- Created `src/editor/ImportErrorDialog.tsx` to show a list of validation errors
+- i18n strings added for EN and DE
+- 13 unit tests in `src/validation/mapSchema.test.ts`

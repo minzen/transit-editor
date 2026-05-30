@@ -74,6 +74,12 @@ export type DataSlice = {
     setLineStyle: (id: string, lineStyle: LineStyle) => void
     setLineTransitMode: (id: string, transitMode: TransitMode) => void
     clear: () => void
+    importMap: (map: {
+        stations: Record<string, Station>
+        segments: Record<string, Segment>
+        lines: Record<string, Line>
+        shapes: Record<string, Shape>
+    }) => void
     undo: () => void
     redo: () => void
     addShape: (points: Point[], color: string, name?: string, opacity?: number) => void
@@ -678,6 +684,18 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
             futureStates: [],
         }))
         get().setAnnouncement('All data cleared')
+    },
+
+    importMap: (map) => {
+        set(() => ({
+            stations: map.stations,
+            segments: map.segments,
+            lines: map.lines,
+            shapes: map.shapes,
+            pastStates: [],
+            futureStates: [],
+        }))
+        get().setAnnouncement('Map imported')
     },
 
     addShape: (points, color, name, opacity) => {

@@ -7,8 +7,10 @@ import { GridSizeControl } from './GridSizeControl'
 import { LineWidthControl } from './LineWidthControl'
 import { HelpDialog } from './HelpDialog'
 import { ConfirmDialog } from './ConfirmDialog'
+import { ImportErrorDialog } from './ImportErrorDialog'
+import { useMapJSON } from './useMapJSON'
 
-import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel } from '@mui/material'
+import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel, Menu } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
@@ -137,6 +139,18 @@ export function EditorToolbar({
     }, [isCreatingLine, lines, setSelectedLineId])
 
     const setBackgroundImageUrl = useEditorStore((s) => s.setBackgroundImageUrl)
+    const { exportAsJSON, triggerImport } = useMapJSON()
+    const [importErrors, setImportErrors] = useState<string[]>([])
+    const [importErrorOpen, setImportErrorOpen] = useState(false)
+    const [exportMenuAnchor, setExportMenuAnchor] = useState<HTMLElement | null>(null)
+
+    const handleImport = async () => {
+        const result = await triggerImport()
+        if (!result.success) {
+            setImportErrors(result.errors)
+            setImportErrorOpen(true)
+        }
+    }
 
     const handleClear = () => {
         clear()
@@ -253,6 +267,8 @@ export function EditorToolbar({
                         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, minWidth: 200 }}>
                             <Button onClick={() => { exportAsSVG(); setMoreAnchor(null) }}>{t('toolbar.exportSVG')}</Button>
                             <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>{t('toolbar.exportPNG')}</Button>
+                            <Button onClick={() => { exportAsJSON(); setMoreAnchor(null) }}>{t('toolbar.exportJSON')}</Button>
+                            <Button onClick={() => { void handleImport(); setMoreAnchor(null) }}>{t('toolbar.importJSON')}</Button>
                             <Button
                                 onClick={() => {
                                     setClearConfirmOpen(true)
@@ -291,8 +307,17 @@ export function EditorToolbar({
                 <>
                     <Divider orientation="vertical" flexItem />
 
-                    <Button onClick={exportAsSVG}>{t('toolbar.exportSVG')}</Button>
-                    <Button onClick={exportAsPNG}>{t('toolbar.exportPNG')}</Button>
+                    <Button onClick={(e) => setExportMenuAnchor(e.currentTarget)}>{t('toolbar.export')}</Button>
+                    <Menu
+                        anchorEl={exportMenuAnchor}
+                        open={Boolean(exportMenuAnchor)}
+                        onClose={() => setExportMenuAnchor(null)}
+                    >
+                        <MenuItem onClick={() => { exportAsSVG(); setExportMenuAnchor(null) }}>{t('toolbar.exportSVG')}</MenuItem>
+                        <MenuItem onClick={() => { exportAsPNG(); setExportMenuAnchor(null) }}>{t('toolbar.exportPNG')}</MenuItem>
+                        <MenuItem onClick={() => { exportAsJSON(); setExportMenuAnchor(null) }}>{t('toolbar.exportJSON')}</MenuItem>
+                    </Menu>
+                    <Button onClick={() => void handleImport()}>{t('toolbar.importJSON')}</Button>
 
                     <Divider orientation="vertical" flexItem />
 
@@ -475,6 +500,11 @@ export function EditorToolbar({
                 confirmLabel={t('toolbar.clear')}
                 onConfirm={handleClear}
                 onCancel={() => setClearConfirmOpen(false)}
+            />
+            <ImportErrorDialog
+                open={importErrorOpen}
+                errors={importErrors}
+                onClose={() => setImportErrorOpen(false)}
             />
         </Box>
     )
