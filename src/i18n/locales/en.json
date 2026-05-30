@@ -8,8 +8,10 @@
     "edit": "Edit",
     "rename": "Rename",
     "delete": "Delete",
-    "none": "None"
+    "none": "None",
+    "ok": "OK"
   },
+
   "toolbar": {
     "backToHome": "Back to Home",
     "help": "Help",
@@ -23,8 +25,11 @@
     "undo": "Undo",
     "redo": "Redo",
     "more": "More",
+    "export": "Export",
     "exportSVG": "Export SVG",
     "exportPNG": "Export PNG",
+    "exportJSON": "Export JSON",
+    "importJSON": "Import JSON",
     "clear": "Clear",
     "hideLineCodes": "Hide Line Codes",
     "showLineCodes": "Show Line Codes",
@@ -77,6 +82,9 @@
     "width": "Width",
     "height": "Height",
     "opacity": "Opacity"
+  },
+  "importErrorDialog": {
+    "title": "Import Error"
   },
   "editorCanvas": {
     "stationNameTitle": "Station Name",

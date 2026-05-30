@@ -74,6 +74,12 @@ export type DataSlice = {
     setLineStyle: (id: string, lineStyle: LineStyle) => void
     setLineTransitMode: (id: string, transitMode: TransitMode) => void
     clear: () => void
+    importMap: (map: {
+        stations: Record<string, Station>
+        segments: Record<string, Segment>
+        lines: Record<string, Line>
+        shapes: Record<string, Shape>
+    }) => void
     undo: () => void
     redo: () => void
     addShape: (points: Point[], color: string, name?: string, opacity?: number) => void
@@ -474,6 +480,30 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                 return state
             }
 
+            // Check if a segment already connects these two stations (in either direction)
+            const existingSegment = Object.values(state.segments).find(
+                (seg) =>
+                    (seg.fromStationId === fromStationId && seg.toStationId === toStationId) ||
+                    (seg.fromStationId === toStationId && seg.toStationId === fromStationId)
+            )
+
+            if (existingSegment) {
+                // If the line is already on this segment, do nothing
+                if (existingSegment.lineIds.includes(lineId)) {
+                    return state
+                }
+                // Add the new line to the existing shared segment
+                return setWithDelta(state, {
+                    segments: {
+                        ...state.segments,
+                        [existingSegment.id]: {
+                            ...existingSegment,
+                            lineIds: [...existingSegment.lineIds, lineId],
+                        },
+                    },
+                })
+            }
+
             const id = nanoid()
             const obstacles: Point[] = Object.values(state.stations)
                 .filter((s) => s.id !== fromStationId && s.id !== toStationId)
@@ -678,6 +708,18 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
             futureStates: [],
         }))
         get().setAnnouncement('All data cleared')
+    },
+
+    importMap: (map) => {
+        set(() => ({
+            stations: map.stations,
+            segments: map.segments,
+            lines: map.lines,
+            shapes: map.shapes,
+            pastStates: [],
+            futureStates: [],
+        }))
+        get().setAnnouncement('Map imported')
     },
 
     addShape: (points, color, name, opacity) => {
