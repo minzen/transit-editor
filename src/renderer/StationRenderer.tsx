@@ -95,7 +95,8 @@ export const StationRenderer = memo(function StationRenderer({
     showSelection = true,
     themeMode = 'light',
 }: Props) {
-    const stationFill = themeMode === 'dark' ? '#eee' : '#111'
+    const stationFill = '#fff'
+    const stationStroke = '#111'
     const labelFill = themeMode === 'dark' ? '#eee' : '#111'
     const selectionStroke = themeMode === 'dark' ? '#90caf9' : '#1976d2'
     const badgeStroke = themeMode === 'dark' ? '#1e1e2e' : '#fff'
@@ -232,6 +233,8 @@ export const StationRenderer = memo(function StationRenderer({
                                 rx={capsuleWidth / 2}
                                 ry={capsuleWidth / 2}
                                 fill={stationFill}
+                                stroke={stationStroke}
+                                strokeWidth={2}
                                 style={{ cursor: 'pointer' }}
                                 transform={`rotate(${capsuleRotationDeg} ${s.x} ${s.y})`}
                                 onPointerDown={(event) => {
@@ -252,6 +255,8 @@ export const StationRenderer = memo(function StationRenderer({
                                 cy={s.y}
                                 r={STATION_RADIUS}
                                 fill={stationFill}
+                                stroke={stationStroke}
+                                strokeWidth={2}
                                 style={{ cursor: 'pointer' }}
                                 onPointerDown={(event) => {
                                     startLongPress(s.id, event.clientX, event.clientY)
