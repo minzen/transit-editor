@@ -46,19 +46,21 @@ services:
     image: clickhouse/clickhouse-server:latest
     container_name: plausible-events
     restart: unless-stopped
-    environment:
-      - CLICKHOUSE_PASSWORD=plausible
     volumes:
-      - plausible-events-data:/var/lib/clickhouse
+      - plausible-events-db:/var/lib/clickhouse
       - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
       - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/default.xml:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
     networks:
       - plausible-network
 
 volumes:
   plausible-data:
   plausible-db-data:
-  plausible-events-data:
+  plausible-events-db:
 
 networks:
   plausible-network:
