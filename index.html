@@ -5,7 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>transit-editor</title>
-    <script defer data-domain="%VITE_PLAUSIBLE_DOMAIN%" src="%VITE_PLAUSIBLE_URL%/js/script.js"></script>
+    <script>
+      (function() {
+        const domain = '%VITE_PLAUSIBLE_DOMAIN%';
+        const src = '%VITE_PLAUSIBLE_URL%';
+        if (domain && src) {
+          const s = document.createElement('script');
+          s.setAttribute('defer', '');
+          s.setAttribute('data-domain', domain);
+          s.src = src + '/js/script.js';
+          document.head.appendChild(s);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

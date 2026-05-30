@@ -233,22 +233,23 @@ The project includes Plausible Analytics for privacy-focused visitor tracking.
 2. **Enable tracking in the app** by setting environment variables in `.env`:
    ```bash
    VITE_PLAUSIBLE_DOMAIN=your-domain.com
-   VITE_PLAUSIBLE_URL=http://localhost:8000
+   VITE_PLAUSIBLE_URL=http://localhost:8002
    ```
 
-3. **Start Plausible containers**:
+3. **Start Plausible containers** on the server where you want analytics running:
    ```bash
-   docker-compose up plausible plausible-db plausible-events
+   docker compose -f docker-compose.plausible.yml up -d
    ```
 
-4. **Access Plausible dashboard** at `http://localhost:8000`
+4. **Access Plausible dashboard** at `http://localhost:8002`
    - First login: register an admin account
    - Create a new site with your domain
    - Copy the tracking script URL (already configured in `index.html`)
 
 ### Architecture
 
-- **Plausible**: Main analytics service (port 8000)
+- **Plausible**: Main analytics service (port 8002), deployed via `docker-compose.plausible.yml`
+- **Web app**: Deployed via `docker-compose.yml` on the same or a different server
 - **PostgreSQL**: Stores user accounts and site configuration
 - **ClickHouse**: Stores analytics events for fast queries
 

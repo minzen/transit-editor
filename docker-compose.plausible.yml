@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  plausible:
+    image: plausible/plausible:latest
+    container_name: plausible
+    restart: unless-stopped
+    depends_on:
+      - plausible-db
+      - plausible-events
+    ports:
+      - "8002:8000"
+    env_file:
+      - plausible-conf.env
+    volumes:
+      - plausible-data:/var/lib/plausible
+    networks:
+      - plausible-network
+
+  plausible-db:
+    image: postgres:15-alpine
+    container_name: plausible-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=plausible
+      - POSTGRES_USER=plausible
+      - POSTGRES_DB=plausible
+    volumes:
+      - plausible-db-data:/var/lib/postgresql/data
+    networks:
+      - plausible-network
+
+  plausible-events:
+    image: clickhouse/clickhouse-server:latest
+    container_name: plausible-events
+    restart: unless-stopped
+    volumes:
+      - plausible-events-data:/var/lib/clickhouse
+      - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/logging.xml:ro
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml:ro
+    networks:
+      - plausible-network
+
+volumes:
+  plausible-data:
+  plausible-db-data:
+  plausible-events-data:
+
+networks:
+  plausible-network:
