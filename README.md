@@ -10,7 +10,10 @@ A browser-based reactive editor for schematic transit maps.
 - **Multi-select stations** - Hold Shift and click to select multiple stations at once; Delete removes all selected
 - **Station renaming** - Double-click a station to rename it, or right-click for a context menu
 - **Station label placement** - Right-click a station to choose label position: top, bottom, left, or right
+- **Station label rotation** - Right-click a station to rotate its label to avoid collisions and improve readability
 - **Capsule and circle stations** - Stations automatically render as capsules when connected to multiple lines, circles otherwise
+- **Fare zones** - Assign fare zone numbers to stations; shown as small grey badges
+- **Service icons** - Tag stations with service icons (accessibility, ferry, rail, airport, toilet)
 - **Line code badges** - Small coloured pills with line codes (e.g. "M1", "A") appear next to stations
 
 ### Segments and Lines
@@ -23,6 +26,7 @@ A browser-based reactive editor for schematic transit maps.
 - **Line codes** - Assign short codes (e.g. "U1", "S-Bahn") to lines for badge rendering
 - **Line dimming** - Selecting a line in the toolbar dims unrelated stations and segments for easier tracing
 - **Segment hover tooltip** - Hover over a segment to see which lines it belongs to
+- **Line corridor offset** - Multiple lines sharing a segment are drawn side-by-side with automatic offset
 
 ### Geographic Shapes
 - **Shape tool** - Draw filled polygon shapes (e.g. water, parks, land masses) directly on the map
@@ -33,7 +37,10 @@ A browser-based reactive editor for schematic transit maps.
 ### View and Export
 - **Custom colors** - Choose from a color palette or enter custom hex codes
 - **Undo/Redo** - Undo and redo changes with Ctrl+Z / Ctrl+Y
+- **Theme toggle** - Switch between light and dark mode; preference is saved across sessions
+- **i18n** - Interface available in English and German
 - **Export** - Export maps in SVG or PNG format (compatible with external editors like Gimp and Inkscape)
+- **Import/Export JSON** - Save and load complete map data as JSON for backup or sharing
 - **Background image** - Load a background image onto the map (e.g., city map)
 - **Adjustable grid** - Change grid size for more precise placement
 - **Adjustable line width** - Customize line thickness (1-20 pixels)
@@ -59,7 +66,7 @@ The project uses the following architecture:
 
 ### Data Models
 
-- **Station** - `{ id, x, y, name?, labelPosition? }`
+- **Station** - `{ id, x, y, name?, labelPosition?, labelRotation?, services?, fareZone? }`
 - **Segment** - `{ id, fromStationId, toStationId, lineIds[], points[] }`
 - **Line** - `{ id, name, color, lineStyle?, transitMode?, code? }`
 - **Shape** - `{ id, points[], color, name?, opacity? }`
@@ -78,12 +85,23 @@ src/
 │   ├── LineWidthControl.tsx
 │   ├── HelpDialog.tsx
 │   ├── RenameDialog.tsx
+│   ├── ConfirmDialog.tsx
+│   ├── ImportErrorDialog.tsx
 │   ├── useCanvasInteractions.ts
 │   ├── useEditorKeyboardShortcuts.ts
-│   └── useMapExport.ts
+│   ├── useMapExport.ts
+│   └── useMapJSON.ts
 ├── store/                     # Zustand store with undo/redo and persistence
 │   ├── editorStore.ts
-│   └── editorStore.test.ts
+│   ├── editorStore.test.ts
+│   └── slices/
+│       ├── viewSlice.ts
+│       └── dataSlice.ts
+├── i18n/                      # Internationalisation (EN / DE)
+│   ├── i18n.ts
+│   └── locales/
+│       ├── en.json
+│       └── de.json
 ├── model/                     # Data models
 │   ├── station.ts
 │   ├── segment.ts
@@ -202,6 +220,46 @@ docker-compose up
 
 The editor will be available at `http://localhost:80`
 
+## Analytics (Optional)
+
+The project includes Plausible Analytics for privacy-focused visitor tracking.
+
+### Setup
+
+1. **Configure Plausible environment variables** in `plausible-conf.env`:
+   - Set `SECRET_KEY` to a random string
+   - Adjust `BASE_URL` to match your domain
+
+2. **Enable tracking in the app** by setting environment variables in `.env`:
+   ```bash
+   VITE_PLAUSIBLE_DOMAIN=your-domain.com
+   VITE_PLAUSIBLE_URL=http://localhost:8002
+   ```
+
+3. **Start Plausible containers** on the server where you want analytics running:
+   ```bash
+   docker compose -f docker-compose.plausible.yml up -d
+   ```
+
+4. **Access Plausible dashboard** at `http://localhost:8002`
+   - First login: register an admin account
+   - Create a new site with your domain
+   - Copy the tracking script URL (already configured in `index.html`)
+
+### Architecture
+
+- **Plausible**: Main analytics service (port 8002), deployed via `docker-compose.plausible.yml`
+- **Web app**: Deployed via `docker-compose.yml` on the same or a different server
+- **PostgreSQL**: Stores user accounts and site configuration
+- **ClickHouse**: Stores analytics events for fast queries
+
+### Production Notes
+
+- Change `BASE_URL` in `plausible-conf.env` to your public domain
+- Set `DISABLE_REGISTRATION=true` to prevent public signups
+- Configure SMTP settings for password reset emails (optional)
+- For production, use reverse proxy (nginx) with SSL for Plausible
+
 ## Deploy to VPS
 
 The project includes a deploy.sh script for SSH-based deployment.
@@ -246,6 +304,8 @@ nvm use  # Reads .nvmrc file
 - Vite 8
 - Zustand
 - React Router
+- MUI (Material-UI)
+- i18next
 - Vitest
 - React Testing Library
 - Playwright (E2E + visual regression)

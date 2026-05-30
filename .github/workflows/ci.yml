@@ -254,6 +254,13 @@ jobs:
               --exclude='playwright-report' \
               -czf - . | ssh deploy@ghast.feetunyrhinen.de "mkdir -p /opt/transit-editor && cd /opt/transit-editor && tar -xzf -"
 
+      - name: Write .env on VPS
+        run: |
+          ssh deploy@ghast.feetunyrhinen.de "cat > /opt/transit-editor/.env << 'EOF'
+          VITE_PLAUSIBLE_DOMAIN=${{ vars.PLAUSIBLE_DOMAIN }}
+          VITE_PLAUSIBLE_URL=${{ vars.PLAUSIBLE_URL }}
+          EOF"
+
       - name: Build and restart on VPS
         run: |
           VERSION=$(git describe --tags --always 2>/dev/null || echo "${{ github.sha }}")
