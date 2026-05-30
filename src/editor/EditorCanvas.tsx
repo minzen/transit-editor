@@ -154,6 +154,9 @@ export function EditorCanvas() {
     const setStationLabelPosition = useEditorStore(
         (s) => s.setStationLabelPosition
     )
+    const setStationLabelRotation = useEditorStore(
+        (s) => s.setStationLabelRotation
+    )
     const setStationServices = useEditorStore(
         (s) => s.setStationServices
     )
@@ -815,6 +818,24 @@ export function EditorCanvas() {
                         }
                     >
                         {t(`editorCanvas.label${pos.charAt(0).toUpperCase() + pos.slice(1)}` as const)}
+                    </MenuItem>
+                ))}
+                {([-90, -45, 0, 45, 90] as const).map((angle) => (
+                    <MenuItem
+                        key={`rot-${angle}`}
+                        onClick={() => {
+                            if (contextMenuStationId) {
+                                setStationLabelRotation(contextMenuStationId, angle)
+                            }
+                            setContextMenuStationId(null)
+                            setContextMenuPos(null)
+                        }}
+                        selected={
+                            stations[contextMenuStationId ?? '']?.labelRotation === angle ||
+                            (angle === 0 && stations[contextMenuStationId ?? '']?.labelRotation === undefined)
+                        }
+                    >
+                        {t('editorCanvas.labelRotation', { angle })}
                     </MenuItem>
                 ))}
                 <Divider />

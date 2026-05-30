@@ -92,6 +92,7 @@
     "labelBottom": "Beschriftung unten",
     "labelLeft": "Beschriftung links",
     "labelRight": "Beschriftung rechts",
+    "labelRotation": "Drehen {{angle}}°",
     "accessibility": "♿ Barrierefreiheit",
     "ferry": "⛴ Fähre",
     "rail": "🚂 Bahn",

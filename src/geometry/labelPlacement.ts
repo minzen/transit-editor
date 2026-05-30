@@ -15,46 +15,96 @@ const POSITIONS: readonly LabelPosition[] = ['top', 'right', 'bottom', 'left']
 
 type Rect = { x: number; y: number; width: number; height: number }
 
+function rotatedRectAABB(
+    cx: number,
+    cy: number,
+    w: number,
+    h: number,
+    angleDeg: number
+): Rect {
+    const rad = (angleDeg * Math.PI) / 180
+    const cos = Math.cos(rad)
+    const sin = Math.sin(rad)
+    const hw = w / 2
+    const hh = h / 2
+
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+
+    const corners = [
+        { x: -hw, y: -hh },
+        { x: hw, y: -hh },
+        { x: hw, y: hh },
+        { x: -hw, y: hh },
+    ]
+
+    for (const c of corners) {
+        const x = cx + c.x * cos - c.y * sin
+        const y = cy + c.x * sin + c.y * cos
+        minX = Math.min(minX, x)
+        minY = Math.min(minY, y)
+        maxX = Math.max(maxX, x)
+        maxY = Math.max(maxY, y)
+    }
+
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+}
+
 /**
  * Returns an axis-aligned bounding rect for a station's label given a candidate
  * position. World coordinates; box is approximate but sufficient for collision
- * scoring.
+ * scoring. Accounts for label rotation if present.
  */
 export function labelBox(station: Station, position: LabelPosition): Rect {
     const text = station.name ?? ''
     const width = Math.max(APPROX_CHAR_WIDTH * text.length, APPROX_CHAR_WIDTH)
     const height = APPROX_LABEL_HEIGHT
 
+    let anchorX: number
+    let anchorY: number
+    let centerX: number
+    let centerY: number
+
     switch (position) {
         case 'top':
-            return {
-                x: station.x - width / 2,
-                y: station.y - LABEL_OFFSET - height,
-                width,
-                height,
-            }
+            anchorX = station.x
+            anchorY = station.y - LABEL_OFFSET
+            centerX = anchorX
+            centerY = anchorY - height / 2
+            break
         case 'bottom':
-            return {
-                x: station.x - width / 2,
-                y: station.y + LABEL_OFFSET,
-                width,
-                height,
-            }
+            anchorX = station.x
+            anchorY = station.y + LABEL_OFFSET
+            centerX = anchorX
+            centerY = anchorY + height / 2
+            break
         case 'left':
-            return {
-                x: station.x - LABEL_OFFSET - width,
-                y: station.y - height / 2,
-                width,
-                height,
-            }
+            anchorX = station.x - LABEL_OFFSET
+            anchorY = station.y
+            centerX = anchorX - width / 2
+            centerY = anchorY
+            break
         case 'right':
-            return {
-                x: station.x + LABEL_OFFSET,
-                y: station.y - height / 2,
-                width,
-                height,
-            }
+            anchorX = station.x + LABEL_OFFSET
+            anchorY = station.y
+            centerX = anchorX + width / 2
+            centerY = anchorY
+            break
     }
+
+    const rotation = station.labelRotation ?? 0
+    if (rotation === 0) {
+        return {
+            x: centerX - width / 2,
+            y: centerY - height / 2,
+            width,
+            height,
+        }
+    }
+
+    return rotatedRectAABB(centerX, centerY, width, height, rotation)
 }
 
 function rectsOverlap(a: Rect, b: Rect): boolean {

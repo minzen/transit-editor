@@ -274,6 +274,7 @@ export const StationRenderer = memo(function StationRenderer({
                                 style={{
                                     pointerEvents: 'none',
                                 }}
+                                transform={s.labelRotation ? `rotate(${s.labelRotation} ${labelAttrs.x} ${labelAttrs.y})` : undefined}
                             >
                                 {s.name}
                                 {s.services && s.services.length > 0 && (

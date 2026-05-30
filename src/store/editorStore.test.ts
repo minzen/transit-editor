@@ -245,6 +245,27 @@ describe('editor store', () => {
     expect(updatedState).toEqual(initialState)
   })
 
+  it('sets station label rotation', () => {
+    useEditorStore.getState().addStation(100, 200)
+
+    const state = useEditorStore.getState()
+    const stationId = Object.keys(state.stations)[0]
+
+    useEditorStore.getState().setStationLabelRotation(stationId, 45)
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState.stations[stationId].labelRotation).toBe(45)
+  })
+
+  it('does nothing when setting label rotation for non-existent station', () => {
+    const initialState = useEditorStore.getState()
+
+    useEditorStore.getState().setStationLabelRotation('non-existent', 90)
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState).toEqual(initialState)
+  })
+
   it('updates a segment point', () => {
     useEditorStore.getState().addStation(100, 200)
     useEditorStore.getState().addStation(320, 250)

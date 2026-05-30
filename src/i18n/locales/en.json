@@ -93,6 +93,7 @@
     "labelBottom": "Label Bottom",
     "labelLeft": "Label Left",
     "labelRight": "Label Right",
+    "labelRotation": "Rotate {{angle}}°",
     "accessibility": "♿ Accessibility",
     "ferry": "⛴ Ferry",
     "rail": "🚂 Rail",
