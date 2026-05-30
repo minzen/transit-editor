@@ -14,7 +14,7 @@ services:
       - plausible-conf.env
     environment:
       - DATABASE_URL=postgres://plausible:plausible@plausible-db:5432/plausible
-      - CLICKHOUSE_DATABASE_URL=http://plausible-events:8123/plausible
+      - CLICKHOUSE_DATABASE_URL=http://default:plausible@plausible-events:8123/plausible
     volumes:
       - plausible-data:/var/lib/plausible
     networks:

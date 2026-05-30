@@ -1,7 +1,7 @@
 <yandex>
     <users>
         <default>
-            <password></password>
+            <password>plausible</password>
             <networks>
                 <ip>::/0</ip>
             </networks>
