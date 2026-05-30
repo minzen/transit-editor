@@ -55,6 +55,19 @@ This document captures the next set of architectural, performance, and interacti
 - Strictly call `preventDefault()` on touch events in `useCanvasInteractions.ts`.
 - Ensure touch drag thresholds prevent synthetic double-clicks/taps.
 
+### 3.2 Background Image Import & Controls — [COMPLETED]
+
+**Rationale**: The editor already supports loading a background image, but lacked controls for placement, sizing, opacity, and removal.
+
+**Implementation**:
+- Moved background image state from local `useState` in `EditorCanvas.tsx` to `ViewSlice` in the Zustand store
+- Added controls in `BackgroundImageControl.tsx`: Load Image, Show/Hide, Remove
+- Added sliders for X/Y placement, Width, Height, and Opacity
+- Updated `EditorCanvas.tsx` to render the SVG `<image>` with dynamic properties from store
+- Removed prop drilling through `EditorToolbar.tsx`
+- i18n strings added for EN and DE
+- Tests updated in `src/editor/BackgroundImageControl.test.tsx`
+
 ---
 
 ## Priority 4 — Testing & Visual Quality Assurance (Medium Effort)

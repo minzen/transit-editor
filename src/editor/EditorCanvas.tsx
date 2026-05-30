@@ -25,10 +25,6 @@ import { useTranslation } from 'react-i18next'
 
 import './EditorCanvas.css'
 
-// Constants for magic numbers
-const BACKGROUND_IMAGE_SIZE = 4000
-const BACKGROUND_IMAGE_OFFSET = 0
-
 export function EditorCanvas() {
     const activeTool = useEditorStore((s) => s.activeTool)
     const setActiveTool = useEditorStore((s) => s.setActiveTool)
@@ -82,8 +78,13 @@ export function EditorCanvas() {
 
     const [isCreatingLine, setIsCreatingLine] = useState(false)
 
-    const [backgroundImage, setBackgroundImage] = useState<string | null>(null)
-    const [showBackground, setShowBackground] = useState(true)
+    const backgroundImageUrl = useEditorStore((s) => s.backgroundImageUrl)
+    const showBackgroundImage = useEditorStore((s) => s.showBackgroundImage)
+    const backgroundImageX = useEditorStore((s) => s.backgroundImageX)
+    const backgroundImageY = useEditorStore((s) => s.backgroundImageY)
+    const backgroundImageWidth = useEditorStore((s) => s.backgroundImageWidth)
+    const backgroundImageHeight = useEditorStore((s) => s.backgroundImageHeight)
+    const backgroundImageOpacity = useEditorStore((s) => s.backgroundImageOpacity)
 
     const colorPalette = [
         '#e53935',
@@ -409,10 +410,6 @@ export function EditorCanvas() {
                 exportAsPNG={exportAsPNG}
                 clear={clear}
                 setSelectedLineId={setSelectedLineId}
-                setBackgroundImage={setBackgroundImage}
-                backgroundImage={backgroundImage}
-                showBackground={showBackground}
-                setShowBackground={setShowBackground}
                 gridCellsWidth={gridCellsWidth}
                 setGridCellsWidth={useEditorStore((s) => s.setGridCellsWidth)}
                 gridCellsHeight={gridCellsHeight}
@@ -541,14 +538,14 @@ export function EditorCanvas() {
             scale(${useEditorStore.getState().viewport.zoom})
           `}
                 >
-                    {backgroundImage && showBackground && (
+                    {backgroundImageUrl && showBackgroundImage && (
                         <image
-                            href={backgroundImage}
-                            x={BACKGROUND_IMAGE_OFFSET}
-                            y={BACKGROUND_IMAGE_OFFSET}
-                            width={BACKGROUND_IMAGE_SIZE}
-                            height={BACKGROUND_IMAGE_SIZE}
-                            opacity={0.3}
+                            href={backgroundImageUrl}
+                            x={backgroundImageX}
+                            y={backgroundImageY}
+                            width={backgroundImageWidth}
+                            height={backgroundImageHeight}
+                            opacity={backgroundImageOpacity}
                             style={{
                                 pointerEvents: 'none',
                             }}

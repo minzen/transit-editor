@@ -27,10 +27,6 @@ type Props = {
     exportAsPNG: () => void
     clear: () => void
     setSelectedLineId: (id: string | null) => void
-    setBackgroundImage: (image: string | null) => void
-    backgroundImage: string | null
-    showBackground: boolean
-    setShowBackground: (show: boolean) => void
     gridCellsWidth: number
     setGridCellsWidth: (width: number) => void
     gridCellsHeight: number
@@ -86,10 +82,6 @@ export function EditorToolbar({
     exportAsPNG,
     clear,
     setSelectedLineId,
-    setBackgroundImage,
-    backgroundImage,
-    showBackground,
-    setShowBackground,
     gridCellsWidth,
     setGridCellsWidth,
     gridCellsHeight,
@@ -144,10 +136,12 @@ export function EditorToolbar({
         prevLineCountRef.current = Object.keys(lines).length
     }, [isCreatingLine, lines, setSelectedLineId])
 
+    const setBackgroundImageUrl = useEditorStore((s) => s.setBackgroundImageUrl)
+
     const handleClear = () => {
         clear()
         setSelectedLineId(null)
-        setBackgroundImage(null)
+        setBackgroundImageUrl(null)
         setClearConfirmOpen(false)
     }
 
@@ -268,12 +262,7 @@ export function EditorToolbar({
                                 {t('toolbar.clear')}
                             </Button>
                             <Divider />
-                            <BackgroundImageControl
-                                backgroundImage={backgroundImage}
-                                showBackground={showBackground}
-                                setShowBackground={setShowBackground}
-                                setBackgroundImage={setBackgroundImage}
-                            />
+                            <BackgroundImageControl />
                             <Divider />
                             <GridSizeControl
                                 gridCellsWidth={gridCellsWidth}
@@ -319,12 +308,7 @@ export function EditorToolbar({
 
                     <Divider orientation="vertical" flexItem />
 
-                    <BackgroundImageControl
-                        backgroundImage={backgroundImage}
-                        showBackground={showBackground}
-                        setShowBackground={setShowBackground}
-                        setBackgroundImage={setBackgroundImage}
-                    />
+                    <BackgroundImageControl />
 
                     <Divider orientation="vertical" flexItem />
 
