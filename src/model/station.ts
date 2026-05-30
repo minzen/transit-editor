@@ -8,6 +8,7 @@ export type Station = {
   y: number
   name?: string
   labelPosition?: LabelPosition
+  labelRotation?: number
   services?: ServiceIcon[]
   fareZone?: number
 }

@@ -28,6 +28,7 @@ type Props = {
     onStationDoubleClick: (stationId: string) => void
     onStationLongPress?: (stationId: string) => void
     showSelection?: boolean
+    themeMode?: 'light' | 'dark'
 }
 
 const BADGE_RADIUS = 9
@@ -92,7 +93,14 @@ export const StationRenderer = memo(function StationRenderer({
     onStationDoubleClick,
     onStationLongPress,
     showSelection = true,
+    themeMode = 'light',
 }: Props) {
+    const stationFill = '#fff'
+    const stationStroke = '#111'
+    const labelFill = themeMode === 'dark' ? '#eee' : '#111'
+    const selectionStroke = themeMode === 'dark' ? '#90caf9' : '#1976d2'
+    const badgeStroke = themeMode === 'dark' ? '#1e1e2e' : '#fff'
+    const fareZoneFill = themeMode === 'dark' ? '#888' : '#666'
     // Helper: get the unique line ids connected to a station, in stable order.
     const getConnectedLineIds = (stationId: string): string[] => {
         const connected = new Set<string>()
@@ -171,7 +179,7 @@ export const StationRenderer = memo(function StationRenderer({
                                 rx={r}
                                 ry={r}
                                 fill="none"
-                                stroke="#1976d2"
+                                stroke={selectionStroke}
                                 strokeWidth={strokeWidth}
                                 transform={`rotate(${capsuleRotationDeg} ${s.x} ${s.y})`}
                             />
@@ -184,7 +192,7 @@ export const StationRenderer = memo(function StationRenderer({
                             cy={s.y}
                             r={STATION_RADIUS + extraRadius}
                             fill="none"
-                            stroke="#1976d2"
+                            stroke={selectionStroke}
                             strokeWidth={strokeWidth}
                         />
                     )
@@ -224,7 +232,9 @@ export const StationRenderer = memo(function StationRenderer({
                                 height={capsuleWidth}
                                 rx={capsuleWidth / 2}
                                 ry={capsuleWidth / 2}
-                                fill="#111"
+                                fill={stationFill}
+                                stroke={stationStroke}
+                                strokeWidth={2}
                                 style={{ cursor: 'pointer' }}
                                 transform={`rotate(${capsuleRotationDeg} ${s.x} ${s.y})`}
                                 onPointerDown={(event) => {
@@ -244,7 +254,9 @@ export const StationRenderer = memo(function StationRenderer({
                                 cx={s.x}
                                 cy={s.y}
                                 r={STATION_RADIUS}
-                                fill="#111"
+                                fill={stationFill}
+                                stroke={stationStroke}
+                                strokeWidth={2}
                                 style={{ cursor: 'pointer' }}
                                 onPointerDown={(event) => {
                                     startLongPress(s.id, event.clientX, event.clientY)
@@ -270,10 +282,11 @@ export const StationRenderer = memo(function StationRenderer({
                                 dominantBaseline={labelAttrs.dominantBaseline}
                                 fontSize={16}
                                 fontWeight="bold"
-                                fill="#111"
+                                fill={labelFill}
                                 style={{
                                     pointerEvents: 'none',
                                 }}
+                                transform={s.labelRotation ? `rotate(${s.labelRotation} ${labelAttrs.x} ${labelAttrs.y})` : undefined}
                             >
                                 {s.name}
                                 {s.services && s.services.length > 0 && (
@@ -297,8 +310,8 @@ export const StationRenderer = memo(function StationRenderer({
                                     cx={s.x}
                                     cy={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10}
                                     r={7}
-                                    fill="#666"
-                                    stroke="#fff"
+                                    fill={fareZoneFill}
+                                    stroke={badgeStroke}
                                     strokeWidth={1}
                                 />
                                 <text
@@ -308,7 +321,7 @@ export const StationRenderer = memo(function StationRenderer({
                                     dominantBaseline="central"
                                     fontSize={9}
                                     fontWeight="bold"
-                                    fill="#fff"
+                                    fill={badgeStroke}
                                 >
                                     {s.fareZone}
                                 </text>
@@ -335,7 +348,7 @@ export const StationRenderer = memo(function StationRenderer({
                                             cy={badgeY}
                                             r={BADGE_RADIUS}
                                             fill={line.color}
-                                            stroke="#fff"
+                                            stroke={badgeStroke}
                                             strokeWidth={1.5}
                                         />
                                         <text
@@ -345,7 +358,7 @@ export const StationRenderer = memo(function StationRenderer({
                                             dominantBaseline="central"
                                             fontSize={10}
                                             fontWeight="bold"
-                                            fill="#fff"
+                                            fill={badgeStroke}
                                         >
                                             {line.code}
                                         </text>

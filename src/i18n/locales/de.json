@@ -42,7 +42,8 @@
     "clearAllDataMessage": "Sind Sie sicher, dass Sie alle Daten löschen möchten? Dies kann nicht rückgängig gemacht werden.",
     "renameLine": "Linie umbenennen",
     "lineNamePlaceholder": "Linienname",
-    "autoPlaceLabels": "Beschriftungen automatisch platzieren"
+    "autoPlaceLabels": "Beschriftungen automatisch platzieren",
+    "toggleTheme": "Design wechseln"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Linienname",
@@ -92,6 +93,7 @@
     "labelBottom": "Beschriftung unten",
     "labelLeft": "Beschriftung links",
     "labelRight": "Beschriftung rechts",
+    "labelRotation": "Drehen {{angle}}°",
     "accessibility": "♿ Barrierefreiheit",
     "ferry": "⛴ Fähre",
     "rail": "🚂 Bahn",

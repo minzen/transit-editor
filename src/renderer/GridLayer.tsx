@@ -6,6 +6,7 @@ type Props = {
   zoom?: number
   offsetX?: number
   offsetY?: number
+  themeMode?: 'light' | 'dark'
 }
 
 export function GridLayer({
@@ -13,12 +14,14 @@ export function GridLayer({
   gridCellsWidth,
   gridCellsHeight,
   showGrid = true,
+  themeMode = 'light',
 }: Props) {
   if (!showGrid) {
     return null
   }
 
   const lines = []
+  const gridColor = themeMode === 'dark' ? '#3a3a4a' : '#e2e2e2'
 
   // Calculate total grid dimensions
   const totalWidth = gridCellsWidth * gridCellSize
@@ -33,7 +36,7 @@ export function GridLayer({
         y1={0}
         x2={x}
         y2={totalHeight}
-        stroke="#e2e2e2"
+        stroke={gridColor}
         strokeWidth={1}
         vectorEffect="non-scaling-stroke"
       />
@@ -49,7 +52,7 @@ export function GridLayer({
         y1={y}
         x2={totalWidth}
         y2={y}
-        stroke="#e2e2e2"
+        stroke={gridColor}
         strokeWidth={1}
         vectorEffect="non-scaling-stroke"
       />

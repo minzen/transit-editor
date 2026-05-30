@@ -133,7 +133,8 @@ describe('StationRenderer', () => {
         const circles = container.querySelectorAll('circle')
         // Main station circles
         circles.forEach(circle => {
-            expect(circle).toHaveAttribute('fill', '#111')
+            expect(circle).toHaveAttribute('fill', '#fff')
+            expect(circle).toHaveAttribute('stroke', '#111')
             expect(circle).toHaveAttribute('r', '8')
         })
     })
@@ -162,7 +163,8 @@ describe('StationRenderer', () => {
         // st1 and st2 are both transfer stations with 2 lines -> 2 capsules
         expect(rects.length).toBe(2)
         rects.forEach(rect => {
-            expect(rect).toHaveAttribute('fill', '#111')
+            expect(rect).toHaveAttribute('fill', '#fff')
+            expect(rect).toHaveAttribute('stroke', '#111')
             expect(rect).toHaveAttribute('rx')
             expect(rect).toHaveAttribute('transform')
         })

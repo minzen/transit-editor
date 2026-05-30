@@ -127,3 +127,46 @@ svg:focus {
   outline: 2px solid #1976d2;
   outline-offset: -2px;
 }
+
+/* Dark mode overrides */
+.editor-canvas[data-theme="dark"] .editor-toolbar {
+  background: rgba(30, 30, 46, 0.95);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.editor-canvas[data-theme="dark"] .editor-toolbar-button {
+  border-color: #444;
+  background: #2a2a3a;
+  color: #eee;
+}
+
+.editor-canvas[data-theme="dark"] .editor-toolbar-button.active {
+  border-color: #90caf9;
+  background: #1976d2;
+  color: #ffffff;
+}
+
+.editor-canvas[data-theme="dark"] .editor-toolbar-separator {
+  background: #444;
+}
+
+.editor-canvas[data-theme="dark"] .editor-color-swatch.active {
+  border-color: #eee;
+}
+
+.editor-canvas[data-theme="dark"] .editor-line-creator {
+  background: #2a2a3a;
+  border-color: #444;
+}
+
+.editor-canvas[data-theme="dark"] .editor-line-selector,
+.editor-canvas[data-theme="dark"] .editor-line-name-input,
+.editor-canvas[data-theme="dark"] .editor-grid-size-input {
+  border-color: #444;
+  background: #2a2a3a;
+  color: #eee;
+}
+
+.editor-canvas[data-theme="dark"] svg:focus {
+  outline-color: #90caf9;
+}

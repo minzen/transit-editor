@@ -48,6 +48,11 @@ export function EditorCanvas() {
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const showLineCodes = useEditorStore((s) => s.showLineCodes)
     const setShowLineCodes = useEditorStore((s) => s.setShowLineCodes)
+    const themeMode = useEditorStore((s) => s.themeMode)
+
+    const canvasBg = themeMode === 'dark' ? '#1e1e2e' : '#f5f5f5'
+    const shapeHandleFill = themeMode === 'dark' ? '#1e1e2e' : '#fff'
+    const shapeHandleStroke = themeMode === 'dark' ? '#90caf9' : '#1976d2'
 
     // Wrapper functions to zoom around the center of the SVG element
     const zoomIn = () => {
@@ -153,6 +158,9 @@ export function EditorCanvas() {
 
     const setStationLabelPosition = useEditorStore(
         (s) => s.setStationLabelPosition
+    )
+    const setStationLabelRotation = useEditorStore(
+        (s) => s.setStationLabelRotation
     )
     const setStationServices = useEditorStore(
         (s) => s.setStationServices
@@ -398,7 +406,7 @@ export function EditorCanvas() {
 
 
     return (
-        <div className="editor-canvas">
+        <div className="editor-canvas" data-theme={themeMode}>
             <EditorToolbar
                 activeTool={activeTool}
                 setActiveTool={setActiveTool}
@@ -528,7 +536,7 @@ export function EditorCanvas() {
                 <rect
                     width="100%"
                     height="100%"
-                    fill="#f5f5f5"
+                    fill={canvasBg}
                 />
 
                 <g
@@ -557,6 +565,7 @@ export function EditorCanvas() {
                         gridCellsWidth={gridCellsWidth}
                         gridCellsHeight={gridCellsHeight}
                         showGrid={showGridForExport}
+                        themeMode={themeMode}
                     />
 
                     <ShapeLayer shapes={shapes} />
@@ -577,8 +586,8 @@ export function EditorCanvas() {
                                     cx={p.x}
                                     cy={p.y}
                                     r={6 / useEditorStore.getState().viewport.zoom}
-                                    fill="#fff"
-                                    stroke="#1976d2"
+                                    fill={shapeHandleFill}
+                                    stroke={shapeHandleStroke}
                                     strokeWidth={2}
                                     style={{ cursor: 'move', pointerEvents: 'all' }}
                                     onPointerDown={(event) => {
@@ -703,6 +712,7 @@ export function EditorCanvas() {
                         pendingStationId={pendingStationId}
                         selectedLineId={selectedLineId}
                         showLineCodes={showLineCodes}
+                        themeMode={themeMode}
                         onStationPointerDown={(stationId, event) => {
                             event.stopPropagation()
 
@@ -815,6 +825,24 @@ export function EditorCanvas() {
                         }
                     >
                         {t(`editorCanvas.label${pos.charAt(0).toUpperCase() + pos.slice(1)}` as const)}
+                    </MenuItem>
+                ))}
+                {([-90, -45, 0, 45, 90] as const).map((angle) => (
+                    <MenuItem
+                        key={`rot-${angle}`}
+                        onClick={() => {
+                            if (contextMenuStationId) {
+                                setStationLabelRotation(contextMenuStationId, angle)
+                            }
+                            setContextMenuStationId(null)
+                            setContextMenuPos(null)
+                        }}
+                        selected={
+                            stations[contextMenuStationId ?? '']?.labelRotation === angle ||
+                            (angle === 0 && stations[contextMenuStationId ?? '']?.labelRotation === undefined)
+                        }
+                    >
+                        {t('editorCanvas.labelRotation', { angle })}
                     </MenuItem>
                 ))}
                 <Divider />

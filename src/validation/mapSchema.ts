@@ -21,6 +21,7 @@ const StationSchema = z.object({
     y: z.number(),
     name: z.string().optional(),
     labelPosition: LabelPositionSchema.optional(),
+    labelRotation: z.number().optional(),
     services: z.array(ServiceIconSchema).optional(),
     fareZone: z.number().optional(),
 })

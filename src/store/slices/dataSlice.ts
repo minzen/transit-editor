@@ -58,6 +58,7 @@ export type DataSlice = {
     moveStation: (id: string, x: number, y: number) => void
     setStationName: (id: string, name: string) => void
     setStationLabelPosition: (id: string, position: LabelPosition) => void
+    setStationLabelRotation: (id: string, rotation: number) => void
     autoPlaceLabels: () => void
     setStationServices: (id: string, services: ServiceIcon[]) => void
     setStationFareZone: (id: string, zone: number | undefined) => void
@@ -296,6 +297,25 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                     [id]: {
                         ...station,
                         labelPosition: position,
+                    },
+                },
+            })
+        }),
+
+    setStationLabelRotation: (id, rotation) =>
+        set((state) => {
+            const station = state.stations[id]
+
+            if (!station) {
+                return state
+            }
+
+            return setWithDelta(state, {
+                stations: {
+                    ...state.stations,
+                    [id]: {
+                        ...station,
+                        labelRotation: rotation,
                     },
                 },
             })

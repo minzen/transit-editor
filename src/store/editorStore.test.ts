@@ -245,6 +245,27 @@ describe('editor store', () => {
     expect(updatedState).toEqual(initialState)
   })
 
+  it('sets station label rotation', () => {
+    useEditorStore.getState().addStation(100, 200)
+
+    const state = useEditorStore.getState()
+    const stationId = Object.keys(state.stations)[0]
+
+    useEditorStore.getState().setStationLabelRotation(stationId, 45)
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState.stations[stationId].labelRotation).toBe(45)
+  })
+
+  it('does nothing when setting label rotation for non-existent station', () => {
+    const initialState = useEditorStore.getState()
+
+    useEditorStore.getState().setStationLabelRotation('non-existent', 90)
+
+    const updatedState = useEditorStore.getState()
+    expect(updatedState).toEqual(initialState)
+  })
+
   it('updates a segment point', () => {
     useEditorStore.getState().addStation(100, 200)
     useEditorStore.getState().addStation(320, 250)
@@ -624,6 +645,7 @@ describe('editor store', () => {
       gridCellsHeight: 80,
       showLineCodes: true,
       language: 'en',
+      themeMode: 'light',
       pastStates: [],
       futureStates: [],
     })
@@ -636,6 +658,7 @@ describe('editor store', () => {
     expect(state.gridCellsHeight).toBe(80)
     expect(state.showLineCodes).toBe(true)
     expect(state.language).toBe('en')
+    expect(state.themeMode).toBe('light')
   })
 
   it('zooms in', () => {
@@ -1026,5 +1049,20 @@ describe('editor store', () => {
     useEditorStore.getState().setLanguage('de')
     useEditorStore.getState().setLanguage('en')
     expect(useEditorStore.getState().language).toBe('en')
+  })
+
+  it('defaults themeMode to light', () => {
+    expect(useEditorStore.getState().themeMode).toBe('light')
+  })
+
+  it('sets themeMode to dark', () => {
+    useEditorStore.getState().setThemeMode('dark')
+    expect(useEditorStore.getState().themeMode).toBe('dark')
+  })
+
+  it('sets themeMode back to light', () => {
+    useEditorStore.getState().setThemeMode('dark')
+    useEditorStore.getState().setThemeMode('light')
+    expect(useEditorStore.getState().themeMode).toBe('light')
   })
 })

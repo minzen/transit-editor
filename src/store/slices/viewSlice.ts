@@ -16,6 +16,7 @@ export type ViewSlice = {
     backgroundImageWidth: number
     backgroundImageHeight: number
     backgroundImageOpacity: number
+    themeMode: 'light' | 'dark'
     setViewport: (viewport: Viewport) => void
     zoomIn: (centerX?: number, centerY?: number) => void
     zoomOut: (centerX?: number, centerY?: number) => void
@@ -33,6 +34,7 @@ export type ViewSlice = {
     setBackgroundImageWidth: (width: number) => void
     setBackgroundImageHeight: (height: number) => void
     setBackgroundImageOpacity: (opacity: number) => void
+    setThemeMode: (mode: 'light' | 'dark') => void
 }
 
 export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set) => ({
@@ -50,6 +52,7 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
     backgroundImageWidth: 4000,
     backgroundImageHeight: 4000,
     backgroundImageOpacity: 0.3,
+    themeMode: 'light',
 
     setViewport: (viewport) =>
         set({ viewport }),
@@ -157,4 +160,7 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
         set(() => ({
             backgroundImageOpacity: Math.max(0, Math.min(1, opacity)),
         })),
+
+    setThemeMode: (mode) =>
+        set({ themeMode: mode }),
 })
