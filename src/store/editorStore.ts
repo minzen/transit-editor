@@ -35,6 +35,7 @@ export const useEditorStore = create<EditorState>()(
                 gridCellsHeight: state.gridCellsHeight,
                 showLineCodes: state.showLineCodes,
                 language: state.language,
+                themeMode: state.themeMode,
             }),
             migrate: (persistedState, version) => {
                 // Handle cleared localStorage (null/undefined persistedState)
@@ -51,6 +52,7 @@ export const useEditorStore = create<EditorState>()(
                         gridCellsHeight: 80,
                         showLineCodes: true,
                         language: 'en',
+                        themeMode: 'light',
                     }
                 }
                 if (version === 0) {
@@ -69,6 +71,7 @@ export const useEditorStore = create<EditorState>()(
                         gridCellsHeight: typeof state.gridCellsHeight === 'number' ? state.gridCellsHeight : 80,
                         showLineCodes: state.showLineCodes ?? true,
                         language: state.language ?? 'en',
+                        themeMode: state.themeMode ?? 'light',
                     }
                 }
                 return persistedState

@@ -645,6 +645,7 @@ describe('editor store', () => {
       gridCellsHeight: 80,
       showLineCodes: true,
       language: 'en',
+      themeMode: 'light',
       pastStates: [],
       futureStates: [],
     })
@@ -657,6 +658,7 @@ describe('editor store', () => {
     expect(state.gridCellsHeight).toBe(80)
     expect(state.showLineCodes).toBe(true)
     expect(state.language).toBe('en')
+    expect(state.themeMode).toBe('light')
   })
 
   it('zooms in', () => {
@@ -1047,5 +1049,20 @@ describe('editor store', () => {
     useEditorStore.getState().setLanguage('de')
     useEditorStore.getState().setLanguage('en')
     expect(useEditorStore.getState().language).toBe('en')
+  })
+
+  it('defaults themeMode to light', () => {
+    expect(useEditorStore.getState().themeMode).toBe('light')
+  })
+
+  it('sets themeMode to dark', () => {
+    useEditorStore.getState().setThemeMode('dark')
+    expect(useEditorStore.getState().themeMode).toBe('dark')
+  })
+
+  it('sets themeMode back to light', () => {
+    useEditorStore.getState().setThemeMode('dark')
+    useEditorStore.getState().setThemeMode('light')
+    expect(useEditorStore.getState().themeMode).toBe('light')
   })
 })

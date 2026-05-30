@@ -11,7 +11,7 @@ import { ImportErrorDialog } from './ImportErrorDialog'
 import { useMapJSON } from './useMapJSON'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel, Menu } from '@mui/material'
-import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert } from '@mui/icons-material'
+import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert, DarkMode, LightMode } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -378,6 +378,18 @@ export function EditorToolbar({
                     <MenuItem value="de">DE</MenuItem>
                 </Select>
             </FormControl>
+
+            <Tooltip title={t('toolbar.toggleTheme')}>
+                <IconButton
+                    aria-label={t('toolbar.toggleTheme')}
+                    onClick={() => {
+                        const next = useEditorStore.getState().themeMode === 'light' ? 'dark' : 'light'
+                        useEditorStore.getState().setThemeMode(next)
+                    }}
+                >
+                    {useEditorStore.getState().themeMode === 'light' ? <DarkMode /> : <LightMode />}
+                </IconButton>
+            </Tooltip>
 
             {activeTool === 'segment' && (
                 <>

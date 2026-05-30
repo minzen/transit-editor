@@ -1,15 +1,24 @@
 import './App.css'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { EditorCanvas } from './editor/EditorCanvas'
 import { LandingPage } from './LandingPage'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useEditorStore } from './store/editorStore'
 import i18n from './i18n/i18n'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import CssBaseline from '@mui/material/CssBaseline'
 
 function App() {
     const language = useEditorStore((s) => s.language)
+    const themeMode = useEditorStore((s) => s.themeMode)
     const announcement = useEditorStore((s) => s.announcement)
     const clearAnnouncement = useEditorStore((s) => s.clearAnnouncement)
+
+    const muiTheme = useMemo(() => createTheme({
+        palette: {
+            mode: themeMode,
+        },
+    }), [themeMode])
 
     useEffect(() => {
         if (language && language !== i18n.language) {
@@ -25,7 +34,8 @@ function App() {
     }, [announcement, clearAnnouncement])
 
     return (
-        <>
+        <ThemeProvider theme={muiTheme}>
+            <CssBaseline />
             <BrowserRouter>
                 <Routes>
                     <Route path="/" element={<LandingPage />} />
@@ -46,7 +56,7 @@ function App() {
             >
                 {announcement}
             </div>
-        </>
+        </ThemeProvider>
     )
 }
 
