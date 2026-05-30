@@ -11,6 +11,7 @@ import { isPointNearPolyline, pointToLineSegmentDistance } from '../../geometry/
 import { validateLineName, validateStationName } from '../../validation/constants'
 import type { ToolSlice } from './toolSlice'
 import type { ViewSlice } from './viewSlice'
+import type { AccessibilitySlice } from './accessibilitySlice'
 import {
     createDelta,
     applyDelta,
@@ -20,7 +21,7 @@ import type { HistoryStep, DataSnapshot } from '../utils/history'
 
 export type { DataSnapshot }
 
-type FullState = DataSlice & ToolSlice & ViewSlice
+type FullState = DataSlice & ToolSlice & ViewSlice & AccessibilitySlice
 
 const createSnapshot = (state: DataSlice): DataSnapshot => ({
     stations: state.stations,
@@ -102,7 +103,7 @@ const setWithDelta = (
     return nextStateData
 }
 
-export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set) => ({
+export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set, get) => ({
     stations: {},
     segments: {},
     lines: {},
@@ -110,7 +111,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
     pastStates: [],
     futureStates: [],
 
-    addStation: (x, y, name) =>
+    addStation: (x, y, name) => {
         set((state) => {
             const id = nanoid()
 
@@ -195,7 +196,9 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 },
                 segments: newSegments,
             })
-        }),
+        })
+        get().setAnnouncement('Station added')
+    },
 
     moveStation: (id, x, y) =>
         set((state) => {
@@ -344,7 +347,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             })
         }),
 
-    deleteStation: (id) =>
+    deleteStation: (id) => {
         set((state) => {
             const station = state.stations[id]
 
@@ -364,7 +367,9 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 stations: remainingStations,
                 segments: remainingSegments,
             })
-        }),
+        })
+        get().setAnnouncement('Station deleted')
+    },
 
     updateSegmentPoint: (segmentId, pointIndex, x, y) =>
         set((state) => {
@@ -459,7 +464,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             })
         }),
 
-    addSegment: (fromStationId, toStationId, lineId) =>
+    addSegment: (fromStationId, toStationId, lineId) => {
         set((state) => {
             const from = state.stations[fromStationId]
             const to = state.stations[toStationId]
@@ -487,7 +492,9 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     },
                 },
             })
-        }),
+        })
+        get().setAnnouncement('Segment added')
+    },
 
     deleteSegment: (id) =>
         set((state) => {
@@ -504,7 +511,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             })
         }),
 
-    undo: () =>
+    undo: () => {
         set((state) => {
             if (state.pastStates.length === 0) {
                 return state
@@ -519,9 +526,11 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 pastStates: state.pastStates.slice(0, -1),
                 futureStates: [step, ...state.futureStates],
             }
-        }),
+        })
+        get().setAnnouncement('Undo')
+    },
 
-    redo: () =>
+    redo: () => {
         set((state) => {
             if (state.futureStates.length === 0) {
                 return state
@@ -536,9 +545,11 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                 pastStates: [...state.pastStates, step],
                 futureStates: state.futureStates.slice(1),
             }
-        }),
+        })
+        get().setAnnouncement('Redo')
+    },
 
-    addLine: (name, color, code, lineStyle, transitMode) =>
+    addLine: (name, color, code, lineStyle, transitMode) => {
         set((state) => {
             const id = nanoid()
 
@@ -555,7 +566,9 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     },
                 },
             })
-        }),
+        })
+        get().setAnnouncement('Line created')
+    },
 
     setLineCode: (id, code) =>
         set((state) => {
@@ -655,7 +668,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             })
         }),
 
-    clear: () =>
+    clear: () => {
         set(() => ({
             stations: {},
             segments: {},
@@ -663,9 +676,11 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             shapes: {},
             pastStates: [],
             futureStates: [],
-        })),
+        }))
+        get().setAnnouncement('All data cleared')
+    },
 
-    addShape: (points, color, name, opacity) =>
+    addShape: (points, color, name, opacity) => {
         set((state) => {
             const id = nanoid()
             return setWithDelta(state, {
@@ -680,7 +695,9 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
                     },
                 },
             })
-        }),
+        })
+        get().setAnnouncement('Shape added')
+    },
 
     updateShape: (id, updates) =>
         set((state) => {
@@ -694,12 +711,14 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set)
             })
         }),
 
-    deleteShape: (id) =>
+    deleteShape: (id) => {
         set((state) => {
             if (!state.shapes[id]) return state
             const { [id]: _removed, ...remainingShapes } = state.shapes
             return setWithDelta(state, {
                 shapes: remainingShapes,
             })
-        }),
+        })
+        get().setAnnouncement('Shape deleted')
+    },
 })

@@ -95,14 +95,17 @@ This document captures the next set of architectural, performance, and interacti
 - Keyboard cursor rendered as crosshair inside the viewport layer, counter-scaled to stay constant size at all zoom levels
 - 14 unit tests in `src/editor/useCanvasKeyboardNavigation.test.tsx`
 
-### 5.2 ARIA Labels and Screen Reader Support
+### 5.2 ARIA Labels and Screen Reader Support ✅
 
 **Rationale**: IconButtons rely on Tooltip `title` attributes and the SVG canvas exposes no semantics to assistive tech.
 
-**Approach**:
-- Add explicit `aria-label` to all `IconButton`s instead of relying on `title`.
-- Give the canvas `role="application"` with an `aria-label` describing the current map.
-- Announce structural changes (station added, line created, undo/redo) via an `aria-live` region.
+**Implementation**:
+- Added explicit `aria-label` to all `IconButton`s in `EditorToolbar.tsx` and `LineCreator.tsx`
+- Canvas already has `role="application"` and `aria-label="Transit map canvas"` from 5.1
+- Created `src/store/slices/accessibilitySlice.ts` with `announcement`, `setAnnouncement`, and `clearAnnouncement`
+- Added visually hidden `aria-live="polite"` region in `App.tsx` that announces structural changes
+- Wired announcements into key data slice actions: `addStation`, `deleteStation`, `addSegment`, `addLine`, `addShape`, `deleteShape`, `undo`, `redo`, `clear`
+- 8 unit tests in `src/store/slices/accessibilitySlice.test.ts`
 
 ---
 

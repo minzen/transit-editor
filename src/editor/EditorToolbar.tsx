@@ -154,13 +154,13 @@ export function EditorToolbar({
     return (
         <Box className="editor-toolbar" sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, p: 1 }}>
             <Tooltip title={t('toolbar.backToHome')}>
-                <IconButton onClick={() => void navigate('/')}>
+                <IconButton aria-label={t('toolbar.backToHome')} onClick={() => void navigate('/')}>
                     <Home />
                 </IconButton>
             </Tooltip>
 
             <Tooltip title={t('toolbar.help')}>
-                <IconButton onClick={() => setHelpOpen(true)}>
+                <IconButton aria-label={t('toolbar.help')} onClick={() => setHelpOpen(true)}>
                     <Help />
                 </IconButton>
             </Tooltip>
@@ -170,19 +170,19 @@ export function EditorToolbar({
             <Divider orientation="vertical" flexItem />
 
             <Tooltip title={t('toolbar.zoomIn')}>
-                <IconButton onClick={zoomIn}>
+                <IconButton aria-label={t('toolbar.zoomIn')} onClick={zoomIn}>
                     <ZoomIn />
                 </IconButton>
             </Tooltip>
 
             <Tooltip title={t('toolbar.zoomOut')}>
-                <IconButton onClick={zoomOut}>
+                <IconButton aria-label={t('toolbar.zoomOut')} onClick={zoomOut}>
                     <ZoomOut />
                 </IconButton>
             </Tooltip>
 
             <Tooltip title={t('toolbar.resetView')}>
-                <IconButton onClick={resetViewport}>
+                <IconButton aria-label={t('toolbar.resetView')} onClick={resetViewport}>
                     <FitScreen />
                 </IconButton>
             </Tooltip>
@@ -231,13 +231,13 @@ export function EditorToolbar({
             <Divider orientation="vertical" flexItem />
 
             <Tooltip title={t('toolbar.undo')}>
-                <IconButton onClick={undo} disabled={!canUndo}>
+                <IconButton aria-label={t('toolbar.undo')} onClick={undo} disabled={!canUndo}>
                     <Undo />
                 </IconButton>
             </Tooltip>
 
             <Tooltip title={t('toolbar.redo')}>
-                <IconButton onClick={redo} disabled={!canRedo}>
+                <IconButton aria-label={t('toolbar.redo')} onClick={redo} disabled={!canRedo}>
                     <Redo />
                 </IconButton>
             </Tooltip>
@@ -245,7 +245,7 @@ export function EditorToolbar({
             {isMobile ? (
                 <>
                     <Tooltip title={t('toolbar.more')}>
-                        <IconButton onClick={(e) => setMoreAnchor(e.currentTarget)}>
+                        <IconButton aria-label={t('toolbar.more')} onClick={(e) => setMoreAnchor(e.currentTarget)}>
                             <MoreVert />
                         </IconButton>
                     </Tooltip>

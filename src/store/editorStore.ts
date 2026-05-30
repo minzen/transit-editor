@@ -3,11 +3,13 @@ import { persist } from 'zustand/middleware'
 import type { DataSlice } from './slices/dataSlice'
 import type { ToolSlice } from './slices/toolSlice'
 import type { ViewSlice } from './slices/viewSlice'
+import type { AccessibilitySlice } from './slices/accessibilitySlice'
 import { createDataSlice } from './slices/dataSlice'
 import { createToolSlice } from './slices/toolSlice'
 import { createViewSlice } from './slices/viewSlice'
+import { createAccessibilitySlice } from './slices/accessibilitySlice'
 
-export type EditorState = DataSlice & ToolSlice & ViewSlice
+export type EditorState = DataSlice & ToolSlice & ViewSlice & AccessibilitySlice
 export type { EditorTool } from './slices/toolSlice'
 
 export const useEditorStore = create<EditorState>()(
@@ -16,6 +18,7 @@ export const useEditorStore = create<EditorState>()(
             ...createDataSlice(...a),
             ...createToolSlice(...a),
             ...createViewSlice(...a),
+            ...createAccessibilitySlice(...a),
         }),
         {
             name: 'transit-editor-storage',
