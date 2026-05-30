@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   plausible:
-    image: plausible/plausible:latest
+    image: plausible/analytics:latest
     container_name: plausible
     restart: unless-stopped
     depends_on:
