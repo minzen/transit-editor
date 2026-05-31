@@ -183,7 +183,7 @@ export function EditorCanvas() {
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
 
-    const { showGridForExport, showSelectionForExport, showInteractiveHandlesForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
+    const { showGridForExport, showSelectionForExport, showInteractiveHandlesForExport, exportAsSVG, exportAsPNG, print } = useMapExport(svgRef)
 
     const { spacePressed } = useEditorKeyboardShortcuts({
         selectedStationIds,
@@ -416,6 +416,7 @@ export function EditorCanvas() {
                 canRedo={futureStates.length > 0}
                 exportAsSVG={exportAsSVG}
                 exportAsPNG={exportAsPNG}
+                onPrint={print}
                 clear={clear}
                 setSelectedLineId={setSelectedLineId}
                 gridCellsWidth={gridCellsWidth}

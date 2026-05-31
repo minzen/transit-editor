@@ -105,11 +105,25 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
         }, 0)
     }, [svgRef, hideExportFlags, resetExportFlags])
 
+    const print = useCallback(() => {
+        if (!svgRef.current) return
+
+        hideExportFlags()
+
+        // Wait for React to re-render without handles, then print
+        requestAnimationFrame(() => {
+            window.print()
+            // Restore after print dialog closes
+            resetExportFlags()
+        })
+    }, [svgRef, hideExportFlags, resetExportFlags])
+
     return {
         showGridForExport,
         showSelectionForExport,
         showInteractiveHandlesForExport,
         exportAsSVG,
         exportAsPNG,
+        print,
     }
 }

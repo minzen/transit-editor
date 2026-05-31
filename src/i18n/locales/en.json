@@ -28,6 +28,7 @@
     "export": "Export",
     "exportSVG": "Export SVG",
     "exportPNG": "Export PNG",
+    "print": "Print",
     "exportJSON": "Export JSON",
     "importJSON": "Import JSON",
     "clear": "Clear",
