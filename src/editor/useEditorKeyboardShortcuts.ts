@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Options = {
     selectedStationIds: string[]
@@ -17,6 +17,10 @@ type Options = {
  *   or shape, unless Space is also held.
  * - Ctrl+Z / Cmd+Z: undo last action.
  * - Ctrl+Y / Cmd+Shift+Z: redo last action.
+ *
+ * Uses a ref for the internal Space tracking to avoid a stale closure race:
+ * if Space and Delete are pressed in rapid succession, React may not have
+ * re-rendered the effect before the second keydown arrives.
  */
 export function useEditorKeyboardShortcuts({
     selectedStationIds,
@@ -27,14 +31,18 @@ export function useEditorKeyboardShortcuts({
     canUndo,
     canRedo,
 }: Options) {
+    // Ref tracks the authoritative value for event handlers (no stale closure)
+    const spacePressedRef = useRef(false)
+    // State is kept in sync so consumers can observe it reactively
     const [spacePressed, setSpacePressed] = useState(false)
 
     useEffect(() => {
         const down = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
+                spacePressedRef.current = true
                 setSpacePressed(true)
             }
-            if ((e.code === 'Delete' || e.code === 'Backspace') && (selectedStationIds.length > 0 || selectedShapeId) && !spacePressed) {
+            if ((e.code === 'Delete' || e.code === 'Backspace') && (selectedStationIds.length > 0 || selectedShapeId) && !spacePressedRef.current) {
                 e.preventDefault()
                 onDeleteSelected()
             }
@@ -52,6 +60,7 @@ export function useEditorKeyboardShortcuts({
 
         const up = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
+                spacePressedRef.current = false
                 setSpacePressed(false)
             }
         }
@@ -63,7 +72,7 @@ export function useEditorKeyboardShortcuts({
             window.removeEventListener('keydown', down)
             window.removeEventListener('keyup', up)
         }
-    }, [selectedStationIds, selectedShapeId, spacePressed, onDeleteSelected, onUndo, onRedo, canUndo, canRedo])
+    }, [selectedStationIds, selectedShapeId, onDeleteSelected, onUndo, onRedo, canUndo, canRedo])
 
     return { spacePressed }
 }
