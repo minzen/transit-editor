@@ -129,6 +129,15 @@ export function HelpDialog({ open, onClose }: Props) {
                         <ListItem>
                             <ListItemText primary="Double-click" secondary={t('helpDialog.doubleClickShortcut')} />
                         </ListItem>
+                        <ListItem>
+                            <ListItemText primary="Arrow keys" secondary={t('helpDialog.arrowKeysShortcut')} />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText primary="Tab / Shift+Tab" secondary={t('helpDialog.tabShortcut')} />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText primary="Enter" secondary={t('helpDialog.enterShortcut')} />
+                        </ListItem>
                     </List>
                 </Box>
 

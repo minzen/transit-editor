@@ -40,6 +40,7 @@ A browser-based reactive editor for schematic transit maps.
 - **Theme toggle** - Switch between light and dark mode; preference is saved across sessions
 - **i18n** - Interface available in English and German
 - **Export** - Export maps in SVG or PNG format (compatible with external editors like Gimp and Inkscape)
+- **Print** - Print the map directly from the browser; interactive handles are hidden automatically
 - **Import/Export JSON** - Save and load complete map data as JSON for backup or sharing
 - **Background image** - Load a background image onto the map (e.g., city map)
 - **Adjustable grid** - Change grid size for more precise placement
