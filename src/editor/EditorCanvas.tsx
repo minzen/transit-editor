@@ -183,7 +183,7 @@ export function EditorCanvas() {
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
 
-    const { showGridForExport, showSelectionForExport, exportAsSVG, exportAsPNG } = useMapExport(svgRef)
+    const { showGridForExport, showSelectionForExport, showInteractiveHandlesForExport, exportAsSVG, exportAsPNG, print } = useMapExport(svgRef)
 
     const { spacePressed } = useEditorKeyboardShortcuts({
         selectedStationIds,
@@ -416,6 +416,7 @@ export function EditorCanvas() {
                 canRedo={futureStates.length > 0}
                 exportAsSVG={exportAsSVG}
                 exportAsPNG={exportAsPNG}
+                onPrint={print}
                 clear={clear}
                 setSelectedLineId={setSelectedLineId}
                 gridCellsWidth={gridCellsWidth}
@@ -571,7 +572,7 @@ export function EditorCanvas() {
                     <ShapeLayer shapes={shapes} />
 
                     {/* Selected shape vertex handles */}
-                    {selectedShapeId && shapes[selectedShapeId] && (
+                    {showInteractiveHandlesForExport && selectedShapeId && shapes[selectedShapeId] && (
                         <>
                             {/* Invisible hit-area polygon on top for easier selection */}
                             <polygon
@@ -599,7 +600,7 @@ export function EditorCanvas() {
                         </>
                     )}
 
-                    {shapePoints.length > 0 && (
+                    {showInteractiveHandlesForExport && shapePoints.length > 0 && (
                         <>
                             <polygon
                                 points={shapePoints.map((p) => `${p.x},${p.y}`).join(' ')}
@@ -625,7 +626,7 @@ export function EditorCanvas() {
                     )}
 
                     {/* Keyboard cursor */}
-                    {svgHasFocus && (
+                    {showInteractiveHandlesForExport && svgHasFocus && (
                         <g transform={`translate(${keyboardCursor.x} ${keyboardCursor.y})`}>
                             <circle
                                 r={8 / useEditorStore.getState().viewport.zoom}
@@ -681,7 +682,7 @@ export function EditorCanvas() {
                         }}
                     />
 
-                    {activeTool === 'segment' &&
+                    {showInteractiveHandlesForExport && activeTool === 'segment' &&
                         pendingStation &&
                         previewEndPoint &&
                         selectedLineId && (
@@ -692,15 +693,17 @@ export function EditorCanvas() {
                             />
                         )}
 
-                    <BendPointRenderer
-                        segments={segmentsList}
-                        onBendPointDragStart={(segmentId, pointIndex) => {
-                            setDraggingBendPoint({ segmentId, pointIndex })
-                        }}
-                        onBendPointDoubleClick={(segmentId, pointIndex) => {
-                            removeBendPoint(segmentId, pointIndex)
-                        }}
-                    />
+                    {showInteractiveHandlesForExport && (
+                        <BendPointRenderer
+                            segments={segmentsList}
+                            onBendPointDragStart={(segmentId, pointIndex) => {
+                                setDraggingBendPoint({ segmentId, pointIndex })
+                            }}
+                            onBendPointDoubleClick={(segmentId, pointIndex) => {
+                                removeBendPoint(segmentId, pointIndex)
+                            }}
+                        />
+                    )}
 
                     <StationRenderer
                         stations={stations}

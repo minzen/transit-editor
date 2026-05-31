@@ -27,6 +27,7 @@ type Props = {
     canRedo: boolean
     exportAsSVG: () => void
     exportAsPNG: () => void
+    onPrint: () => void
     clear: () => void
     setSelectedLineId: (id: string | null) => void
     gridCellsWidth: number
@@ -82,6 +83,7 @@ export function EditorToolbar({
     canRedo,
     exportAsSVG,
     exportAsPNG,
+    onPrint,
     clear,
     setSelectedLineId,
     gridCellsWidth,
@@ -267,6 +269,7 @@ export function EditorToolbar({
                         <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1, minWidth: 200 }}>
                             <Button onClick={() => { exportAsSVG(); setMoreAnchor(null) }}>{t('toolbar.exportSVG')}</Button>
                             <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>{t('toolbar.exportPNG')}</Button>
+                            <Button onClick={() => { onPrint(); setMoreAnchor(null) }}>{t('toolbar.print')}</Button>
                             <Button onClick={() => { exportAsJSON(); setMoreAnchor(null) }}>{t('toolbar.exportJSON')}</Button>
                             <Button onClick={() => { void handleImport(); setMoreAnchor(null) }}>{t('toolbar.importJSON')}</Button>
                             <Button
@@ -315,6 +318,7 @@ export function EditorToolbar({
                     >
                         <MenuItem onClick={() => { exportAsSVG(); setExportMenuAnchor(null) }}>{t('toolbar.exportSVG')}</MenuItem>
                         <MenuItem onClick={() => { exportAsPNG(); setExportMenuAnchor(null) }}>{t('toolbar.exportPNG')}</MenuItem>
+                        <MenuItem onClick={() => { onPrint(); setExportMenuAnchor(null) }}>{t('toolbar.print')}</MenuItem>
                         <MenuItem onClick={() => { exportAsJSON(); setExportMenuAnchor(null) }}>{t('toolbar.exportJSON')}</MenuItem>
                     </Menu>
                     <Button onClick={() => void handleImport()}>{t('toolbar.importJSON')}</Button>

@@ -170,3 +170,45 @@ svg:focus {
 .editor-canvas[data-theme="dark"] svg:focus {
   outline-color: #90caf9;
 }
+
+/* Print styles: hide UI chrome and make the map fill the page */
+@media print {
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .editor-canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: visible !important;
+  }
+
+  .editor-toolbar,
+  .MuiDialog-root,
+  .MuiPopover-root,
+  .MuiMenu-root,
+  .MuiTooltip-popper,
+  .MuiSnackbar-root,
+  .MuiBackdrop-root {
+    display: none !important;
+  }
+
+  /* Hide segment tooltip and context menu overlays */
+  .editor-canvas > div:not(:has(svg)) {
+    display: none !important;
+  }
+
+  svg {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+}
