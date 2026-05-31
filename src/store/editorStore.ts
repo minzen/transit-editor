@@ -58,12 +58,24 @@ export const useEditorStore = create<EditorState>()(
                 if (version === 0) {
                     // Unversioned storage: ensure all newer fields have sensible defaults
                     const state = persistedState as Partial<EditorState>
+                    const migratedLines = state.lines
+                        ? Object.fromEntries(
+                            Object.entries(state.lines).map(([id, line]) => [
+                                id,
+                                {
+                                    ...line,
+                                    lineStyle: line.lineStyle ?? 'solid',
+                                    transitMode: line.transitMode ?? 'metro',
+                                },
+                            ])
+                        )
+                        : {}
                     return {
                         ...state,
                         activeTool: state.activeTool ?? 'select',
                         stations: state.stations ?? {},
                         segments: state.segments ?? {},
-                        lines: state.lines ?? {},
+                        lines: migratedLines,
                         shapes: state.shapes ?? {},
                         lineWidth: typeof state.lineWidth === 'number' ? state.lineWidth : 10,
                         gridCellSize: typeof state.gridCellSize === 'number' ? state.gridCellSize : 50,

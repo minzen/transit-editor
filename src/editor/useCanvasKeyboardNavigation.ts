@@ -13,7 +13,7 @@ type Options = {
     selectedShapeId: string | null
     setSelectedShapeId: (id: string | null) => void
     shapePoints: Point[]
-    setShapePoints: (points: Point[]) => void
+    setShapePoints: React.Dispatch<React.SetStateAction<Point[]>>
     selectedLineId: string | null
     pendingStationId: string | null
     setPendingStationId: (id: string | null) => void
@@ -217,7 +217,7 @@ export function useCanvasKeyboardNavigation({
                     } else {
                         const snapped = snapPointToGrid(keyboardCursor.x, keyboardCursor.y, gridCellSize)
                         const clamped = clampToGrid(snapped)
-                        setShapePoints([...shapePoints, clamped])
+                        setShapePoints((prev) => [...prev, clamped])
                     }
                     return
                 }
@@ -247,7 +247,7 @@ export function useCanvasKeyboardNavigation({
                 event.stopPropagation()
 
                 if (shapePoints.length > 0) {
-                    setShapePoints([])
+                    setShapePoints(() => [])
                 }
                 if (selectedShapeId) {
                     setSelectedShapeId(null)

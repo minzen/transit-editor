@@ -1065,4 +1065,42 @@ describe('editor store', () => {
     useEditorStore.getState().setThemeMode('light')
     expect(useEditorStore.getState().themeMode).toBe('light')
   })
+
+  it('importMap backfills missing lineStyle and transitMode', () => {
+    useEditorStore.getState().importMap({
+      stations: {},
+      segments: {},
+      lines: {
+        oldLine: {
+          id: 'oldLine',
+          name: 'Old Line',
+          color: '#ff0000',
+        },
+      },
+      shapes: {},
+    })
+    const state = useEditorStore.getState()
+    expect(state.lines.oldLine.lineStyle).toBe('solid')
+    expect(state.lines.oldLine.transitMode).toBe('metro')
+  })
+
+  it('importMap preserves existing lineStyle and transitMode', () => {
+    useEditorStore.getState().importMap({
+      stations: {},
+      segments: {},
+      lines: {
+        styledLine: {
+          id: 'styledLine',
+          name: 'Styled Line',
+          color: '#00ff00',
+          lineStyle: 'dashed',
+          transitMode: 'rail',
+        },
+      },
+      shapes: {},
+    })
+    const state = useEditorStore.getState()
+    expect(state.lines.styledLine.lineStyle).toBe('dashed')
+    expect(state.lines.styledLine.transitMode).toBe('rail')
+  })
 })
