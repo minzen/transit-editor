@@ -12,19 +12,30 @@ const EXPORT_PADDING = 40
 export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
     const [showGridForExport, setShowGridForExport] = useState(true)
     const [showSelectionForExport, setShowSelectionForExport] = useState(true)
+    const [showInteractiveHandlesForExport, setShowInteractiveHandlesForExport] = useState(true)
+
+    const resetExportFlags = useCallback(() => {
+        setShowGridForExport(true)
+        setShowSelectionForExport(true)
+        setShowInteractiveHandlesForExport(true)
+    }, [])
+
+    const hideExportFlags = useCallback(() => {
+        setShowGridForExport(false)
+        setShowSelectionForExport(false)
+        setShowInteractiveHandlesForExport(false)
+    }, [])
 
     const exportAsSVG = useCallback(() => {
         if (!svgRef.current) return
 
-        setShowGridForExport(false)
-        setShowSelectionForExport(false)
+        hideExportFlags()
 
         // Wait for re-render before exporting
         setTimeout(() => {
             const svgElement = svgRef.current
             if (!svgElement) {
-                setShowGridForExport(true)
-                setShowSelectionForExport(true)
+                resetExportFlags()
                 return
             }
 
@@ -44,22 +55,19 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
 
             URL.revokeObjectURL(url)
 
-            setShowGridForExport(true)
-            setShowSelectionForExport(true)
+            resetExportFlags()
         }, 0)
-    }, [svgRef])
+    }, [svgRef, hideExportFlags, resetExportFlags])
 
     const exportAsPNG = useCallback(() => {
         if (!svgRef.current) return
 
-        setShowGridForExport(false)
-        setShowSelectionForExport(false)
+        hideExportFlags()
 
         setTimeout(() => {
             const svgElement = svgRef.current
             if (!svgElement) {
-                setShowGridForExport(true)
-                setShowSelectionForExport(true)
+                resetExportFlags()
                 return
             }
 
@@ -91,16 +99,16 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
                 }
 
                 URL.revokeObjectURL(svgUrl)
-                setShowGridForExport(true)
-                setShowSelectionForExport(true)
+                resetExportFlags()
             }
             img.src = svgUrl
         }, 0)
-    }, [svgRef])
+    }, [svgRef, hideExportFlags, resetExportFlags])
 
     return {
         showGridForExport,
         showSelectionForExport,
+        showInteractiveHandlesForExport,
         exportAsSVG,
         exportAsPNG,
     }
