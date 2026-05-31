@@ -731,10 +731,20 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
     },
 
     importMap: (map) => {
+        const migratedLines = Object.fromEntries(
+            Object.entries(map.lines).map(([id, line]) => [
+                id,
+                {
+                    ...line,
+                    lineStyle: line.lineStyle ?? 'solid',
+                    transitMode: line.transitMode ?? 'metro',
+                },
+            ])
+        )
         set(() => ({
             stations: map.stations,
             segments: map.segments,
-            lines: map.lines,
+            lines: migratedLines,
             shapes: map.shapes,
             pastStates: [],
             futureStates: [],
