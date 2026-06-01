@@ -25,6 +25,7 @@
     "redo": "Wiederholen",
     "more": "Mehr",
     "export": "Exportieren",
+    "importExport": "Import/Export",
     "exportSVG": "SVG exportieren",
     "exportPNG": "PNG exportieren",
     "print": "Drucken",

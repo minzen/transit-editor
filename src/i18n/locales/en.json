@@ -26,6 +26,7 @@
     "redo": "Redo",
     "more": "More",
     "export": "Export",
+    "importExport": "Import/Export",
     "exportSVG": "Export SVG",
     "exportPNG": "Export PNG",
     "print": "Print",
