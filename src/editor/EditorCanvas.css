@@ -196,12 +196,8 @@ svg:focus {
   .MuiMenu-root,
   .MuiTooltip-popper,
   .MuiSnackbar-root,
-  .MuiBackdrop-root {
-    display: none !important;
-  }
-
-  /* Hide segment tooltip and context menu overlays */
-  .editor-canvas > div:not(:has(svg)) {
+  .MuiBackdrop-root,
+  .segment-tooltip {
     display: none !important;
   }
 

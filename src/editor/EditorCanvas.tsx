@@ -914,6 +914,7 @@ export function EditorCanvas() {
             {/* Segment hover tooltip */}
             {tooltipPos && hoveredSegmentId && segments[hoveredSegmentId] && (
                 <div
+                    className="segment-tooltip"
                     style={{
                         position: 'absolute',
                         left: tooltipPos.x + 12,
