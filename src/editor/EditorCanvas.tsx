@@ -693,7 +693,7 @@ export function EditorCanvas() {
                             />
                         )}
 
-                    {showInteractiveHandlesForExport && (
+                    {showInteractiveHandlesForExport && (activeTool === 'segment' || activeTool === 'select') && (
                         <BendPointRenderer
                             segments={segmentsList}
                             onBendPointDragStart={(segmentId, pointIndex) => {

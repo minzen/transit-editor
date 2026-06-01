@@ -144,7 +144,7 @@ export function EditorToolbar({
     const { exportAsJSON, triggerImport } = useMapJSON()
     const [importErrors, setImportErrors] = useState<string[]>([])
     const [importErrorOpen, setImportErrorOpen] = useState(false)
-    const [exportMenuAnchor, setExportMenuAnchor] = useState<HTMLElement | null>(null)
+    const [importExportMenuAnchor, setImportExportMenuAnchor] = useState<HTMLElement | null>(null)
 
     const handleImport = async () => {
         const result = await triggerImport()
@@ -271,7 +271,9 @@ export function EditorToolbar({
                             <Button onClick={() => { exportAsPNG(); setMoreAnchor(null) }}>{t('toolbar.exportPNG')}</Button>
                             <Button onClick={() => { onPrint(); setMoreAnchor(null) }}>{t('toolbar.print')}</Button>
                             <Button onClick={() => { exportAsJSON(); setMoreAnchor(null) }}>{t('toolbar.exportJSON')}</Button>
+                            <Divider />
                             <Button onClick={() => { void handleImport(); setMoreAnchor(null) }}>{t('toolbar.importJSON')}</Button>
+                            <Divider />
                             <Button
                                 onClick={() => {
                                     setClearConfirmOpen(true)
@@ -310,18 +312,19 @@ export function EditorToolbar({
                 <>
                     <Divider orientation="vertical" flexItem />
 
-                    <Button onClick={(e) => setExportMenuAnchor(e.currentTarget)}>{t('toolbar.export')}</Button>
+                    <Button onClick={(e) => setImportExportMenuAnchor(e.currentTarget)}>{t('toolbar.importExport')}</Button>
                     <Menu
-                        anchorEl={exportMenuAnchor}
-                        open={Boolean(exportMenuAnchor)}
-                        onClose={() => setExportMenuAnchor(null)}
+                        anchorEl={importExportMenuAnchor}
+                        open={Boolean(importExportMenuAnchor)}
+                        onClose={() => setImportExportMenuAnchor(null)}
                     >
-                        <MenuItem onClick={() => { exportAsSVG(); setExportMenuAnchor(null) }}>{t('toolbar.exportSVG')}</MenuItem>
-                        <MenuItem onClick={() => { exportAsPNG(); setExportMenuAnchor(null) }}>{t('toolbar.exportPNG')}</MenuItem>
-                        <MenuItem onClick={() => { onPrint(); setExportMenuAnchor(null) }}>{t('toolbar.print')}</MenuItem>
-                        <MenuItem onClick={() => { exportAsJSON(); setExportMenuAnchor(null) }}>{t('toolbar.exportJSON')}</MenuItem>
+                        <MenuItem onClick={() => { exportAsSVG(); setImportExportMenuAnchor(null) }}>{t('toolbar.exportSVG')}</MenuItem>
+                        <MenuItem onClick={() => { exportAsPNG(); setImportExportMenuAnchor(null) }}>{t('toolbar.exportPNG')}</MenuItem>
+                        <MenuItem onClick={() => { onPrint(); setImportExportMenuAnchor(null) }}>{t('toolbar.print')}</MenuItem>
+                        <MenuItem onClick={() => { exportAsJSON(); setImportExportMenuAnchor(null) }}>{t('toolbar.exportJSON')}</MenuItem>
+                        <Divider />
+                        <MenuItem onClick={() => { void handleImport(); setImportExportMenuAnchor(null) }}>{t('toolbar.importJSON')}</MenuItem>
                     </Menu>
-                    <Button onClick={() => void handleImport()}>{t('toolbar.importJSON')}</Button>
 
                     <Divider orientation="vertical" flexItem />
 
