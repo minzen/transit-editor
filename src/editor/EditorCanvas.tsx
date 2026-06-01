@@ -414,9 +414,9 @@ export function EditorCanvas() {
                 redo={redo}
                 canUndo={pastStates.length > 0}
                 canRedo={futureStates.length > 0}
-                exportAsSVG={exportAsSVG}
-                exportAsPNG={exportAsPNG}
-                onPrint={print}
+                exportAsSVG={() => void exportAsSVG()}
+                exportAsPNG={() => void exportAsPNG()}
+                onPrint={() => void print()}
                 clear={clear}
                 setSelectedLineId={setSelectedLineId}
                 gridCellsWidth={gridCellsWidth}
@@ -914,6 +914,7 @@ export function EditorCanvas() {
             {/* Segment hover tooltip */}
             {tooltipPos && hoveredSegmentId && segments[hoveredSegmentId] && (
                 <div
+                    className="segment-tooltip"
                     style={{
                         position: 'absolute',
                         left: tooltipPos.x + 12,

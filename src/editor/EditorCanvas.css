@@ -174,7 +174,7 @@ svg:focus {
 /* Print styles: hide UI chrome and make the map fill the page */
 @media print {
   @page {
-    margin: 0;
+    margin: 1cm;
     size: auto;
   }
 
@@ -196,12 +196,8 @@ svg:focus {
   .MuiMenu-root,
   .MuiTooltip-popper,
   .MuiSnackbar-root,
-  .MuiBackdrop-root {
-    display: none !important;
-  }
-
-  /* Hide segment tooltip and context menu overlays */
-  .editor-canvas > div:not(:has(svg)) {
+  .MuiBackdrop-root,
+  .segment-tooltip {
     display: none !important;
   }
 
