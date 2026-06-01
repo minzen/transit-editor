@@ -216,7 +216,7 @@ This document captures the next set of architectural, performance, and interacti
 
 These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smooth print, export-handle hiding, migration backfill, stale-closure fixes). No blockers, but worth tackling gradually.
 
-### 8.1 Use `afterprint` event for print reset
+### 8.1 Use `afterprint` event for print reset ✅
 
 **Rationale**: `useMapExport.print()` currently resets export flags synchronously after `window.print()`. This is reliable in Chromium/WebKit (which block until the dialog closes) but unreliable in some Firefox versions where `window.print()` is asynchronous. If async, handles can be restored before the print snapshot is taken.
 
@@ -232,7 +232,7 @@ These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smoot
   ```
 - Also handles the "Cancel" button correctly across browsers.
 
-### 8.2 Unify re-render-wait strategy in `useMapExport`
+### 8.2 Unify re-render-wait strategy in `useMapExport` ✅
 
 **Rationale**: `print()` uses a single `requestAnimationFrame`; `exportAsSVG`/`exportAsPNG` use `setTimeout(..., 0)`. A single `rAF` fires before the next paint and may not guarantee that React has flushed the state update that hides handles. Inconsistency also makes the code harder to reason about.
 
@@ -240,7 +240,7 @@ These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smoot
 - Pick one strategy across all three exports: either double `rAF` (`requestAnimationFrame(() => requestAnimationFrame(...))`) or `setTimeout(..., 0)`.
 - Extract a helper `waitForRender(): Promise<void>` and `await` it in each export function.
 
-### 8.3 Replace fragile print CSS selector
+### 8.3 Replace fragile print CSS selector ✅
 
 **Rationale**: The print stylesheet uses `.editor-canvas > div:not(:has(svg)) { display: none !important }` to hide tooltip and context-menu overlays. This rule is brittle: any future direct child `<div>` of `.editor-canvas` that doesn't contain an SVG will be hidden, and `:has()` requires Safari 15.4+ / Firefox 121+.
 
