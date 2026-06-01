@@ -248,7 +248,7 @@ These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smoot
 - Replace the structural selector with explicit class names (e.g. `.segment-tooltip, .context-menu, .station-rename-popover`).
 - Audit all overlay components rendered inside `.editor-canvas` and ensure they have stable class hooks for print suppression.
 
-### 8.4 Reconsider `@page { margin: 0 }`
+### 8.4 Reconsider `@page { margin: 0 }` ✅
 
 **Rationale**: `EditorCanvas.css` sets the printed page margin to zero. This removes browser headers/footers but also forces map content to the physical paper edge, which most printers cannot reach — output may be clipped.
 
@@ -256,14 +256,14 @@ These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smoot
 - Change to `@page { margin: 1cm; size: auto }` (or `0.5in`) as a safer default.
 - Optionally expose a "Tight margins" toggle in the print path for users who want edge-to-edge.
 
-### 8.5 Update `useMapExport` docstring
+### 8.5 Update `useMapExport` docstring ✅
 
 **Rationale**: The header comment still describes the hook as "providing SVG and PNG export"; it doesn't mention `print()` or the new `showInteractiveHandlesForExport` flag.
 
 **Approach**:
 - Refresh the JSDoc to reflect the three export modes and the trio of visibility flags.
 
-### 8.6 Regression test for Space+Delete race
+### 8.6 Regression test for Space+Delete race ✅
 
 **Rationale**: Commit `6fe952a` fixed a stale-closure bug where rapid Space+Delete presses could still trigger deletion. The fix uses a ref, but there's no automated test guarding against regression.
 
@@ -271,7 +271,7 @@ These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smoot
 - Add a unit test for `useEditorKeyboardShortcuts` that synchronously dispatches `keydown` for Space immediately followed by Delete and asserts `onDeleteSelected` is **not** called.
 - Use `@testing-library/react`'s `renderHook` and `window.dispatchEvent(new KeyboardEvent(...))`.
 
-### 8.7 Integration test for export-handle hiding
+### 8.7 Integration test for export-handle hiding ✅
 
 **Rationale**: Commit `503d092` introduced `showInteractiveHandlesForExport` to keep bend points and shape vertices out of exported SVG/PNG/print output. There's no test asserting this stays false during the export window.
 
