@@ -209,3 +209,72 @@ This document captures the next set of architectural, performance, and interacti
 - Created `src/editor/ImportErrorDialog.tsx` to show a list of validation errors
 - i18n strings added for EN and DE
 - 13 unit tests in `src/validation/mapSchema.test.ts`
+
+---
+
+## Priority 8 — Code Review Follow-ups (Print + Export Hardening)
+
+These items emerged from a code review of commits `6fe952a` → `fa97cd0` (smooth print, export-handle hiding, migration backfill, stale-closure fixes). No blockers, but worth tackling gradually.
+
+### 8.1 Use `afterprint` event for print reset
+
+**Rationale**: `useMapExport.print()` currently resets export flags synchronously after `window.print()`. This is reliable in Chromium/WebKit (which block until the dialog closes) but unreliable in some Firefox versions where `window.print()` is asynchronous. If async, handles can be restored before the print snapshot is taken.
+
+**Approach**:
+- Replace the synchronous reset with a one-shot `afterprint` listener:
+  ```ts
+  const handler = () => {
+      resetExportFlags()
+      window.removeEventListener('afterprint', handler)
+  }
+  window.addEventListener('afterprint', handler)
+  window.print()
+  ```
+- Also handles the "Cancel" button correctly across browsers.
+
+### 8.2 Unify re-render-wait strategy in `useMapExport`
+
+**Rationale**: `print()` uses a single `requestAnimationFrame`; `exportAsSVG`/`exportAsPNG` use `setTimeout(..., 0)`. A single `rAF` fires before the next paint and may not guarantee that React has flushed the state update that hides handles. Inconsistency also makes the code harder to reason about.
+
+**Approach**:
+- Pick one strategy across all three exports: either double `rAF` (`requestAnimationFrame(() => requestAnimationFrame(...))`) or `setTimeout(..., 0)`.
+- Extract a helper `waitForRender(): Promise<void>` and `await` it in each export function.
+
+### 8.3 Replace fragile print CSS selector
+
+**Rationale**: The print stylesheet uses `.editor-canvas > div:not(:has(svg)) { display: none !important }` to hide tooltip and context-menu overlays. This rule is brittle: any future direct child `<div>` of `.editor-canvas` that doesn't contain an SVG will be hidden, and `:has()` requires Safari 15.4+ / Firefox 121+.
+
+**Approach**:
+- Replace the structural selector with explicit class names (e.g. `.segment-tooltip, .context-menu, .station-rename-popover`).
+- Audit all overlay components rendered inside `.editor-canvas` and ensure they have stable class hooks for print suppression.
+
+### 8.4 Reconsider `@page { margin: 0 }`
+
+**Rationale**: `EditorCanvas.css` sets the printed page margin to zero. This removes browser headers/footers but also forces map content to the physical paper edge, which most printers cannot reach — output may be clipped.
+
+**Approach**:
+- Change to `@page { margin: 1cm; size: auto }` (or `0.5in`) as a safer default.
+- Optionally expose a "Tight margins" toggle in the print path for users who want edge-to-edge.
+
+### 8.5 Update `useMapExport` docstring
+
+**Rationale**: The header comment still describes the hook as "providing SVG and PNG export"; it doesn't mention `print()` or the new `showInteractiveHandlesForExport` flag.
+
+**Approach**:
+- Refresh the JSDoc to reflect the three export modes and the trio of visibility flags.
+
+### 8.6 Regression test for Space+Delete race
+
+**Rationale**: Commit `6fe952a` fixed a stale-closure bug where rapid Space+Delete presses could still trigger deletion. The fix uses a ref, but there's no automated test guarding against regression.
+
+**Approach**:
+- Add a unit test for `useEditorKeyboardShortcuts` that synchronously dispatches `keydown` for Space immediately followed by Delete and asserts `onDeleteSelected` is **not** called.
+- Use `@testing-library/react`'s `renderHook` and `window.dispatchEvent(new KeyboardEvent(...))`.
+
+### 8.7 Integration test for export-handle hiding
+
+**Rationale**: Commit `503d092` introduced `showInteractiveHandlesForExport` to keep bend points and shape vertices out of exported SVG/PNG/print output. There's no test asserting this stays false during the export window.
+
+**Approach**:
+- Add a unit test that calls `exportAsSVG()` and asserts `showInteractiveHandlesForExport === false` synchronously after the call (before the timeout fires).
+- Optionally extend a Playwright test to download an SVG and grep for handle classes.
