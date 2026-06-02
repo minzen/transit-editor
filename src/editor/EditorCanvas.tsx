@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 
-import { useEditorStore } from '../store/editorStore'
+import { useEditorStore, type EditorTool } from '../store/editorStore'
 import { snapPointToOctolinear } from '../geometry/octolinear'
 import { useMapExport } from './useMapExport'
 import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
@@ -404,12 +404,23 @@ export function EditorCanvas() {
             )
             : null
 
+    const handleSetActiveTool = useCallback((tool: EditorTool) => {
+        if (tool !== 'select') {
+            if (selectedStationIds.length > 0) {
+                setSelectedStationIds([])
+            }
+            if (selectedShapeId) {
+                setSelectedShapeId(null)
+            }
+        }
+        setActiveTool(tool)
+    }, [selectedStationIds, selectedShapeId, setSelectedStationIds, setSelectedShapeId, setActiveTool])
 
     return (
         <div className="editor-canvas" data-theme={themeMode}>
             <EditorToolbar
                 activeTool={activeTool}
-                setActiveTool={setActiveTool}
+                setActiveTool={handleSetActiveTool}
                 undo={undo}
                 redo={redo}
                 canUndo={pastStates.length > 0}
@@ -525,6 +536,9 @@ export function EditorCanvas() {
                         }
                         if (selectedShapeId) {
                             setSelectedShapeId(null)
+                        }
+                        if (selectedStationIds.length > 0) {
+                            setSelectedStationIds([])
                         }
                         handleClick(event)
                         return

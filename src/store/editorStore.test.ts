@@ -192,6 +192,68 @@ describe('editor store', () => {
     expect(updatedState).toEqual(initialState)
   })
 
+  it('recalculates auto-generated segment path when a station is moved', () => {
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(300, 400)
+
+    const state = useEditorStore.getState()
+    const stationIds = Object.keys(state.stations)
+
+    useEditorStore.getState().addLine('Line 1', '#0000ff')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
+    useEditorStore
+      .getState()
+      .addSegment(stationIds[0], stationIds[1], lineId)
+
+    // Move station so the segment is no longer octolinear — should become an L-shape
+    useEditorStore.getState().moveStation(stationIds[0], 100, 420)
+
+    const updatedState = useEditorStore.getState()
+    const segmentIds = Object.keys(updatedState.segments)
+    const segment = updatedState.segments[segmentIds[0]]
+
+    // Segment should have been recalculated to a 3-point L-shape
+    expect(segment.points.length).toBe(3)
+    expect(segment.points[0].x).toBe(100)
+    expect(segment.points[0].y).toBe(420)
+    expect(segment.points[2].x).toBe(300)
+    expect(segment.points[2].y).toBe(400)
+  })
+
+  it('preserves custom bend points when moving a station', () => {
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(300, 400)
+
+    const state = useEditorStore.getState()
+    const stationIds = Object.keys(state.stations)
+
+    useEditorStore.getState().addLine('Line 1', '#0000ff')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+
+    useEditorStore
+      .getState()
+      .addSegment(stationIds[0], stationIds[1], lineId)
+
+    // Insert a custom bend point, making the segment 3 points
+    const segmentIds = Object.keys(useEditorStore.getState().segments)
+    useEditorStore.getState().insertBendPoint(segmentIds[0], 200, 300)
+
+    const beforeMove = useEditorStore.getState().segments[segmentIds[0]]
+    expect(beforeMove.points.length).toBe(3)
+
+    useEditorStore.getState().moveStation(stationIds[0], 120, 220)
+
+    const afterMove = useEditorStore.getState().segments[segmentIds[0]]
+    // Custom path should be preserved, only endpoint updated
+    expect(afterMove.points.length).toBe(3)
+    expect(afterMove.points[0].x).toBe(120)
+    expect(afterMove.points[0].y).toBe(220)
+    expect(afterMove.points[1]).toEqual({ x: 200, y: 300 })
+    expect(afterMove.points[2].x).toBe(300)
+    expect(afterMove.points[2].y).toBe(400)
+  })
+
   it('does nothing when adding a segment with non-existent stations', () => {
     const initialState = useEditorStore.getState()
 

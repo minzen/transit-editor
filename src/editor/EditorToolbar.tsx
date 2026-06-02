@@ -427,7 +427,9 @@ export function EditorToolbar({
                         sx={{ minWidth: isMobile ? 80 : 140 }}
                     >
                         <MenuItem value="">{t('toolbar.selectLine')}</MenuItem>
-                        {Object.values(lines).map((line) => (
+                        {Object.values(lines)
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map((line) => (
                             <MenuItem key={line.id} value={line.id}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <Box
