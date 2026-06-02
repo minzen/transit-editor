@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 
-import { useEditorStore } from '../store/editorStore'
+import { useEditorStore, type EditorTool } from '../store/editorStore'
 import { snapPointToOctolinear } from '../geometry/octolinear'
 import { useMapExport } from './useMapExport'
 import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
@@ -288,19 +288,6 @@ export function EditorCanvas() {
         return unsubscribe
     }, [])
 
-    // Clear selection when switching away from select tool so stale
-    // selectedStationIds don't get accidentally deleted via keyboard shortcuts.
-    useEffect(() => {
-        if (activeTool !== 'select') {
-            if (selectedStationIds.length > 0) {
-                setSelectedStationIds([])
-            }
-            if (selectedShapeId) {
-                setSelectedShapeId(null)
-            }
-        }
-    }, [activeTool, selectedStationIds, selectedShapeId, setSelectedStationIds, setSelectedShapeId])
-
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -417,12 +404,23 @@ export function EditorCanvas() {
             )
             : null
 
+    const handleSetActiveTool = useCallback((tool: EditorTool) => {
+        if (tool !== 'select') {
+            if (selectedStationIds.length > 0) {
+                setSelectedStationIds([])
+            }
+            if (selectedShapeId) {
+                setSelectedShapeId(null)
+            }
+        }
+        setActiveTool(tool)
+    }, [selectedStationIds, selectedShapeId, setSelectedStationIds, setSelectedShapeId, setActiveTool])
 
     return (
         <div className="editor-canvas" data-theme={themeMode}>
             <EditorToolbar
                 activeTool={activeTool}
-                setActiveTool={setActiveTool}
+                setActiveTool={handleSetActiveTool}
                 undo={undo}
                 redo={redo}
                 canUndo={pastStates.length > 0}
