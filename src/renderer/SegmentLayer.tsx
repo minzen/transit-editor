@@ -1,10 +1,88 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import type { Segment } from '../model/segment'
 import type { Line } from '../model/line'
 import { offsetPath } from '../geometry/offsetPath'
 import { trimPolyline } from '../geometry/trimPolyline'
 import { buildRoundedPolylinePath } from '../geometry/buildRoundedPath'
 import { STATION_RADIUS } from './stationConstants'
+
+const STATION_TRIM_PADDING = 2
+
+function countConnectedLines(stationId: string, segments: Record<string, Segment>): number {
+  const connected = new Set<string>()
+  for (const segment of Object.values(segments)) {
+    if (segment.fromStationId === stationId || segment.toStationId === stationId) {
+      segment.lineIds.forEach((id) => connected.add(id))
+    }
+  }
+  return connected.size
+}
+
+function getStationAxisAngleDeg(stationId: string, segments: Record<string, Segment>): number {
+  let sumSin = 0
+  let sumCos = 0
+  let count = 0
+  for (const segment of Object.values(segments)) {
+    if (segment.points.length < 2) continue
+    let dx: number, dy: number
+    if (segment.fromStationId === stationId) {
+      dx = segment.points[1].x - segment.points[0].x
+      dy = segment.points[1].y - segment.points[0].y
+    } else if (segment.toStationId === stationId) {
+      const last = segment.points.length - 1
+      dx = segment.points[last - 1].x - segment.points[last].x
+      dy = segment.points[last - 1].y - segment.points[last].y
+    } else {
+      continue
+    }
+    const len = Math.hypot(dx, dy)
+    if (len === 0) continue
+    const theta = Math.atan2(dy / len, dx / len)
+    sumSin += Math.sin(2 * theta)
+    sumCos += Math.cos(2 * theta)
+    count++
+  }
+  if (count === 0) return 0
+  const axisAngleRad = Math.atan2(sumSin, sumCos) / 2
+  return (axisAngleRad * 180) / Math.PI
+}
+
+function getTrimDistance(
+  stationId: string,
+  segment: Segment,
+  isStart: boolean,
+  lineWidth: number,
+  allSegments: Record<string, Segment>
+): number {
+  const lineCount = countConnectedLines(stationId, allSegments)
+  const isCapsule = lineCount > 1
+  if (!isCapsule) {
+    return STATION_RADIUS + STATION_TRIM_PADDING
+  }
+
+  const segmentAxisDeg = getStationAxisAngleDeg(stationId, allSegments)
+  const capsuleAxisRad = ((segmentAxisDeg + 90) * Math.PI) / 180
+
+  const idx = isStart ? 0 : segment.points.length - 1
+  const nextIdx = isStart ? 1 : segment.points.length - 2
+  const dx = segment.points[nextIdx].x - segment.points[idx].x
+  const dy = segment.points[nextIdx].y - segment.points[idx].y
+  const approachRad = Math.atan2(dy, dx)
+
+  const angleDiff = Math.abs(
+    Math.atan2(Math.sin(approachRad - capsuleAxisRad), Math.cos(approachRad - capsuleAxisRad))
+  )
+  const isAlongLongAxis = angleDiff < Math.PI / 4 || angleDiff > (3 * Math.PI) / 4
+
+  const spacing = lineWidth + 1.5
+  const capsuleLength = (lineCount - 1) * spacing + STATION_RADIUS * 2
+  const capsuleWidth = STATION_RADIUS * 2
+
+  if (isAlongLongAxis) {
+    return Math.max(capsuleLength, capsuleWidth) / 2 + STATION_TRIM_PADDING
+  }
+  return capsuleWidth / 2 + STATION_TRIM_PADDING
+}
 
 type Props = {
   segments: Segment[]
@@ -84,12 +162,20 @@ export const SegmentLayer = memo(function SegmentLayer({
   onSegmentMouseEnter,
   onSegmentMouseLeave,
 }: Props) {
+  const allSegments = useMemo(() => {
+    const map: Record<string, Segment> = {}
+    for (const s of segments) {
+      map[s.id] = s
+    }
+    return map
+  }, [segments])
+
   return (
     <>
       {segments.map((segment) => {
-        // Trim segment endpoints inward so lines terminate at the station
-        // outline (circle radius / capsule short-edge), not at the station centre.
-        const trimmed = trimPolyline(segment.points, STATION_RADIUS, STATION_RADIUS)
+        const startTrim = getTrimDistance(segment.fromStationId, segment, true, lineWidth, allSegments)
+        const endTrim = getTrimDistance(segment.toStationId, segment, false, lineWidth, allSegments)
+        const trimmed = trimPolyline(segment.points, startTrim, endTrim)
 
         const isHovered = hoveredSegmentId === segment.id
         const isDimmed = selectedLineId ? !segment.lineIds.includes(selectedLineId) : false
