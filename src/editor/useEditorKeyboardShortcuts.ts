@@ -37,22 +37,38 @@ export function useEditorKeyboardShortcuts({
     const [spacePressed, setSpacePressed] = useState(false)
 
     useEffect(() => {
+        const isInputFocused = () => {
+            const active = document.activeElement
+            if (!active) return false
+            const tag = active.tagName
+            return (
+                tag === 'INPUT' ||
+                tag === 'TEXTAREA' ||
+                active.getAttribute('contenteditable') === 'true'
+            )
+        }
+
         const down = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
                 spacePressedRef.current = true
                 setSpacePressed(true)
             }
-            if ((e.code === 'Delete' || e.code === 'Backspace') && (selectedStationIds.length > 0 || selectedShapeId) && !spacePressedRef.current) {
+            if (
+                (e.code === 'Delete' || e.code === 'Backspace') &&
+                !isInputFocused() &&
+                (selectedStationIds.length > 0 || selectedShapeId) &&
+                !spacePressedRef.current
+            ) {
                 e.preventDefault()
                 onDeleteSelected()
             }
             // Undo: Ctrl+Z or Cmd+Z
-            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey && canUndo) {
+            if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey && canUndo && !isInputFocused()) {
                 e.preventDefault()
                 onUndo()
             }
             // Redo: Ctrl+Y or Cmd+Shift+Z
-            if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey)) && canRedo) {
+            if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey)) && canRedo && !isInputFocused()) {
                 e.preventDefault()
                 onRedo()
             }

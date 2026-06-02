@@ -288,6 +288,19 @@ export function EditorCanvas() {
         return unsubscribe
     }, [])
 
+    // Clear selection when switching away from select tool so stale
+    // selectedStationIds don't get accidentally deleted via keyboard shortcuts.
+    useEffect(() => {
+        if (activeTool !== 'select') {
+            if (selectedStationIds.length > 0) {
+                setSelectedStationIds([])
+            }
+            if (selectedShapeId) {
+                setSelectedShapeId(null)
+            }
+        }
+    }, [activeTool, selectedStationIds, selectedShapeId, setSelectedStationIds, setSelectedShapeId])
+
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
@@ -525,6 +538,9 @@ export function EditorCanvas() {
                         }
                         if (selectedShapeId) {
                             setSelectedShapeId(null)
+                        }
+                        if (selectedStationIds.length > 0) {
+                            setSelectedStationIds([])
                         }
                         handleClick(event)
                         return

@@ -181,9 +181,43 @@ describe('useEditorKeyboardShortcuts', () => {
     expect(defaultProps.onDeleteSelected).not.toHaveBeenCalled()
   })
 
+  it('does not call onDeleteSelected when an input is focused', () => {
+    const props = { ...defaultProps, selectedStationIds: ['station1'] }
+    renderHook(() => useEditorKeyboardShortcuts(props))
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Delete' }))
+    })
+
+    expect(props.onDeleteSelected).not.toHaveBeenCalled()
+
+    document.body.removeChild(input)
+  })
+
+  it('does not call onUndo when an input is focused', () => {
+    const props = { ...defaultProps, canUndo: true }
+    renderHook(() => useEditorKeyboardShortcuts(props))
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyZ', ctrlKey: true }))
+    })
+
+    expect(props.onUndo).not.toHaveBeenCalled()
+
+    document.body.removeChild(input)
+  })
+
   it('cleans up event listeners on unmount', () => {
     const { unmount } = renderHook(() => useEditorKeyboardShortcuts(defaultProps))
-    
+
     // Should not throw when unmounting
     expect(() => unmount()).not.toThrow()
   })
