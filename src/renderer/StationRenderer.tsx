@@ -33,6 +33,8 @@ type Props = {
 
 const BADGE_RADIUS = 9
 const BADGE_SPACING = BADGE_RADIUS * 2 + 4
+const APPROX_LABEL_HEIGHT = 18
+const BADGE_LABEL_GAP = 4
 
 /**
  * Calculate the average axis angle (in degrees) of all segments connected to a station.
@@ -308,7 +310,7 @@ export const StationRenderer = memo(function StationRenderer({
                             <g style={{ pointerEvents: 'none' }}>
                                 <circle
                                     cx={s.x}
-                                    cy={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10}
+                                    cy={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10 - (labelPos === 'top' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0)}
                                     r={7}
                                     fill={fareZoneFill}
                                     stroke={badgeStroke}
@@ -316,7 +318,7 @@ export const StationRenderer = memo(function StationRenderer({
                                 />
                                 <text
                                     x={s.x}
-                                    y={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10}
+                                    y={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10 - (labelPos === 'top' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0)}
                                     textAnchor="middle"
                                     dominantBaseline="central"
                                     fontSize={9}
@@ -335,7 +337,8 @@ export const StationRenderer = memo(function StationRenderer({
                                 .filter((line): line is Line => Boolean(line?.code))
                             if (codedLines.length === 0) return null
                             const totalWidth = (codedLines.length - 1) * BADGE_SPACING
-                            const badgeY = s.y + labelOffset + BADGE_RADIUS
+                            const badgeExtraOffset = labelPos === 'bottom' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0
+                            const badgeY = s.y + labelOffset + BADGE_RADIUS + badgeExtraOffset
                             return codedLines.map((line, i) => {
                                 const cx = s.x - totalWidth / 2 + i * BADGE_SPACING
                                 return (
