@@ -216,6 +216,21 @@ export function scoreLabelPosition(
         }
     }
 
+    // Penalize bottom position when station has connected segments,
+    // because line-code badges are shifted downward and need extra clearance.
+    const hasConnectedSegments = segments.some(
+        (seg) => seg.fromStationId === station.id || seg.toStationId === station.id
+    )
+    if (position === 'bottom' && hasConnectedSegments) {
+        score += 15
+    }
+
+    // Penalize top position when station has a fare zone,
+    // because the fare-zone badge is shifted upward.
+    if (position === 'top' && station.fareZone !== undefined) {
+        score += 5
+    }
+
     return score
 }
 

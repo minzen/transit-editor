@@ -11,7 +11,7 @@ import { ImportErrorDialog } from './ImportErrorDialog'
 import { useMapJSON } from './useMapJSON'
 
 import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel, Menu } from '@mui/material'
-import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert, DarkMode, LightMode } from '@mui/icons-material'
+import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert, DarkMode, LightMode, RestartAlt } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -124,6 +124,9 @@ export function EditorToolbar({
     const { t } = useTranslation()
     const language = useEditorStore((s) => s.language)
     const setLanguage = useEditorStore((s) => s.setLanguage)
+    const canvasBackgroundColor = useEditorStore((s) => s.canvasBackgroundColor)
+    const setCanvasBackgroundColor = useEditorStore((s) => s.setCanvasBackgroundColor)
+    const themeMode = useEditorStore((s) => s.themeMode)
 
     // Track line creation to auto-select the new line
     const prevLineCountRef = useRef(Object.keys(lines).length)
@@ -397,6 +400,44 @@ export function EditorToolbar({
                     {useEditorStore.getState().themeMode === 'light' ? <DarkMode /> : <LightMode />}
                 </IconButton>
             </Tooltip>
+
+            <Tooltip title={t('toolbar.backgroundColor')}>
+                <Box
+                    sx={{
+                        position: 'relative',
+                        width: 24,
+                        height: 24,
+                        overflow: 'hidden',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        cursor: 'pointer',
+                    }}
+                >
+                    <input
+                        type="color"
+                        value={canvasBackgroundColor || (themeMode === 'dark' ? '#1e1e2e' : '#f5f5f5')}
+                        onChange={(e) => setCanvasBackgroundColor(e.target.value)}
+                        style={{
+                            position: 'absolute',
+                            top: -4,
+                            left: -4,
+                            width: 32,
+                            height: 32,
+                            padding: 0,
+                            border: 'none',
+                            cursor: 'pointer',
+                        }}
+                    />
+                </Box>
+            </Tooltip>
+            {canvasBackgroundColor && (
+                <Tooltip title={t('toolbar.resetBackgroundColor')}>
+                    <IconButton size="small" onClick={() => setCanvasBackgroundColor('')}>
+                        <RestartAlt fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            )}
 
             {activeTool === 'segment' && (
                 <>
