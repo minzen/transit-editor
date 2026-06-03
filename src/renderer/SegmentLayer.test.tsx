@@ -301,6 +301,46 @@ describe('SegmentLayer', () => {
         expect(seg2Path).toHaveAttribute('opacity', '0.25')
     })
 
+    it('parallel paths on a horizontal segment are offset symmetrically above and below', () => {
+        const segments: Segment[] = [
+            {
+                id: 'seg1',
+                fromStationId: 'st1',
+                toStationId: 'st2',
+                lineIds: ['line1', 'line2'],
+                points: [
+                    { x: 0, y: 0 },
+                    { x: 500, y: 0 },
+                ],
+            },
+        ]
+
+        const { container } = render(
+            <SegmentLayer segments={segments} lines={mockLines} lineWidth={10} />
+        )
+
+        const paths = container.querySelectorAll('path')
+        expect(paths).toHaveLength(2)
+
+        // Extract the M (start) y-coordinate from each path
+        const getStartY = (path: Element) => {
+            const d = path.getAttribute('d') ?? ''
+            const m = d.match(/^M [\d.-]+ ([\d.-]+)/)
+            return m ? parseFloat(m[1]) : NaN
+        }
+
+        const y0 = getStartY(paths[0])
+        const y1 = getStartY(paths[1])
+
+        // The two lines should be on opposite sides of y=0
+        expect(y0).not.toBeNaN()
+        expect(y1).not.toBeNaN()
+        expect(y0).not.toBeCloseTo(0, 1)
+        expect(y1).not.toBeCloseTo(0, 1)
+        // They must be mirror images (opposite sign)
+        expect(y0 + y1).toBeCloseTo(0, 5)
+    })
+
     it('calls onSegmentMouseEnter and onSegmentMouseLeave', () => {
         const segments: Segment[] = [
             {

@@ -175,7 +175,6 @@ export const SegmentLayer = memo(function SegmentLayer({
       {segments.map((segment) => {
         const startTrim = getTrimDistance(segment.fromStationId, segment, true, lineWidth, allSegments)
         const endTrim = getTrimDistance(segment.toStationId, segment, false, lineWidth, allSegments)
-        const trimmed = trimPolyline(segment.points, startTrim, endTrim)
 
         const isHovered = hoveredSegmentId === segment.id
         const isDimmed = selectedLineId ? !segment.lineIds.includes(selectedLineId) : false
@@ -193,10 +192,13 @@ export const SegmentLayer = memo(function SegmentLayer({
             ? (index - (totalLines - 1) / 2) * spacing
             : 0
 
-          // Calculate the actual offset path points using our miter joints algorithm
-          const offsetPoints = offsetPath(trimmed, offsetDistance)
+          // Offset first, then trim: trimming on the offset path ensures each
+          // parallel line's endpoints are correctly spaced from the station marker
+          // regardless of how far the line has been displaced laterally.
+          const offsetPoints = offsetPath(segment.points, offsetDistance)
+          const trimmed = trimPolyline(offsetPoints, startTrim, endTrim)
 
-          const d = buildRoundedPolylinePath(offsetPoints)
+          const d = buildRoundedPolylinePath(trimmed)
 
           return (
             <SegmentPath

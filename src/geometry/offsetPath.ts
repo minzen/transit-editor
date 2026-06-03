@@ -57,15 +57,23 @@ export function offsetPath(points: Point[], d: number): Point[] {
                 y: points[i].y + n1.y * d,
             })
         } else {
-            const bx = bisectorX / bisectorLen
-            const by = bisectorY / bisectorLen
+            let bx = bisectorX / bisectorLen
+            let by = bisectorY / bisectorLen
+
+            // The bisector from n1+n2 always points toward the outer (convex) side.
+            // For concave corners the bisector is in the opposite direction of n1,
+            // so we need to flip it to keep the offset on the correct side.
+            const dot = bx * n1.x + by * n1.y
+            if (dot < 0) {
+                bx = -bx
+                by = -by
+            }
 
             // Calculate scaling factor = 1 / cos(half_angle)
-            // dot product of normalized bisector and segment normal
-            const cosHalfAngle = bx * n1.x + by * n1.y
+            // Using the absolute dot product so the scale is always positive.
+            const cosHalfAngle = Math.abs(dot)
 
-            // Safeguard division by zero and limit extremely sharp miters
-            // Miter limit = 2.5 times the offset distance
+            // Limit extremely sharp miters (miter limit = 2.5× the offset distance)
             const miterLimit = 2.5
             const scale = cosHalfAngle > 0.1 ? Math.min(miterLimit, 1 / cosHalfAngle) : miterLimit
 
