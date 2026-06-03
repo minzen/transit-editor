@@ -45,7 +45,9 @@
     "renameLine": "Linie umbenennen",
     "lineNamePlaceholder": "Linienname",
     "autoPlaceLabels": "Beschriftungen automatisch platzieren",
-    "toggleTheme": "Design wechseln"
+    "toggleTheme": "Design wechseln",
+    "backgroundColor": "Hintergrundfarbe",
+    "resetBackgroundColor": "Hintergrund zurücksetzen"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Linienname",

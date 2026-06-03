@@ -46,7 +46,9 @@
     "renameLine": "Rename Line",
     "lineNamePlaceholder": "Line name",
     "autoPlaceLabels": "Auto-place Labels",
-    "toggleTheme": "Toggle Theme"
+    "toggleTheme": "Toggle Theme",
+    "backgroundColor": "Canvas Background",
+    "resetBackgroundColor": "Reset Background"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Line name",

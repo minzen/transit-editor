@@ -11,6 +11,7 @@ describe('editor store', () => {
       shapes: {},
       pastStates: [],
       futureStates: [],
+      canvasBackgroundColor: '',
     })
   })
 
@@ -708,6 +709,7 @@ describe('editor store', () => {
       showLineCodes: true,
       language: 'en',
       themeMode: 'light',
+      canvasBackgroundColor: '',
       pastStates: [],
       futureStates: [],
     })
@@ -721,6 +723,7 @@ describe('editor store', () => {
     expect(state.showLineCodes).toBe(true)
     expect(state.language).toBe('en')
     expect(state.themeMode).toBe('light')
+    expect(state.canvasBackgroundColor).toBe('')
   })
 
   it('zooms in', () => {
@@ -1126,6 +1129,21 @@ describe('editor store', () => {
     useEditorStore.getState().setThemeMode('dark')
     useEditorStore.getState().setThemeMode('light')
     expect(useEditorStore.getState().themeMode).toBe('light')
+  })
+
+  it('defaults canvasBackgroundColor to empty', () => {
+    expect(useEditorStore.getState().canvasBackgroundColor).toBe('')
+  })
+
+  it('sets canvasBackgroundColor', () => {
+    useEditorStore.getState().setCanvasBackgroundColor('#aabbcc')
+    expect(useEditorStore.getState().canvasBackgroundColor).toBe('#aabbcc')
+  })
+
+  it('clears canvasBackgroundColor', () => {
+    useEditorStore.getState().setCanvasBackgroundColor('#aabbcc')
+    useEditorStore.getState().setCanvasBackgroundColor('')
+    expect(useEditorStore.getState().canvasBackgroundColor).toBe('')
   })
 
   it('importMap backfills missing lineStyle and transitMode', () => {

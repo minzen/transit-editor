@@ -49,8 +49,9 @@ export function EditorCanvas() {
     const showLineCodes = useEditorStore((s) => s.showLineCodes)
     const setShowLineCodes = useEditorStore((s) => s.setShowLineCodes)
     const themeMode = useEditorStore((s) => s.themeMode)
+    const canvasBackgroundColor = useEditorStore((s) => s.canvasBackgroundColor)
 
-    const canvasBg = themeMode === 'dark' ? '#1e1e2e' : '#f5f5f5'
+    const canvasBg = canvasBackgroundColor || (themeMode === 'dark' ? '#1e1e2e' : '#f5f5f5')
     const shapeHandleFill = themeMode === 'dark' ? '#1e1e2e' : '#fff'
     const shapeHandleStroke = themeMode === 'dark' ? '#90caf9' : '#1976d2'
 
@@ -549,6 +550,7 @@ export function EditorCanvas() {
                 onDoubleClick={handleDoubleClick}
             >
                 <rect
+                    className="editor-canvas-background"
                     width="100%"
                     height="100%"
                     fill={canvasBg}
