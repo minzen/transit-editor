@@ -74,6 +74,34 @@ export function isPointNearPolyline(
 }
 
 /**
+ * Test whether a point lies inside an axis-aligned rectangle.
+ */
+export function isPointInRect(
+    point: Point,
+    rect: { minX: number; minY: number; maxX: number; maxY: number }
+): boolean {
+    return (
+        point.x >= rect.minX &&
+        point.x <= rect.maxX &&
+        point.y >= rect.minY &&
+        point.y <= rect.maxY
+    )
+}
+
+/**
+ * Test whether any point of a polyline lies inside an axis-aligned rectangle.
+ */
+export function isRectIntersectingPolyline(
+    rect: { minX: number; minY: number; maxX: number; maxY: number },
+    polyline: Point[]
+): boolean {
+    for (const p of polyline) {
+        if (isPointInRect(p, rect)) return true
+    }
+    return false
+}
+
+/**
  * Ray-casting test: returns true if the point is inside the polygon.
  * The polygon vertices should be ordered (clockwise or counter-clockwise).
  */

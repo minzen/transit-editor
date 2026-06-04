@@ -655,6 +655,21 @@ describe('editor store', () => {
     expect(useEditorStore.getState().shapes[shapeId]).toBeUndefined()
   })
 
+  it('moveShapes translates multiple shapes by a delta', () => {
+    useEditorStore.getState().addShape([{ x: 0, y: 0 }, { x: 10, y: 10 }], '#a8d5e2', 'A')
+    useEditorStore.getState().addShape([{ x: 100, y: 100 }], '#ff0000', 'B')
+    const ids = Object.keys(useEditorStore.getState().shapes)
+
+    useEditorStore.getState().moveShapes(ids, 5, -3)
+
+    const state = useEditorStore.getState()
+    expect(state.shapes[ids[0]].points).toEqual([
+      { x: 5, y: -3 },
+      { x: 15, y: 7 },
+    ])
+    expect(state.shapes[ids[1]].points).toEqual([{ x: 105, y: 97 }])
+  })
+
   it('undo restores deleted shape', () => {
     useEditorStore.getState().addShape([{ x: 0, y: 0 }], '#a8d5e2')
     const shapeId = Object.keys(useEditorStore.getState().shapes)[0]

@@ -90,6 +90,7 @@ type Props = {
   lineWidth: number
   selectedLineId?: string | null
   hoveredSegmentId?: string | null
+  selectedSegmentIds?: string[]
   onSegmentMouseEnter?: (segmentId: string, event: React.MouseEvent<SVGGElement>) => void
   onSegmentMouseLeave?: (segmentId: string) => void
 }
@@ -105,16 +106,18 @@ function SegmentPath({
   lineWidth,
   dimmed,
   highlighted,
+  selected,
 }: {
   d: string
   line: Line
   lineWidth: number
   dimmed?: boolean
   highlighted?: boolean
+  selected?: boolean
 }) {
   const dasharray = getStrokeDasharray(line.lineStyle)
   const opacity = dimmed ? 0.25 : highlighted ? 1 : 1
-  const strokeW = highlighted ? lineWidth + 2 : lineWidth
+  const strokeW = selected ? lineWidth + 4 : highlighted ? lineWidth + 2 : lineWidth
 
   if (line.lineStyle === 'double') {
     return (
@@ -159,6 +162,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   lineWidth,
   selectedLineId,
   hoveredSegmentId,
+  selectedSegmentIds = [],
   onSegmentMouseEnter,
   onSegmentMouseLeave,
 }: Props) {
@@ -177,6 +181,7 @@ export const SegmentLayer = memo(function SegmentLayer({
         const endTrim = getTrimDistance(segment.toStationId, segment, false, lineWidth, allSegments)
 
         const isHovered = hoveredSegmentId === segment.id
+        const isSelected = selectedSegmentIds.includes(segment.id)
         const isDimmed = selectedLineId ? !segment.lineIds.includes(selectedLineId) : false
 
         // Render the segment once for each line it belongs to
@@ -208,6 +213,7 @@ export const SegmentLayer = memo(function SegmentLayer({
               lineWidth={lineWidth}
               dimmed={isDimmed}
               highlighted={isHovered}
+              selected={isSelected}
             />
           )
         })

@@ -16,6 +16,7 @@ import { BendPointRenderer } from '../renderer/BendPointRenderer'
 import { screenToWorld, worldToScreen } from '../viewport/coordinates'
 import { snapPointToGrid } from '../geometry/snap'
 import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
+import type { Point } from '../types/geometry'
 
 import { EditorToolbar } from './EditorToolbar'
 import { StationNameDialog } from './StationNameDialog'
@@ -139,6 +140,13 @@ export function EditorCanvas() {
         pointIndex: number
     } | null>(null)
 
+    // Whole-shape group drag
+    const [draggingShapeIds, setDraggingShapeIds] = useState<string[] | null>(null)
+    const shapeDragStartRef = useRef<Point | null>(null)
+
+    // Segment selection state
+    const [selectedSegmentIds, setSelectedSegmentIds] = useState<string[]>([])
+
     // Segment hover / tooltip state
     const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null)
     const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
@@ -183,6 +191,8 @@ export function EditorCanvas() {
     const clear = useEditorStore((s) => s.clear)
     const pastStates = useEditorStore((s) => s.pastStates)
     const futureStates = useEditorStore((s) => s.futureStates)
+    const deleteSegment = useEditorStore((s) => s.deleteSegment)
+    const moveShapes = useEditorStore((s) => s.moveShapes)
 
     const { showGridForExport, showSelectionForExport, showInteractiveHandlesForExport, exportAsSVG, exportAsPNG, print } = useMapExport(svgRef)
 
@@ -195,7 +205,14 @@ export function EditorCanvas() {
                     deleteStation(stationId)
                 }
                 setSelectedStationIds([])
-            } else if (selectedShapeId) {
+            }
+            if (selectedSegmentIds.length > 0) {
+                for (const segmentId of selectedSegmentIds) {
+                    deleteSegment(segmentId)
+                }
+                setSelectedSegmentIds([])
+            }
+            if (selectedShapeId) {
                 deleteShape(selectedShapeId)
                 setSelectedShapeId(null)
             }
@@ -225,7 +242,16 @@ export function EditorCanvas() {
         handleStationNameSave,
         handleStationNameCancel,
         setPendingStationPosition,
-    } = useCanvasInteractions({ spacePressed })
+        selectionRect,
+        isRectangleSelecting,
+    } = useCanvasInteractions({
+        spacePressed,
+        selectedStationIds,
+        selectedShapeId,
+        setSelectedStationIds,
+        setSelectedShapeId,
+        setSelectedSegmentIds,
+    })
 
     const [svgHasFocus, setSvgHasFocus] = useState(false)
 
@@ -301,6 +327,9 @@ export function EditorCanvas() {
                 if (selectedStationIds.length > 0) {
                     setSelectedStationIds([])
                 }
+                if (selectedSegmentIds.length > 0) {
+                    setSelectedSegmentIds([])
+                }
             }
             if ((e.key === 'Backspace' || e.key === 'Delete') && activeTool === 'shape' && shapePoints.length > 0) {
                 setShapePoints((prev) => prev.slice(0, -1))
@@ -308,7 +337,7 @@ export function EditorCanvas() {
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [shapePoints.length, selectedShapeId, activeTool, selectedStationIds, setSelectedStationIds, setSelectedShapeId, setShapePoints])
+    }, [shapePoints.length, selectedShapeId, activeTool, selectedStationIds, selectedSegmentIds, setSelectedStationIds, setSelectedSegmentIds, setSelectedShapeId, setShapePoints])
 
     const insertBendPoint = useEditorStore((s) => s.insertBendPoint)
     const removeBendPoint = useEditorStore((s) => s.removeBendPoint)
@@ -410,12 +439,15 @@ export function EditorCanvas() {
             if (selectedStationIds.length > 0) {
                 setSelectedStationIds([])
             }
+            if (selectedSegmentIds.length > 0) {
+                setSelectedSegmentIds([])
+            }
             if (selectedShapeId) {
                 setSelectedShapeId(null)
             }
         }
         setActiveTool(tool)
-    }, [selectedStationIds, selectedShapeId, setSelectedStationIds, setSelectedShapeId, setActiveTool])
+    }, [selectedStationIds, selectedSegmentIds, selectedShapeId, setSelectedStationIds, setSelectedSegmentIds, setSelectedShapeId, setActiveTool])
 
     return (
         <div className="editor-canvas" data-theme={themeMode}>
@@ -473,7 +505,9 @@ export function EditorCanvas() {
                         ? 'grabbing'
                         : spacePressed
                             ? 'grab'
-                            : 'default',
+                            : isRectangleSelecting
+                                ? 'crosshair'
+                                : 'default',
                 }}
                 onFocus={() => setSvgHasFocus(true)}
                 onBlur={() => setSvgHasFocus(false)}
@@ -494,6 +528,17 @@ export function EditorCanvas() {
                         }
                         return
                     }
+                    if (draggingShapeIds && shapeDragStartRef.current) {
+                        const rect = event.currentTarget.getBoundingClientRect()
+                        const x = event.clientX - rect.left
+                        const y = event.clientY - rect.top
+                        const world = screenToWorld(x, y, viewportRef.current)
+                        const dx = world.x - shapeDragStartRef.current.x
+                        const dy = world.y - shapeDragStartRef.current.y
+                        moveShapes(draggingShapeIds, dx, dy)
+                        shapeDragStartRef.current = world
+                        return
+                    }
                     handlePointerMove(event)
                 }}
                 onPointerUp={(event) => {
@@ -501,11 +546,22 @@ export function EditorCanvas() {
                         setDraggingShapeVertex(null)
                         return
                     }
+                    if (draggingShapeIds) {
+                        setDraggingShapeIds(null)
+                        shapeDragStartRef.current = null
+                        suppressNextClickRef.current = true
+                        return
+                    }
                     handlePointerUp(event)
                 }}
                 onPointerCancel={(event) => {
                     if (draggingShapeVertex) {
                         setDraggingShapeVertex(null)
+                        return
+                    }
+                    if (draggingShapeIds) {
+                        setDraggingShapeIds(null)
+                        shapeDragStartRef.current = null
                         return
                     }
                     handlePointerCancel(event)
@@ -590,11 +646,25 @@ export function EditorCanvas() {
                     {/* Selected shape vertex handles */}
                     {showInteractiveHandlesForExport && selectedShapeId && shapes[selectedShapeId] && (
                         <>
-                            {/* Invisible hit-area polygon on top for easier selection */}
+                            {/* Invisible hit-area polygon on top for easier selection / whole-shape drag */}
                             <polygon
                                 points={shapes[selectedShapeId].points.map((p) => `${p.x},${p.y}`).join(' ')}
                                 fill="transparent"
-                                style={{ pointerEvents: 'all' }}
+                                style={{ cursor: 'move', pointerEvents: 'all' }}
+                                onPointerDown={(event) => {
+                                    event.stopPropagation()
+                                    const rect = event.currentTarget.getBoundingClientRect()
+                                    // Use the SVG parent for coordinate conversion
+                                    const svg = svgRef.current
+                                    if (!svg) return
+                                    const svgRect = svg.getBoundingClientRect()
+                                    const x = event.clientX - svgRect.left
+                                    const y = event.clientY - svgRect.top
+                                    const world = screenToWorld(x, y, viewportRef.current)
+                                    const ids = selectedShapeId ? [selectedShapeId] : []
+                                    setDraggingShapeIds(ids)
+                                    shapeDragStartRef.current = world
+                                }}
                             />
                             {shapes[selectedShapeId].points.map((p, i) => (
                                 <circle
@@ -682,6 +752,7 @@ export function EditorCanvas() {
                         lineWidth={lineWidth}
                         selectedLineId={selectedLineId}
                         hoveredSegmentId={hoveredSegmentId}
+                        selectedSegmentIds={selectedSegmentIds}
                         onSegmentMouseEnter={(segmentId, event) => {
                             setHoveredSegmentId(segmentId)
                             const rect = svgRef.current?.getBoundingClientRect()
@@ -718,6 +789,21 @@ export function EditorCanvas() {
                             onBendPointDoubleClick={(segmentId, pointIndex) => {
                                 removeBendPoint(segmentId, pointIndex)
                             }}
+                        />
+                    )}
+
+                    {/* Rectangle selection overlay */}
+                    {selectionRect && (
+                        <rect
+                            x={selectionRect.x}
+                            y={selectionRect.y}
+                            width={selectionRect.width}
+                            height={selectionRect.height}
+                            fill="rgba(25, 118, 210, 0.15)"
+                            stroke="#1976d2"
+                            strokeWidth={2 / useEditorStore.getState().viewport.zoom}
+                            strokeDasharray={`${8 / useEditorStore.getState().viewport.zoom} ${4 / useEditorStore.getState().viewport.zoom}`}
+                            style={{ pointerEvents: 'none' }}
                         />
                     )}
 
@@ -770,6 +856,13 @@ export function EditorCanvas() {
                                         ? prev.filter((id) => id !== stationId)
                                         : [...prev, stationId]
                                 )
+                            } else if (selectedStationIds.includes(stationId)) {
+                                // Clicked an already-selected station: keep multi-selection and drag group
+                                setDraggingStationId(stationId)
+                                stationDragStartRef.current = {
+                                    x: event.clientX,
+                                    y: event.clientY,
+                                }
                             } else {
                                 setSelectedStationIds([stationId])
                                 setDraggingStationId(stationId)

@@ -101,6 +101,7 @@ export type DataSlice = {
     addShape: (points: Point[], color: string, name?: string, opacity?: number) => void
     updateShape: (id: string, updates: Partial<Pick<Shape, 'points' | 'color' | 'name' | 'opacity'>>) => void
     deleteShape: (id: string) => void
+    moveShapes: (ids: string[], dx: number, dy: number) => void
 }
 
 const setWithDelta = (
@@ -832,4 +833,21 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
         })
         get().setAnnouncement('Shape deleted')
     },
+
+    moveShapes: (ids, dx, dy) =>
+        set((state) => {
+            const nextShapes = { ...state.shapes }
+            let changed = false
+            for (const id of ids) {
+                const shape = state.shapes[id]
+                if (!shape) continue
+                changed = true
+                nextShapes[id] = {
+                    ...shape,
+                    points: shape.points.map((p) => ({ x: p.x + dx, y: p.y + dy })),
+                }
+            }
+            if (!changed) return state
+            return setWithDelta(state, { shapes: nextShapes })
+        }),
 })

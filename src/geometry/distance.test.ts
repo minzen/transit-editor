@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pointToLineSegmentDistance, isPointNearPolyline, isPointInPolygon } from './distance'
+import { pointToLineSegmentDistance, isPointNearPolyline, isPointInPolygon, isPointInRect, isRectIntersectingPolyline } from './distance'
 
 describe('pointToLineSegmentDistance', () => {
     it('returns perpendicular distance for point next to a horizontal segment', () => {
@@ -89,5 +89,35 @@ describe('isPointInPolygon', () => {
 
     it('returns false for an empty polygon', () => {
         expect(isPointInPolygon({ x: 0, y: 0 }, [])).toBe(false)
+    })
+})
+
+describe('isPointInRect', () => {
+    const rect = { minX: 10, minY: 20, maxX: 50, maxY: 60 }
+
+    it('returns true for a point inside the rectangle', () => {
+        expect(isPointInRect({ x: 30, y: 40 }, rect)).toBe(true)
+    })
+
+    it('returns true for a point on the edge', () => {
+        expect(isPointInRect({ x: 10, y: 20 }, rect)).toBe(true)
+    })
+
+    it('returns false for a point outside the rectangle', () => {
+        expect(isPointInRect({ x: 5, y: 40 }, rect)).toBe(false)
+    })
+})
+
+describe('isRectIntersectingPolyline', () => {
+    it('returns true when a polyline point is inside the rectangle', () => {
+        const polyline = [{ x: 0, y: 0 }, { x: 30, y: 30 }, { x: 100, y: 100 }]
+        const rect = { minX: 20, minY: 20, maxX: 40, maxY: 40 }
+        expect(isRectIntersectingPolyline(rect, polyline)).toBe(true)
+    })
+
+    it('returns false when no polyline points are inside the rectangle', () => {
+        const polyline = [{ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 20, y: 20 }]
+        const rect = { minX: 50, minY: 50, maxX: 60, maxY: 60 }
+        expect(isRectIntersectingPolyline(rect, polyline)).toBe(false)
     })
 })

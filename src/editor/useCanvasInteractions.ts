@@ -4,10 +4,16 @@ import { screenToWorld } from '../viewport/coordinates'
 import { snapPointToGrid } from '../geometry/snap'
 import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
 import { isPointInsideStation } from '../utils/stationUtils'
+import { isPointInRect, isRectIntersectingPolyline, isPointInPolygon } from '../geometry/distance'
 import type { Point } from '../types/geometry'
 
 type Args = {
     spacePressed: boolean
+    selectedStationIds: string[]
+    selectedShapeId: string | null
+    setSelectedStationIds: (ids: string[] | ((prev: string[]) => string[])) => void
+    setSelectedShapeId: (id: string | null) => void
+    setSelectedSegmentIds: (ids: string[] | ((prev: string[]) => string[])) => void
 }
 
 // Margin (in screen pixels) of the grid that must remain visible when panning,
@@ -27,7 +33,14 @@ const clamp = (value: number, min: number, max: number): number =>
  * for drag-related state so child renderers (StationRenderer, BendPointRenderer)
  * can initiate drags from their own pointerDown callbacks.
  */
-export function useCanvasInteractions({ spacePressed }: Args) {
+export function useCanvasInteractions({
+    spacePressed,
+    selectedStationIds,
+    selectedShapeId: _selectedShapeId,
+    setSelectedStationIds,
+    setSelectedShapeId,
+    setSelectedSegmentIds,
+}: Args) {
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
     const setViewport = useEditorStore((s) => s.setViewport)
@@ -77,6 +90,11 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     } | null>(null)
     const [isPanning, setIsPanning] = useState(false)
     const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 })
+
+    // Rectangle selection state
+    const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+    const [isRectangleSelecting, setIsRectangleSelecting] = useState(false)
+    const rectSelectStartRef = useRef<Point | null>(null)
 
     const stationDragStartRef = useRef<{ x: number; y: number } | null>(null)
     const suppressNextClickRef = useRef(false)
@@ -139,6 +157,19 @@ export function useCanvasInteractions({ spacePressed }: Args) {
                 x: event.clientX,
                 y: event.clientY,
             })
+            return
+        }
+
+        // Start rectangle selection when clicking empty canvas in select tool
+        if (activeTool === 'select' && !draggingStationId && !draggingBendPoint) {
+            const currentViewport = useEditorStore.getState().viewport
+            const rect = event.currentTarget.getBoundingClientRect()
+            const x = event.clientX - rect.left
+            const y = event.clientY - rect.top
+            const world = screenToWorld(x, y, currentViewport)
+            rectSelectStartRef.current = world
+            setSelectionRect({ x: world.x, y: world.y, width: 0, height: 0 })
+            setIsRectangleSelecting(true)
         }
     }
 
@@ -266,6 +297,15 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             return
         }
 
+        if (isRectangleSelecting && rectSelectStartRef.current) {
+            const x1 = Math.min(rectSelectStartRef.current.x, point.x)
+            const y1 = Math.min(rectSelectStartRef.current.y, point.y)
+            const x2 = Math.max(rectSelectStartRef.current.x, point.x)
+            const y2 = Math.max(rectSelectStartRef.current.y, point.y)
+            setSelectionRect({ x: x1, y: y1, width: x2 - x1, height: y2 - y1 })
+            return
+        }
+
         if (!draggingStationId) return
 
         if (stationDragStartRef.current) {
@@ -279,27 +319,75 @@ export function useCanvasInteractions({ spacePressed }: Args) {
 
         const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
-        // Snap to octolinear angles from connected stations
-        const stationIds = Object.keys(stations)
+        // Determine if this is a group drag
+        const isGroupDrag = selectedStationIds.includes(draggingStationId) && selectedStationIds.length > 1
+        const idsToMove = isGroupDrag ? selectedStationIds : [draggingStationId]
+
+        if (isGroupDrag) {
+            // Compute group delta once from the dragged station, then apply uniformly.
+            const draggedStation = stations[draggingStationId]
+            if (!draggedStation) return
+
+            // Clamp the dragged station's intended target to grid bounds and grid
+            const draggedTarget = clampToGridBounds(gridSnapped)
+            const dx = draggedTarget.x - draggedStation.x
+            const dy = draggedTarget.y - draggedStation.y
+            if (dx === 0 && dy === 0) return
+
+            // Build target positions for every selected station, clamped to bounds.
+            const targets: Record<string, { x: number; y: number }> = {}
+            for (const id of idsToMove) {
+                const s = stations[id]
+                if (!s) continue
+                const t = clampToGridBounds(
+                    snapPointToGrid(s.x + dx, s.y + dy, gridCellSize)
+                )
+                targets[id] = t
+            }
+
+            // Reject the whole frame if any selected station would collide with a
+            // non-selected station at its target. Other selected stations are
+            // ignored because they are also moving.
+            const selectedSet = new Set(idsToMove)
+            const otherStations: Record<string, typeof stations[string]> = {}
+            for (const [sid, s] of Object.entries(stations)) {
+                if (!selectedSet.has(sid)) otherStations[sid] = s
+            }
+            for (const id of idsToMove) {
+                const t = targets[id]
+                if (!t) continue
+                if (isPointInsideStation(t.x, t.y, otherStations)) {
+                    return
+                }
+            }
+
+            for (const id of idsToMove) {
+                const t = targets[id]
+                if (!t) continue
+                moveStation(id, t.x, t.y)
+            }
+            return
+        }
+
+        // Single-station drag
         let snapped = gridSnapped
-        if (stationIds.length > 1) {
+
+        // Snap to octolinear angles from connected stations
+        const stationIdsAll = Object.keys(stations)
+        if (stationIdsAll.length > 1) {
             const connectedStations = Object.values(segments)
                 .filter(seg => seg.fromStationId === draggingStationId || seg.toStationId === draggingStationId)
                 .map(seg => seg.fromStationId === draggingStationId ? stations[seg.toStationId] : stations[seg.fromStationId])
                 .filter(s => s !== undefined)
 
             if (connectedStations.length > 0) {
-                // Snap to octolinear from the first connected station, then re-snap to grid
-                // so the final position always lands on a grid intersection
                 const octoSnapped = snapPointToOctolinear(connectedStations[0], gridSnapped)
                 snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
             }
         }
 
-        // Clamp to grid bounds so dragged stations stay inside the editable area
         snapped = clampToGridBounds(snapped)
 
-        // Prevent moving station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations, draggingStationId)) {
             return
         }
@@ -324,10 +412,67 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             if (wasMultiTouch) {
                 suppressNextClickRef.current = true
             }
+
+            // Finalize rectangle selection
+            if (isRectangleSelecting && selectionRect) {
+                const minSize = 5 // threshold to distinguish click from drag
+                if (Math.abs(selectionRect.width) > minSize || Math.abs(selectionRect.height) > minSize) {
+                    const shapes = useEditorStore.getState().shapes
+                    const segments = useEditorStore.getState().segments
+                    const rect = {
+                        minX: selectionRect.x,
+                        minY: selectionRect.y,
+                        maxX: selectionRect.x + selectionRect.width,
+                        maxY: selectionRect.y + selectionRect.height,
+                    }
+
+                    const stationIds: string[] = []
+                    for (const station of Object.values(stations)) {
+                        if (isPointInRect(station, rect)) {
+                            stationIds.push(station.id)
+                        }
+                    }
+
+                    const shapeIds: string[] = []
+                    for (const shape of Object.values(shapes)) {
+                        if (isPointInPolygon({ x: rect.minX, y: rect.minY }, shape.points) ||
+                            isPointInPolygon({ x: rect.maxX, y: rect.minY }, shape.points) ||
+                            isPointInPolygon({ x: rect.maxX, y: rect.maxY }, shape.points) ||
+                            isPointInPolygon({ x: rect.minX, y: rect.maxY }, shape.points) ||
+                            shape.points.some((p) => isPointInRect(p, rect))) {
+                            shapeIds.push(shape.id)
+                        }
+                    }
+
+                    const segmentIds: string[] = []
+                    for (const segment of Object.values(segments)) {
+                        if (isRectIntersectingPolyline(rect, segment.points)) {
+                            segmentIds.push(segment.id)
+                        }
+                    }
+
+                    if (event.shiftKey) {
+                        setSelectedStationIds((prev) => Array.from(new Set([...prev, ...stationIds])))
+                        setSelectedSegmentIds((prev) => Array.from(new Set([...prev, ...segmentIds])))
+                        if (shapeIds.length > 0) {
+                            setSelectedShapeId(shapeIds[0])
+                        }
+                    } else {
+                        setSelectedStationIds(stationIds)
+                        setSelectedSegmentIds(segmentIds)
+                        setSelectedShapeId(shapeIds.length > 0 ? shapeIds[0] : null)
+                    }
+                }
+                suppressNextClickRef.current = true
+            }
+
             setDraggingStationId(null)
             stationDragStartRef.current = null
             setDraggingBendPoint(null)
             setIsPanning(false)
+            setIsRectangleSelecting(false)
+            setSelectionRect(null)
+            rectSelectStartRef.current = null
         }
     }
 
@@ -418,5 +563,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         handleStationNameCancel,
         pendingStationPosition,
         setPendingStationPosition,
+        selectionRect,
+        isRectangleSelecting,
     }
 }
