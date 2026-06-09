@@ -114,7 +114,8 @@ test.describe('Dialogs', () => {
         const input = dialog.getByRole('textbox').first()
         await input.evaluate((el: HTMLInputElement, val) => {
             el.removeAttribute('maxlength')
-            el.value = val
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+            nativeInputValueSetter?.call(el, val)
             el.dispatchEvent(new Event('input', { bubbles: true }))
         }, longName)
 
@@ -172,7 +173,8 @@ test.describe('Dialogs', () => {
         const lineInput = dialog.getByRole('textbox').first()
         await lineInput.evaluate((el: HTMLInputElement, val) => {
             el.removeAttribute('maxlength')
-            el.value = val
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+            nativeInputValueSetter?.call(el, val)
             el.dispatchEvent(new Event('input', { bubbles: true }))
         }, 'L'.repeat(51))
         await expect(dialog.getByRole('button', { name: 'Create' })).toBeDisabled()

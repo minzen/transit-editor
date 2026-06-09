@@ -46,7 +46,8 @@ test.describe('Editor interactions', () => {
         const input = dialog.getByRole('textbox').first()
         await input.evaluate((el: HTMLInputElement, val) => {
             el.removeAttribute('maxlength')
-            el.value = val
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+            nativeInputValueSetter?.call(el, val)
             el.dispatchEvent(new Event('input', { bubbles: true }))
         }, longName)
 
