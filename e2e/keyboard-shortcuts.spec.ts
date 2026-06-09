@@ -63,9 +63,9 @@ test.describe('Keyboard shortcuts', () => {
         const canvas = page.getByTestId('editor-canvas')
         await expect(canvas.locator('circle[fill="#fff"][stroke="#111"]')).toHaveCount(1)
 
-        // Switch to Select tool and click the canvas at the station position
+        // Switch to Select tool and click the station circle to select it
         await page.getByRole('button', { name: 'Select', exact: true }).click()
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await canvas.locator('circle[fill="#fff"][stroke="#111"]').first().click()
         // Wait for the selection ring to confirm the station is selected
         await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"]')).toBeVisible()
 
@@ -79,7 +79,7 @@ test.describe('Keyboard shortcuts', () => {
 
         const canvas = page.getByTestId('editor-canvas')
         await page.getByRole('button', { name: 'Select', exact: true }).click()
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await canvas.locator('circle[fill="#fff"][stroke="#111"]').first().click()
         // Wait for the selection ring to confirm the station is selected
         await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"]')).toBeVisible()
 
