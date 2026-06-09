@@ -10,12 +10,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     testTimeout: 15000,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        maxWorkers: 2,
-      },
-    },
+    maxWorkers: 2,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
