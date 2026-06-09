@@ -246,6 +246,7 @@ export const StationRenderer = memo(function StationRenderer({
                                 onPointerUp={() => cancelLongPress()}
                                 onPointerMove={(event) => cancelLongPress(event.clientX, event.clientY)}
                                 onPointerLeave={() => cancelLongPress()}
+                                onClick={(event) => event.stopPropagation()}
                                 onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     onStationDoubleClick(s.id)
@@ -267,6 +268,7 @@ export const StationRenderer = memo(function StationRenderer({
                                 onPointerUp={() => cancelLongPress()}
                                 onPointerMove={(event) => cancelLongPress(event.clientX, event.clientY)}
                                 onPointerLeave={() => cancelLongPress()}
+                                onClick={(event) => event.stopPropagation()}
                                 onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     onStationDoubleClick(s.id)

@@ -10,6 +10,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     testTimeout: 15000,
+    maxWorkers: 2,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -25,6 +26,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@mui/icons-material': path.resolve(__dirname, './src/test/muiIconsMock.ts'),
     },
   },
 })

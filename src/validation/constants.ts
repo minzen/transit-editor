@@ -29,24 +29,24 @@ function sanitizeInput(input: string): string {
     return sanitized.trim()
 }
 
-export function validateLineName(name: string): { valid: boolean; error?: string; sanitized?: string } {
-    const sanitized = sanitizeInput(name)
+export function validateLineName(name: string, anarchyMode = false): { valid: boolean; error?: string; sanitized?: string } {
+    const sanitized = anarchyMode ? name.trim() : sanitizeInput(name)
     
     if (sanitized.length < VALIDATION.MIN_LINE_NAME_LENGTH) {
         return { valid: false, error: 'Line name cannot be empty', sanitized }
     }
     
-    if (sanitized.length > VALIDATION.MAX_LINE_NAME_LENGTH) {
+    if (!anarchyMode && sanitized.length > VALIDATION.MAX_LINE_NAME_LENGTH) {
         return { valid: false, error: `Line name cannot exceed ${VALIDATION.MAX_LINE_NAME_LENGTH} characters`, sanitized }
     }
     
     return { valid: true, sanitized }
 }
 
-export function validateStationName(name: string): { valid: boolean; error?: string; sanitized?: string } {
-    const sanitized = sanitizeInput(name)
+export function validateStationName(name: string, anarchyMode = false): { valid: boolean; error?: string; sanitized?: string } {
+    const sanitized = anarchyMode ? name.trim() : sanitizeInput(name)
     
-    if (sanitized.length > VALIDATION.MAX_STATION_NAME_LENGTH) {
+    if (!anarchyMode && sanitized.length > VALIDATION.MAX_STATION_NAME_LENGTH) {
         return { valid: false, error: `Station name cannot exceed ${VALIDATION.MAX_STATION_NAME_LENGTH} characters`, sanitized }
     }
     
