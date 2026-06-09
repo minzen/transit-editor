@@ -43,7 +43,12 @@ test.describe('Editor interactions', () => {
         await expect(dialog).toBeVisible()
 
         const longName = 'A'.repeat(51)
-        await dialog.getByRole('textbox').first().fill(longName)
+        const input = dialog.getByRole('textbox').first()
+        await input.evaluate((el: HTMLInputElement, val) => {
+            el.removeAttribute('maxlength')
+            el.value = val
+            el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, longName)
 
         await expect(dialog.getByRole('button', { name: 'Create' })).toBeDisabled()
     })

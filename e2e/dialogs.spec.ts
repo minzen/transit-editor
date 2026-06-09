@@ -29,10 +29,10 @@ test.describe('Dialogs', () => {
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
-        await expect(dialog.getByText('Select Tool')).toBeVisible()
-        await expect(dialog.getByText('Station Tool')).toBeVisible()
-        await expect(dialog.getByText('Segment Tool')).toBeVisible()
-        await expect(dialog.getByText('Shape Tool')).toBeVisible()
+        await expect(dialog.getByText('Select Tool', { exact: true }).first()).toBeVisible()
+        await expect(dialog.getByText('Station Tool', { exact: true }).first()).toBeVisible()
+        await expect(dialog.getByText('Segment Tool', { exact: true }).first()).toBeVisible()
+        await expect(dialog.getByText('Shape Tool', { exact: true }).first()).toBeVisible()
     })
 
     // ---------------------------------------------------------------------------
@@ -45,7 +45,7 @@ test.describe('Dialogs', () => {
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
-        await expect(dialog.getByText('Clear All Data')).toBeVisible()
+        await expect(dialog.getByRole('heading', { name: 'Clear All Data' })).toBeVisible()
     })
 
     test('cancelling the clear dialog leaves existing data intact', async ({ page }) => {
@@ -111,7 +111,12 @@ test.describe('Dialogs', () => {
         await expect(dialog).toBeVisible()
 
         const longName = 'X'.repeat(51)
-        await dialog.getByRole('textbox').first().fill(longName)
+        const input = dialog.getByRole('textbox').first()
+        await input.evaluate((el: HTMLInputElement, val) => {
+            el.removeAttribute('maxlength')
+            el.value = val
+            el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, longName)
 
         await expect(dialog.getByText(/cannot exceed 50/i)).toBeVisible()
         await expect(dialog.getByRole('button', { name: 'Create' })).toBeDisabled()
@@ -150,8 +155,8 @@ test.describe('Dialogs', () => {
         // Name textbox
         await expect(dialog.getByRole('textbox').first()).toBeVisible()
         // Style and Mode labels
-        await expect(dialog.getByText('Style')).toBeVisible()
-        await expect(dialog.getByText('Mode')).toBeVisible()
+        await expect(dialog.getByText('Style', { exact: true }).first()).toBeVisible()
+        await expect(dialog.getByText('Mode', { exact: true }).first()).toBeVisible()
 
         await dialog.getByRole('button', { name: 'Cancel' }).click()
     })
@@ -164,7 +169,12 @@ test.describe('Dialogs', () => {
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
 
-        await dialog.getByRole('textbox').first().fill('L'.repeat(51))
+        const lineInput = dialog.getByRole('textbox').first()
+        await lineInput.evaluate((el: HTMLInputElement, val) => {
+            el.removeAttribute('maxlength')
+            el.value = val
+            el.dispatchEvent(new Event('input', { bubbles: true }))
+        }, 'L'.repeat(51))
         await expect(dialog.getByRole('button', { name: 'Create' })).toBeDisabled()
 
         await dialog.getByRole('button', { name: 'Cancel' }).click()
