@@ -66,8 +66,8 @@ test.describe('Keyboard shortcuts', () => {
         // Switch to Select tool and click the station circle to select it
         await page.getByRole('button', { name: 'Select', exact: true }).click()
         await canvas.locator('circle[fill="#fff"][stroke="#111"]').first().click()
-        // Wait for the selection ring to confirm the station is selected
-        await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"]')).toBeVisible()
+        // Wait for the selection ring (stroke-width=3) to confirm the station is selected
+        await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"][stroke-width="3"]')).toBeVisible()
 
         await page.keyboard.press('Delete')
         await expect(canvas.locator('circle[fill="#fff"][stroke="#111"]')).toHaveCount(0)
@@ -80,8 +80,8 @@ test.describe('Keyboard shortcuts', () => {
         const canvas = page.getByTestId('editor-canvas')
         await page.getByRole('button', { name: 'Select', exact: true }).click()
         await canvas.locator('circle[fill="#fff"][stroke="#111"]').first().click()
-        // Wait for the selection ring to confirm the station is selected
-        await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"]')).toBeVisible()
+        // Wait for the selection ring (stroke-width=3) to confirm the station is selected
+        await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"][stroke-width="3"]')).toBeVisible()
 
         await page.keyboard.press('Backspace')
         await expect(canvas.locator('circle[fill="#fff"][stroke="#111"]')).toHaveCount(0)
