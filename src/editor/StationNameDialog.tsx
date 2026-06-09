@@ -7,26 +7,28 @@ import {
     Button,
     TextField,
     Stack,
+    Box,
     useMediaQuery,
     useTheme,
 } from '@mui/material'
 import { useTranslation } from 'react-i18next'
-import { validateStationName } from '../validation/constants'
+import { validateStationName, VALIDATION } from '../validation/constants'
 
 type Props = {
     open: boolean
     onSave: (name: string) => void
     onCancel: () => void
+    anarchyMode?: boolean
 }
 
-export function StationNameDialog({ open, onSave, onCancel }: Props) {
+export function StationNameDialog({ open, onSave, onCancel, anarchyMode = false }: Props) {
     const { t } = useTranslation()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
     const [name, setName] = useState('')
 
-    const validation = validateStationName(name)
+    const validation = validateStationName(name, anarchyMode)
     const canSave = validation.valid
 
     const handleSave = () => {
@@ -67,8 +69,16 @@ export function StationNameDialog({ open, onSave, onCancel }: Props) {
                         fullWidth
                         autoFocus
                         size={isMobile ? 'small' : 'medium'}
+                        slotProps={anarchyMode ? undefined : {
+                            htmlInput: { maxLength: VALIDATION.MAX_STATION_NAME_LENGTH },
+                        }}
                         error={!validation.valid && name.length > 0}
-                        helperText={!validation.valid && name.length > 0 ? validation.error : ''}
+                        helperText={
+                            <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span>{!validation.valid && name.length > 0 ? validation.error : ''}</span>
+                                <span>{name.length}{anarchyMode ? ' / ∞' : ` / ${VALIDATION.MAX_STATION_NAME_LENGTH}`}</span>
+                            </Box>
+                        }
                     />
                 </Stack>
             </DialogContent>

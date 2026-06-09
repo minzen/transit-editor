@@ -37,6 +37,8 @@ export type ViewSlice = {
     setBackgroundImageOpacity: (opacity: number) => void
     setThemeMode: (mode: 'light' | 'dark') => void
     setCanvasBackgroundColor: (color: string) => void
+    anarchyMode: boolean
+    setAnarchyMode: (enabled: boolean) => void
 }
 
 export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set) => ({
@@ -169,4 +171,9 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
 
     setCanvasBackgroundColor: (color) =>
         set({ canvasBackgroundColor: color }),
+
+    anarchyMode: false,
+
+    setAnarchyMode: (enabled) =>
+        set({ anarchyMode: enabled }),
 })

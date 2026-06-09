@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { TextField, Box, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem, useMediaQuery, useTheme } from '@mui/material'
+import { TextField, Box, Typography, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem, useMediaQuery, useTheme } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { validateLineName, VALIDATION } from '../validation/constants'
 import type { Line, LineStyle, TransitMode } from '../model/line'
@@ -9,6 +9,7 @@ type Props = {
     onSave: (values: { name: string; color: string; code?: string; lineStyle: LineStyle; transitMode: TransitMode }) => void
     onCancel: () => void
     initialLine?: Line
+    anarchyMode?: boolean
 }
 
 const MAX_LINE_CODE_LENGTH = 4
@@ -19,7 +20,7 @@ function isValidHexColor(hex: string): boolean {
     return /^#[0-9A-Fa-f]{6}$/.test(hex)
 }
 
-export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Props) {
+export function LineCreator({ colorPalette, onSave, onCancel, initialLine, anarchyMode = false }: Props) {
     const { t } = useTranslation()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -31,7 +32,7 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
     const [lineStyle, setLineStyle] = useState<LineStyle>(initialLine?.lineStyle ?? 'solid')
     const [transitMode, setTransitMode] = useState<TransitMode>(initialLine?.transitMode ?? 'metro')
 
-    const validation = validateLineName(name)
+    const validation = validateLineName(name, anarchyMode)
     const isColorValid = isValidHexColor(color)
     const canSave = validation.valid && isColorValid
 
@@ -71,13 +72,18 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
                 placeholder={t('lineCreator.lineNamePlaceholder')}
                 size={isMobile ? 'small' : 'medium'}
                 fullWidth
-                slotProps={{
+                slotProps={anarchyMode ? undefined : {
                     htmlInput: {
                         maxLength: VALIDATION.MAX_LINE_NAME_LENGTH,
                     },
                 }}
                 error={!validation.valid && name.length > 0}
-                helperText={!validation.valid && name.length > 0 ? validation.error : ''}
+                helperText={
+                    <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>{!validation.valid && name.length > 0 ? validation.error : ''}</span>
+                        <span>{name.length}{anarchyMode ? '' : ` / ${VALIDATION.MAX_LINE_NAME_LENGTH}`}</span>
+                    </Box>
+                }
             />
             <Stack direction={isMobile ? 'row' : 'row'} spacing={0.5} sx={{ flexWrap: 'wrap' }}>
                 {colorPalette.map((paletteColor) => (
@@ -147,18 +153,23 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine }: Pro
                 <TextField
                     value={code}
                     onChange={(e) => {
-                        const value = e.target.value.toUpperCase().slice(0, MAX_LINE_CODE_LENGTH)
-                        setCode(value)
+                        const raw = e.target.value.toUpperCase()
+                        setCode(anarchyMode ? raw : raw.slice(0, MAX_LINE_CODE_LENGTH))
                     }}
                     placeholder={t('lineCreator.codePlaceholder')}
                     size={isMobile ? 'small' : 'medium'}
                     fullWidth={!isTablet}
-                    slotProps={{
+                    slotProps={anarchyMode ? undefined : {
                         htmlInput: {
                             maxLength: MAX_LINE_CODE_LENGTH,
                         },
                     }}
-                    helperText={t('lineCreator.shortBadgeHint')}
+                    helperText={
+                        <Box component="span" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{t('lineCreator.shortBadgeHint')}</span>
+                            <Typography component="span" variant="caption">{code.length}{anarchyMode ? '' : ` / ${MAX_LINE_CODE_LENGTH}`}</Typography>
+                        </Box>
+                    }
                 />
             </Stack>
             <Stack direction={isTablet ? 'column' : 'row'} spacing={2}>

@@ -20,7 +20,7 @@ import { isPointNearPolyline, isPointInPolygon } from '../geometry/distance'
 import { EditorToolbar } from './EditorToolbar'
 import { StationNameDialog } from './StationNameDialog'
 import { RenameDialog } from './RenameDialog'
-import { Menu, MenuItem, Divider, Checkbox, ListItemIcon, ListItemText } from '@mui/material'
+import { Menu, MenuItem, Divider, Checkbox, ListItemIcon, ListItemText, Snackbar, Alert } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 
 import './EditorCanvas.css'
@@ -143,6 +143,10 @@ export function EditorCanvas() {
     const [hoveredSegmentId, setHoveredSegmentId] = useState<string | null>(null)
     const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null)
 
+    const anarchyMode = useEditorStore((s) => s.anarchyMode)
+    const setAnarchyMode = useEditorStore((s) => s.setAnarchyMode)
+    const [anarchyToastOpen, setAnarchyToastOpen] = useState(false)
+
     const svgRef = useRef<SVGSVGElement>(null)
 
     const addSegment = useEditorStore(
@@ -171,6 +175,23 @@ export function EditorCanvas() {
     )
 
     const { t } = useTranslation()
+
+    // Secret shortcut: Ctrl+Shift+Alt+A
+    useEffect(() => {
+        const handleAnarchyShortcut = (e: KeyboardEvent) => {
+            const active = document.activeElement
+            const tag = active?.tagName
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+            if (e.ctrlKey && e.shiftKey && e.altKey && e.code === 'KeyA') {
+                e.preventDefault()
+                setAnarchyMode(true)
+                setAnarchyToastOpen(true)
+            }
+        }
+        window.addEventListener('keydown', handleAnarchyShortcut)
+        return () => window.removeEventListener('keydown', handleAnarchyShortcut)
+    }, [setAnarchyMode])
 
     const addLine = useEditorStore((s) => s.addLine)
     const setLineName = useEditorStore((s) => s.setLineName)
@@ -810,7 +831,24 @@ export function EditorCanvas() {
                 open={stationNameDialogOpen}
                 onSave={handleStationNameSave}
                 onCancel={handleStationNameCancel}
+                anarchyMode={anarchyMode}
             />
+
+            <Snackbar
+                open={anarchyToastOpen}
+                autoHideDuration={4000}
+                onClose={() => setAnarchyToastOpen(false)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert
+                    onClose={() => setAnarchyToastOpen(false)}
+                    severity="warning"
+                    variant="filled"
+                    sx={{ width: '100%', fontWeight: 700 }}
+                >
+                    🏴‍☠️ Anarchy Mode activated — all limits removed!
+                </Alert>
+            </Snackbar>
             <Menu
                 open={Boolean(contextMenuStationId)}
                 onClose={() => {
