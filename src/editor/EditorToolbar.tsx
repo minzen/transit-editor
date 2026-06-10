@@ -48,6 +48,7 @@ type Props = {
     setLineColor: (id: string, color: string) => void
     setLineStyle: (id: string, lineStyle: LineStyle) => void
     setLineTransitMode: (id: string, transitMode: TransitMode) => void
+    setLineLineWidth: (id: string, lineWidth: number | undefined) => void
     setPendingStationId: (id: string | null) => void
     setPointerWorldPosition: (point: { x: number; y: number } | null) => void
     colorPalette: string[]
@@ -104,6 +105,7 @@ export function EditorToolbar({
     setLineColor,
     setLineStyle,
     setLineTransitMode,
+    setLineLineWidth,
     setPendingStationId,
     setPointerWorldPosition,
     colorPalette,
@@ -526,6 +528,10 @@ export function EditorToolbar({
                             anarchyMode={anarchyMode}
                             onSave={(values) => {
                                 addLine(values.name, values.color, values.code, values.lineStyle, values.transitMode)
+                                const newId = Object.keys(useEditorStore.getState().lines).at(-1)
+                                if (newId && values.lineWidth !== undefined) {
+                                    useEditorStore.getState().setLineLineWidth(newId, values.lineWidth)
+                                }
                                 setIsCreatingLine(false)
                             }}
                             onCancel={() => setIsCreatingLine(false)}
@@ -550,6 +556,7 @@ export function EditorToolbar({
                                     setLineColor(selectedLineId, values.color)
                                     setLineStyle(selectedLineId, values.lineStyle)
                                     setLineTransitMode(selectedLineId, values.transitMode)
+                                    setLineLineWidth(selectedLineId, values.lineWidth)
                                 }
                                 setEditLineOpen(false)
                             }}

@@ -15,4 +15,6 @@ export type Line = {
   lineStyle?: LineStyle
   /** Transit mode for filtering / future legend. Defaults to metro. */
   transitMode?: TransitMode
+  /** Per-line stroke width override. Falls back to the global lineWidth setting when absent. */
+  lineWidth?: number
 }

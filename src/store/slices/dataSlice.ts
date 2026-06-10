@@ -89,6 +89,7 @@ export type DataSlice = {
     setLineColor: (id: string, color: string) => void
     setLineStyle: (id: string, lineStyle: LineStyle) => void
     setLineTransitMode: (id: string, transitMode: TransitMode) => void
+    setLineLineWidth: (id: string, lineWidth: number | undefined) => void
     clear: () => void
     importMap: (map: {
         stations: Record<string, Station>
@@ -753,6 +754,28 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                         ...line,
                         transitMode,
                     },
+                },
+            })
+        }),
+
+    setLineLineWidth: (id, lineWidth) =>
+        set((state) => {
+            const line = state.lines[id]
+            if (!line) {
+                return state
+            }
+
+            const updated: Line = { ...line }
+            if (lineWidth === undefined) {
+                delete updated.lineWidth
+            } else {
+                updated.lineWidth = lineWidth
+            }
+
+            return setWithDelta(state, {
+                lines: {
+                    ...state.lines,
+                    [id]: updated,
                 },
             })
         }),

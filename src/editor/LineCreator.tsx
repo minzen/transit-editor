@@ -6,7 +6,7 @@ import type { Line, LineStyle, TransitMode } from '../model/line'
 
 type Props = {
     colorPalette: string[]
-    onSave: (values: { name: string; color: string; code?: string; lineStyle: LineStyle; transitMode: TransitMode }) => void
+    onSave: (values: { name: string; color: string; code?: string; lineStyle: LineStyle; transitMode: TransitMode; lineWidth?: number }) => void
     onCancel: () => void
     initialLine?: Line
     anarchyMode?: boolean
@@ -31,19 +31,28 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine, anarc
     const [code, setCode] = useState(initialLine?.code ?? '')
     const [lineStyle, setLineStyle] = useState<LineStyle>(initialLine?.lineStyle ?? 'solid')
     const [transitMode, setTransitMode] = useState<TransitMode>(initialLine?.transitMode ?? 'metro')
+    const [lineWidthInput, setLineWidthInput] = useState<string>(
+        initialLine?.lineWidth !== undefined ? String(initialLine.lineWidth) : ''
+    )
 
     const validation = validateLineName(name, anarchyMode)
     const isColorValid = isValidHexColor(color)
     const canSave = validation.valid && isColorValid
 
+    const parsedLineWidth = lineWidthInput === '' ? undefined : Number(lineWidthInput)
+    const isLineWidthValid = parsedLineWidth === undefined || (
+        Number.isFinite(parsedLineWidth) && parsedLineWidth >= 1 && parsedLineWidth <= 20
+    )
+
     const handleSave = () => {
-        if (canSave) {
+        if (canSave && isLineWidthValid) {
             onSave({
                 name: validation.sanitized ?? name,
                 color,
                 code: code.trim() || undefined,
                 lineStyle,
                 transitMode,
+                lineWidth: parsedLineWidth,
             })
         }
     }
@@ -199,6 +208,20 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine, anarc
                         ))}
                     </Select>
                 </FormControl>
+                <TextField
+                    value={lineWidthInput}
+                    onChange={(e) => setLineWidthInput(e.target.value)}
+                    placeholder={t('lineCreator.lineWidthPlaceholder')}
+                    label={t('lineCreator.lineWidth')}
+                    size={isMobile ? 'small' : 'medium'}
+                    type="number"
+                    fullWidth={!isTablet}
+                    slotProps={{
+                        htmlInput: { min: 1, max: 20, step: 1 },
+                    }}
+                    error={!isLineWidthValid}
+                    helperText={!isLineWidthValid ? t('lineCreator.lineWidthError') : t('lineCreator.lineWidthHint')}
+                />
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
                 <Button

@@ -199,13 +199,14 @@ export const SegmentLayer = memo(function SegmentLayer({
           const trimmed = trimPolyline(offsetPoints, startTrim, endTrim)
 
           const d = buildRoundedPolylinePath(trimmed)
+          const effectiveWidth = line.lineWidth ?? lineWidth
 
           return (
             <SegmentPath
               key={`${segment.id}-${lineId}`}
               d={d}
               line={line}
-              lineWidth={lineWidth}
+              lineWidth={effectiveWidth}
               dimmed={isDimmed}
               highlighted={isHovered}
             />
