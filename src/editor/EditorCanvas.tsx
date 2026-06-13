@@ -336,6 +336,21 @@ export function EditorCanvas() {
 
     // Double-click on a segment polyline (in select mode) inserts a new bend
     // point at the click position, snapped to the grid.
+    const handleStationContextMenu = (stationId: string, event: React.MouseEvent<SVGElement>) => {
+        const menuWidth = 180
+        const menuHeight = 320
+        const vv = window.visualViewport
+        const vpWidth = vv?.width ?? window.innerWidth
+        const vpHeight = vv?.height ?? window.innerHeight
+        const clampedX = Math.min(Math.max(event.clientX, menuWidth / 2), vpWidth - menuWidth / 2)
+        const clampedY = Math.min(Math.max(event.clientY, menuHeight / 2), vpHeight - menuHeight / 2)
+        setContextMenuStationId(stationId)
+        setContextMenuPos({ x: clampedX, y: clampedY })
+        setDraggingStationId(null)
+        stationDragStartRef.current = null
+        suppressNextClickRef.current = true
+    }
+
     const handleStationLongPress = (stationId: string) => {
         const station = stations[stationId]
         if (!station) return
@@ -570,6 +585,7 @@ export function EditorCanvas() {
                     handleClick(event)
                 }}
                 onDoubleClick={handleDoubleClick}
+                onContextMenu={(e) => e.preventDefault()}
             >
                 <rect
                     className="editor-canvas-background"
@@ -810,6 +826,7 @@ export function EditorCanvas() {
                             setRenameDialogOpen(true)
                         }}
                         onStationLongPress={handleStationLongPress}
+                        onStationContextMenu={handleStationContextMenu}
                         showSelection={showSelectionForExport}
                     />
                 </g>
