@@ -277,27 +277,8 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             }
         }
 
-        const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
-
-        // Snap to octolinear angles from connected stations
-        const stationIds = Object.keys(stations)
-        let snapped = gridSnapped
-        if (stationIds.length > 1) {
-            const connectedStations = Object.values(segments)
-                .filter(seg => seg.fromStationId === draggingStationId || seg.toStationId === draggingStationId)
-                .map(seg => seg.fromStationId === draggingStationId ? stations[seg.toStationId] : stations[seg.fromStationId])
-                .filter(s => s !== undefined)
-
-            if (connectedStations.length > 0) {
-                // Snap to octolinear from the first connected station, then re-snap to grid
-                // so the final position always lands on a grid intersection
-                const octoSnapped = snapPointToOctolinear(connectedStations[0], gridSnapped)
-                snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
-            }
-        }
-
-        // Clamp to grid bounds so dragged stations stay inside the editable area
-        snapped = clampToGridBounds(snapped)
+        // Snap to nearest grid intersection, then clamp to grid bounds
+        let snapped = clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
 
         // Prevent moving station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations, draggingStationId)) {
@@ -347,32 +328,9 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         const y = event.clientY - rect.top
 
         const point = screenToWorld(x, y, viewport)
-        const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
-        // Snap to octolinear angle from nearest station if any exist
-        const stationIds = Object.keys(stations)
-        let snapped = gridSnapped
-        if (stationIds.length > 0) {
-            // Find nearest station
-            let nearestStation: { x: number; y: number } | null = null
-            let nearestDist = Infinity
-            for (const stationId of stationIds) {
-                const station = stations[stationId]
-                const dist = Math.hypot(station.x - gridSnapped.x, station.y - gridSnapped.y)
-                if (dist < nearestDist) {
-                    nearestDist = dist
-                    nearestStation = station
-                }
-            }
-            if (nearestStation && nearestDist < 500) {
-                // Snap octolinear, then re-snap to grid so the final position is a grid intersection
-                const octoSnapped = snapPointToOctolinear(nearestStation, gridSnapped)
-                snapped = snapPointToGrid(octoSnapped.x, octoSnapped.y, gridCellSize)
-            }
-        }
-
-        // Clamp click position to the grid area so stations always land inside
-        snapped = clampToGridBounds(snapped)
+        // Snap to grid, then clamp to grid bounds
+        const snapped = clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
 
         // Prevent placing station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations)) {
