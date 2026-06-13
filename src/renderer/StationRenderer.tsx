@@ -27,6 +27,7 @@ type Props = {
     onStationPointerDown: (stationId: string, event: React.PointerEvent<SVGElement>) => void
     onStationDoubleClick: (stationId: string) => void
     onStationLongPress?: (stationId: string) => void
+    onStationContextMenu?: (stationId: string, event: React.MouseEvent<SVGElement>) => void
     showSelection?: boolean
     themeMode?: 'light' | 'dark'
 }
@@ -94,6 +95,7 @@ export const StationRenderer = memo(function StationRenderer({
     onStationPointerDown,
     onStationDoubleClick,
     onStationLongPress,
+    onStationContextMenu,
     showSelection = true,
     themeMode = 'light',
 }: Props) {
@@ -123,6 +125,7 @@ export const StationRenderer = memo(function StationRenderer({
     const LONG_PRESS_MOVE_THRESHOLD_PX = 10
 
     const startLongPress = (stationId: string, clientX: number, clientY: number) => {
+        if (window.matchMedia?.('(pointer: fine)').matches) return
         longPressRef.current = {
             stationId,
             timer: window.setTimeout(() => {
@@ -247,6 +250,11 @@ export const StationRenderer = memo(function StationRenderer({
                                 onPointerMove={(event) => cancelLongPress(event.clientX, event.clientY)}
                                 onPointerLeave={() => cancelLongPress()}
                                 onClick={(event) => event.stopPropagation()}
+                                onContextMenu={(event) => {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                    onStationContextMenu?.(s.id, event)
+                                }}
                                 onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     onStationDoubleClick(s.id)
@@ -269,6 +277,11 @@ export const StationRenderer = memo(function StationRenderer({
                                 onPointerMove={(event) => cancelLongPress(event.clientX, event.clientY)}
                                 onPointerLeave={() => cancelLongPress()}
                                 onClick={(event) => event.stopPropagation()}
+                                onContextMenu={(event) => {
+                                    event.preventDefault()
+                                    event.stopPropagation()
+                                    onStationContextMenu?.(s.id, event)
+                                }}
                                 onDoubleClick={(event) => {
                                     event.stopPropagation()
                                     onStationDoubleClick(s.id)

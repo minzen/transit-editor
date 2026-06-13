@@ -48,6 +48,8 @@ type Props = {
     setLineColor: (id: string, color: string) => void
     setLineStyle: (id: string, lineStyle: LineStyle) => void
     setLineTransitMode: (id: string, transitMode: TransitMode) => void
+    setLineLineWidth: (id: string, lineWidth: number | undefined) => void
+    deleteLine: (id: string) => void
     setPendingStationId: (id: string | null) => void
     setPointerWorldPosition: (point: { x: number; y: number } | null) => void
     colorPalette: string[]
@@ -104,6 +106,8 @@ export function EditorToolbar({
     setLineColor,
     setLineStyle,
     setLineTransitMode,
+    setLineLineWidth,
+    deleteLine,
     setPendingStationId,
     setPointerWorldPosition,
     colorPalette,
@@ -116,6 +120,7 @@ export function EditorToolbar({
 }: Props) {
     const navigate = useNavigate()
     const [helpOpen, setHelpOpen] = useState(false)
+    const [deleteLineConfirmOpen, setDeleteLineConfirmOpen] = useState(false)
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
@@ -505,13 +510,23 @@ export function EditorToolbar({
                     </Select>
                     <Button onClick={() => setIsCreatingLine(true)}>{t('toolbar.addLine')}</Button>
                     {selectedLineId && (
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => setEditLineOpen(true)}
-                        >
-                            {t('common.edit')}
-                        </Button>
+                        <>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => setEditLineOpen(true)}
+                            >
+                                {t('common.edit')}
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                color="error"
+                                onClick={() => setDeleteLineConfirmOpen(true)}
+                            >
+                                {t('common.delete')}
+                            </Button>
+                        </>
                     )}
 
                     <Dialog
@@ -526,6 +541,10 @@ export function EditorToolbar({
                             anarchyMode={anarchyMode}
                             onSave={(values) => {
                                 addLine(values.name, values.color, values.code, values.lineStyle, values.transitMode)
+                                const newId = Object.keys(useEditorStore.getState().lines).at(-1)
+                                if (newId && values.lineWidth !== undefined) {
+                                    useEditorStore.getState().setLineLineWidth(newId, values.lineWidth)
+                                }
                                 setIsCreatingLine(false)
                             }}
                             onCancel={() => setIsCreatingLine(false)}
@@ -550,6 +569,7 @@ export function EditorToolbar({
                                     setLineColor(selectedLineId, values.color)
                                     setLineStyle(selectedLineId, values.lineStyle)
                                     setLineTransitMode(selectedLineId, values.transitMode)
+                                    setLineLineWidth(selectedLineId, values.lineWidth)
                                 }
                                 setEditLineOpen(false)
                             }}
@@ -565,6 +585,20 @@ export function EditorToolbar({
                 confirmLabel={t('toolbar.clear')}
                 onConfirm={handleClear}
                 onCancel={() => setClearConfirmOpen(false)}
+            />
+            <ConfirmDialog
+                open={deleteLineConfirmOpen}
+                title={t('toolbar.deleteLine')}
+                message={t('toolbar.deleteLineMessage')}
+                confirmLabel={t('common.delete')}
+                onConfirm={() => {
+                    if (selectedLineId) {
+                        deleteLine(selectedLineId)
+                        setSelectedLineId(null)
+                    }
+                    setDeleteLineConfirmOpen(false)
+                }}
+                onCancel={() => setDeleteLineConfirmOpen(false)}
             />
             <ImportErrorDialog
                 open={importErrorOpen}

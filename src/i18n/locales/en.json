@@ -44,6 +44,8 @@
     "clearAllData": "Clear All Data",
     "clearAllDataMessage": "Are you sure you want to clear all data? This cannot be undone.",
     "renameLine": "Rename Line",
+    "deleteLine": "Delete Line",
+    "deleteLineMessage": "Delete this line? Its segments will be removed from the map. This cannot be undone.",
     "lineNamePlaceholder": "Line name",
     "autoPlaceLabels": "Auto-place Labels",
     "toggleTheme": "Toggle Theme",
@@ -67,7 +69,11 @@
     "transitMode_rail": "Rail",
     "transitMode_tram": "Tram",
     "transitMode_bus": "Bus",
-    "transitMode_ferry": "Ferry"
+    "transitMode_ferry": "Ferry",
+    "lineWidth": "Width",
+    "lineWidthPlaceholder": "Default",
+    "lineWidthHint": "Leave empty to use global width",
+    "lineWidthError": "Must be between 1 and 20"
   },
   "gridSizeControl": {
     "width": "Width",
