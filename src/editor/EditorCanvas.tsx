@@ -486,6 +486,7 @@ export function EditorCanvas() {
                 setLineStyle={useEditorStore((s) => s.setLineStyle)}
                 setLineTransitMode={useEditorStore((s) => s.setLineTransitMode)}
                 setLineLineWidth={useEditorStore((s) => s.setLineLineWidth)}
+                deleteLine={useEditorStore((s) => s.deleteLine)}
                 setPendingStationId={setPendingStationId}
                 setPointerWorldPosition={setPointerWorldPosition}
                 colorPalette={colorPalette}

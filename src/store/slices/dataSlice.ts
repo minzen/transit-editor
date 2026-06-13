@@ -90,6 +90,7 @@ export type DataSlice = {
     setLineStyle: (id: string, lineStyle: LineStyle) => void
     setLineTransitMode: (id: string, transitMode: TransitMode) => void
     setLineLineWidth: (id: string, lineWidth: number | undefined) => void
+    deleteLine: (id: string) => void
     clear: () => void
     importMap: (map: {
         stations: Record<string, Station>
@@ -585,6 +586,26 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
         })
         get().setAnnouncement('Segment added')
     },
+
+    deleteLine: (id) =>
+        set((state) => {
+            if (!state.lines[id]) return state
+
+            const { [id]: _removedLine, ...remainingLines } = state.lines
+
+            const updatedSegments: typeof state.segments = {}
+            for (const [segId, seg] of Object.entries(state.segments)) {
+                const newLineIds = seg.lineIds.filter((lid) => lid !== id)
+                if (newLineIds.length > 0) {
+                    updatedSegments[segId] = { ...seg, lineIds: newLineIds }
+                }
+            }
+
+            return setWithDelta(state, {
+                lines: remainingLines,
+                segments: updatedSegments,
+            })
+        }),
 
     deleteSegment: (id) =>
         set((state) => {

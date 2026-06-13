@@ -43,6 +43,8 @@
     "clearAllData": "Alle Daten löschen",
     "clearAllDataMessage": "Sind Sie sicher, dass Sie alle Daten löschen möchten? Dies kann nicht rückgängig gemacht werden.",
     "renameLine": "Linie umbenennen",
+    "deleteLine": "Linie löschen",
+    "deleteLineMessage": "Diese Linie löschen? Ihre Strecken werden von der Karte entfernt. Dies kann nicht rückgängig gemacht werden.",
     "lineNamePlaceholder": "Linienname",
     "autoPlaceLabels": "Beschriftungen automatisch platzieren",
     "toggleTheme": "Design wechseln",
