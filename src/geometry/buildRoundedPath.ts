@@ -34,6 +34,24 @@ export function buildRoundedPolylinePath(points: Point[], radius = 12): string {
 
         const distIn = dist(prev, curr)
         const distOut = dist(curr, next)
+
+        if (distIn === 0 || distOut === 0) {
+            continue
+        }
+
+        // Cross product of the two edge vectors — zero means collinear (no real bend)
+        const inDx = curr.x - prev.x
+        const inDy = curr.y - prev.y
+        const outDx = next.x - curr.x
+        const outDy = next.y - curr.y
+        const cross = inDx * outDy - inDy * outDx
+        const crossNorm = Math.abs(cross) / (distIn * distOut)
+
+        if (crossNorm < 0.01) {
+            d += ` L ${curr.x} ${curr.y}`
+            continue
+        }
+
         const r = Math.min(radius, distIn / 2, distOut / 2)
 
         const start = lerp(curr, prev, r / distIn)
