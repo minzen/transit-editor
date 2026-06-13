@@ -278,7 +278,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         }
 
         // Snap to nearest grid intersection, then clamp to grid bounds
-        let snapped = clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
+        const snapped = clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
 
         // Prevent moving station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations, draggingStationId)) {
