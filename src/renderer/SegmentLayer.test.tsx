@@ -144,7 +144,7 @@ describe('SegmentLayer', () => {
         expect(paths[0]).toHaveAttribute('stroke-width', '8')
     })
 
-    it('generates path data with endpoints trimmed by station radius', () => {
+    it('generates path data running from first to last point without trimming', () => {
         const segments: Segment[] = [
             {
                 id: 'seg1',
@@ -166,25 +166,12 @@ describe('SegmentLayer', () => {
         const paths = container.querySelectorAll('path')
         const d = paths[0].getAttribute('d') ?? ''
 
-        // Diagonal segment of length sqrt(50^2 + 50^2) ≈ 70.71.
-        // Trim 10 px from each end (STATION_RADIUS 8 + PADDING 2)
-        // => start ≈ (7.07, 7.07), end ≈ (92.93, 92.93).
-        // Interior bend point (50, 50) is preserved and rounded via quadratic bezier.
-        expect(d).toContain('Q 50 50')
-        const match = d.match(/^M ([\d.]+) ([\d.]+)/)
-        expect(match).not.toBeNull()
-        if (match) {
-            const [, sx, sy] = match
-            expect(parseFloat(sx)).toBeCloseTo(7.07, 1)
-            expect(parseFloat(sy)).toBeCloseTo(7.07, 1)
-        }
-        const endMatch = d.match(/L ([\d.]+) ([\d.]+)$/)
-        expect(endMatch).not.toBeNull()
-        if (endMatch) {
-            const [, ex, ey] = endMatch
-            expect(parseFloat(ex)).toBeCloseTo(92.93, 1)
-            expect(parseFloat(ey)).toBeCloseTo(92.93, 1)
-        }
+        // Collinear interior point emits a plain L (no bezier rounding).
+        expect(d).not.toContain('Q')
+        // Segment runs all the way from (0,0) to (100,100) — no endpoint trimming.
+        expect(d).toMatch(/^M 0 0/)
+        expect(d).toContain('L 50 50')
+        expect(d).toContain('L 100 100')
     })
 
     it('renders dashed line with stroke-dasharray', () => {

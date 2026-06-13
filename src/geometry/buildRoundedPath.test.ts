@@ -37,6 +37,26 @@ describe('buildRoundedPolylinePath', () => {
         expect(d).toContain('Q 100 100')
     })
 
+    it('emits a plain L for a collinear interior point (no bend)', () => {
+        const d = buildRoundedPolylinePath([
+            { x: 0, y: 0 },
+            { x: 50, y: 0 },
+            { x: 100, y: 0 },
+        ])
+        expect(d).not.toContain('Q')
+        expect(d).toBe('M 0 0 L 50 0 L 100 0')
+    })
+
+    it('emits a plain L for a collinear diagonal interior point', () => {
+        const d = buildRoundedPolylinePath([
+            { x: 0, y: 0 },
+            { x: 50, y: 50 },
+            { x: 100, y: 100 },
+        ])
+        expect(d).not.toContain('Q')
+        expect(d).toBe('M 0 0 L 50 50 L 100 100')
+    })
+
     it('respects the corner radius', () => {
         // Short segments: radius should be clamped to half the shortest leg
         const d = buildRoundedPolylinePath([
