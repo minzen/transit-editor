@@ -7,11 +7,33 @@ import { STATION_RADIUS } from './stationConstants'
 import type { ServiceIcon } from '../model/station'
 
 const SERVICE_ICON_MAP: Record<ServiceIcon, string> = {
+    // Legacy emoji icons
     accessibility: '♿',
     ferry: '⛴',
     rail: '🚂',
     airport: '✈',
     toilet: '🚻',
+    // Material Design inspired elegant icons (using clean Unicode symbols)
+    accessible: '♿',
+    directions_boat: '⛵',
+    train: '🚆',
+    flight: '✈',
+    wc: '🚻',
+    local_taxi: '🚕',
+    directions_bus: '🚌',
+    directions_subway: '🚇',
+    tram: '🚊',
+    directions_bike: '🚲',
+    electric_car: '🔌',
+    local_parking: '🅿',
+    shopping: '🛍',
+    restaurant: '🍽',
+    cafe: '☕',
+    hotel: '🏨',
+    local_hospital: '🏥',
+    school: '🏫',
+    museum: '🏛',
+    park: '🌳',
 }
 
 type Props = {
@@ -291,6 +313,7 @@ export const StationRenderer = memo(function StationRenderer({
 
                         {showSelection && selectedStationIds.includes(s.id) && renderRing(4, 3, 'selected')}
 
+                        {/* Station name text */}
                         {s.name && (
                             <text
                                 x={labelAttrs.x}
@@ -306,17 +329,26 @@ export const StationRenderer = memo(function StationRenderer({
                                 transform={s.labelRotation ? `rotate(${s.labelRotation} ${labelAttrs.x} ${labelAttrs.y})` : undefined}
                             >
                                 {s.name}
-                                {s.services && s.services.length > 0 && (
-                                    <>
-                                        {' • '}
-                                        {s.services.map((service, i) => (
-                                            <tspan key={`service-${s.id}-${service}`}>
-                                                {i > 0 && ' '}
-                                                {SERVICE_ICON_MAP[service]}
-                                            </tspan>
-                                        ))}
-                                    </>
-                                )}
+                            </text>
+                        )}
+
+                        {/* Service icons - shown separately below station or name */}
+                        {s.services && s.services.length > 0 && (
+                            <text
+                                x={s.x}
+                                y={s.y + (s.name ? 24 : 12)}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fontSize={14}
+                                fill={labelFill}
+                                style={{ pointerEvents: 'none' }}
+                            >
+                                {s.services.map((service, i) => (
+                                    <tspan key={`service-${s.id}-${service}`}>
+                                        {i > 0 && ' '}
+                                        {SERVICE_ICON_MAP[service]}
+                                    </tspan>
+                                ))}
                             </text>
                         )}
 

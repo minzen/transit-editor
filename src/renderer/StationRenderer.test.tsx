@@ -334,7 +334,7 @@ describe('StationRenderer', () => {
         expect(groups[1]).toHaveAttribute('opacity', '0.25')
     })
 
-    it('renders service icons in parentheses after station name', () => {
+    it('renders service icons separately from station name', () => {
         const stations: Record<string, Station> = {
             s1: { id: 's1', x: 100, y: 100, name: 'A', services: ['accessibility', 'rail'] },
             s2: { id: 's2', x: 200, y: 100, name: 'B' },
@@ -343,7 +343,9 @@ describe('StationRenderer', () => {
             <StationRenderer {...defaultProps} stations={stations} />
         )
         const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
-        expect(texts).toContain('A • ♿ 🚂')
+        // Name and icons are now in separate text elements
+        expect(texts).toContain('A')
+        expect(texts).toContain('♿ 🚂')
         expect(texts).toContain('B')
         expect(texts).not.toContain('⛴')
     })
@@ -356,7 +358,9 @@ describe('StationRenderer', () => {
             <StationRenderer {...defaultProps} stations={stations} />
         )
         const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
-        expect(texts).toContain('Airport Station • ✈ 🚻')
+        // Name and icons are in separate text elements
+        expect(texts).toContain('Airport Station')
+        expect(texts).toContain('✈ 🚻')
     })
 
     it('does not render service icons when services array is empty', () => {
@@ -368,6 +372,20 @@ describe('StationRenderer', () => {
         )
         const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
         expect(texts).toEqual(['A'])
+    })
+
+    it('renders service icons even when station has no name', () => {
+        const stations: Record<string, Station> = {
+            s1: { id: 's1', x: 100, y: 100, services: ['accessibility', 'toilet'] },
+        }
+        const { container } = render(
+            <StationRenderer {...defaultProps} stations={stations} />
+        )
+        const texts = Array.from(container.querySelectorAll('text')).map((t) => t.textContent)
+        // Icons should appear even without a station name
+        expect(texts).toContain('♿ 🚻')
+        // Should not contain any name text
+        expect(texts).not.toContain('A')
     })
 
     it('renders fare zone badge above station with fareZone', () => {

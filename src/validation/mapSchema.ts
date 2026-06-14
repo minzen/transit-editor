@@ -8,11 +8,33 @@ const PointSchema = z.object({
 const LabelPositionSchema = z.enum(['top', 'bottom', 'left', 'right'])
 
 const ServiceIconSchema = z.enum([
+    // Legacy emoji icons
     'accessibility',
     'ferry',
     'rail',
     'airport',
     'toilet',
+    // Material Design icons
+    'accessible',
+    'directions_boat',
+    'train',
+    'flight',
+    'wc',
+    'local_taxi',
+    'directions_bus',
+    'directions_subway',
+    'tram',
+    'directions_bike',
+    'electric_car',
+    'local_parking',
+    'shopping',
+    'restaurant',
+    'cafe',
+    'hotel',
+    'local_hospital',
+    'school',
+    'museum',
+    'park',
 ])
 
 const StationSchema = z.object({
