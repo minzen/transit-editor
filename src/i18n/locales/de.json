@@ -83,6 +83,7 @@
   },
   "backgroundImageControl": {
     "loadImage": "Bild laden",
+    "adjustImage": "Bild anpassen",
     "hideBG": "HG ausblenden",
     "showBG": "HG anzeigen",
     "removeImage": "Entfernen",

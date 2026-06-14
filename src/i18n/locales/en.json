@@ -84,6 +84,7 @@
   },
   "backgroundImageControl": {
     "loadImage": "Load Image",
+    "adjustImage": "Adjust Image",
     "hideBG": "Hide BG",
     "showBG": "Show BG",
     "removeImage": "Remove",
