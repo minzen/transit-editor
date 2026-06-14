@@ -43,6 +43,9 @@ jobs:
  
       - name: Build
         run: npm run build
+        env:
+          VITE_PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+          VITE_PLAUSIBLE_URL: ${{ vars.PLAUSIBLE_URL }}
  
   e2e:
     name: E2E & Visual Regression
@@ -197,6 +200,9 @@ jobs:
  
       - name: Build
         run: npm run build
+        env:
+          VITE_PLAUSIBLE_DOMAIN: ${{ vars.PLAUSIBLE_DOMAIN }}
+          VITE_PLAUSIBLE_URL: ${{ vars.PLAUSIBLE_URL }}
  
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
