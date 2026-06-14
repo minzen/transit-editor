@@ -125,9 +125,7 @@
     "hospital": "Krankenhaus",
     "school": "Schule",
     "museum": "Museum",
-    "park": "Park",
-    "zone": "Tarifzone",
-    "zoneNumber": "Zone {{zone}}"
+    "park": "Park"
   },
   "landingPage": {
     "title": "Transit Map Editor",
@@ -156,8 +154,6 @@
     "shapeTool": "Form-Werkzeug",
     "shapeToolDesc": "Klicke auf die Leinwand, um Polygon-Eckpunkte zu platzieren. Doppelklicke, um die Form zu finalisieren, oder drücke Escape, um abzubrechen. Drücke Rücktaste oder Entf, um den zuletzt platzierten Punkt rückgängig zu machen. Klicke auf eine fertige Form, um sie auszuwählen, dann ziehe die weißen Eckpunkt-Handles, um sie zu bearbeiten. Drücke Entf oder Escape, um die Auswahl aufzuheben oder eine ausgewählte Form zu entfernen.",
     "stationDetails": "Stationsdetails",
-    "fareZones": "Tarifzonen",
-    "fareZonesDesc": "Weise einer Station eine Tarifzonennummer zu. Die Zone wird als kleines graues Badge an der Station angezeigt.",
     "serviceIcons": "Service-Icons",
     "serviceIconsDesc": "Markiere Stationen mit Service-Icons (Barrierefreiheit, Fähre, Bahn, Flughafen, WC). Icons erscheinen in Klammern nach dem Stationsnamen.",
     "creatingLines": "Linien erstellen",
@@ -214,6 +210,6 @@
     "tip9": "• SVG-Exporte funktionieren mit externen Editoren wie Gimp und Inkscape für weitere Bearbeitung",
     "tip10": "• Nutze Rückgängig/Wiederholen häufig, um mit verschiedenen Layouts zu experimentieren",
     "tip11": "• Wechsle zwischen hellem und dunklem Design mit dem Mond-/Sonnen-Symbol in der Toolbar",
-    "tip12": "• Weise Stationen Tarifzonen und Service-Icons zu, um reichhaltigere Karteninformationen zu erhalten"
+    "tip12": "• Weise Stationen Service-Icons zu, um reichhaltigere Karteninformationen zu erhalten"
   }
 }

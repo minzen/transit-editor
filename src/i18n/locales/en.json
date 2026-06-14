@@ -126,9 +126,7 @@
     "hospital": "Hospital",
     "school": "School",
     "museum": "Museum",
-    "park": "Park",
-    "zone": "Zone",
-    "zoneNumber": "Zone {{zone}}"
+    "park": "Park"
   },
   "landingPage": {
     "title": "Transit Map Editor",
@@ -157,8 +155,6 @@
     "shapeTool": "Shape Tool",
     "shapeToolDesc": "Click on the canvas to place polygon vertices. Double-click to finalize the shape, or press Escape to cancel. Press Backspace or Delete to undo the last placed point. Click a finished shape to select it, then drag the white vertex handles to edit. Press Delete or Escape to deselect or remove a selected shape.",
     "stationDetails": "Station Details",
-    "fareZones": "Fare Zones",
-    "fareZonesDesc": "Assign a fare zone number to a station. The zone is shown as a small grey badge on the station.",
     "serviceIcons": "Service Icons",
     "serviceIconsDesc": "Tag stations with service icons (accessibility, ferry, rail, airport, toilet). Icons appear in parentheses after the station name.",
     "creatingLines": "Creating Lines",
@@ -215,6 +211,6 @@
     "tip9": "• SVG exports work with external editors like Gimp and Inkscape for further editing",
     "tip10": "• Use undo/redo frequently to experiment with different layouts",
     "tip11": "• Toggle between light and dark themes with the moon/sun icon in the toolbar",
-    "tip12": "• Assign fare zones and service icons to stations for richer map information"
+    "tip12": "• Assign service icons to stations for richer map information"
   }
 }

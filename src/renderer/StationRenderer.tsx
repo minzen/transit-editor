@@ -126,7 +126,6 @@ export const StationRenderer = memo(function StationRenderer({
     const labelFill = themeMode === 'dark' ? '#eee' : '#111'
     const selectionStroke = themeMode === 'dark' ? '#90caf9' : '#1976d2'
     const badgeStroke = themeMode === 'dark' ? '#1e1e2e' : '#fff'
-    const fareZoneFill = themeMode === 'dark' ? '#888' : '#666'
     // Helper: get the unique line ids connected to a station, in stable order.
     const getConnectedLineIds = (stationId: string): string[] => {
         const connected = new Set<string>()
@@ -350,31 +349,6 @@ export const StationRenderer = memo(function StationRenderer({
                                     </tspan>
                                 ))}
                             </text>
-                        )}
-
-                        {/* Fare zone badge: small circle above the station */}
-                        {s.fareZone !== undefined && (
-                            <g style={{ pointerEvents: 'none' }}>
-                                <circle
-                                    cx={s.x}
-                                    cy={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10 - (labelPos === 'top' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0)}
-                                    r={7}
-                                    fill={fareZoneFill}
-                                    stroke={badgeStroke}
-                                    strokeWidth={1}
-                                />
-                                <text
-                                    x={s.x}
-                                    y={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10 - (labelPos === 'top' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0)}
-                                    textAnchor="middle"
-                                    dominantBaseline="central"
-                                    fontSize={9}
-                                    fontWeight="bold"
-                                    fill={badgeStroke}
-                                >
-                                    {s.fareZone}
-                                </text>
-                            </g>
                         )}
 
                         {/* Line code bullets: small coloured circles below the station */}

@@ -17,5 +17,4 @@ export type Station = {
   labelPosition?: LabelPosition
   labelRotation?: number
   services?: ServiceIcon[]
-  fareZone?: number
 }

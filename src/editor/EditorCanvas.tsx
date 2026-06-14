@@ -170,10 +170,6 @@ export function EditorCanvas() {
     const setStationServices = useEditorStore(
         (s) => s.setStationServices
     )
-    const setStationFareZone = useEditorStore(
-        (s) => s.setStationFareZone
-    )
-
     const { t } = useTranslation()
 
     // Secret shortcut: Ctrl+Shift+Alt+A
@@ -975,35 +971,6 @@ export function EditorCanvas() {
                         />
                     </MenuItem>
                 ))}
-                <Divider />
-                <MenuItem disabled>{t('editorCanvas.zone')}</MenuItem>
-                {([1, 2, 3, 4, 5, 6] as const).map((zone) => (
-                    <MenuItem
-                        key={zone}
-                        onClick={() => {
-                            if (contextMenuStationId) {
-                                setStationFareZone(contextMenuStationId, zone)
-                            }
-                            setContextMenuStationId(null)
-                            setContextMenuPos(null)
-                        }}
-                        selected={stations[contextMenuStationId ?? '']?.fareZone === zone}
-                    >
-                        {t('editorCanvas.zoneNumber', { zone })}
-                    </MenuItem>
-                ))}
-                <MenuItem
-                    onClick={() => {
-                        if (contextMenuStationId) {
-                            setStationFareZone(contextMenuStationId, undefined)
-                        }
-                        setContextMenuStationId(null)
-                        setContextMenuPos(null)
-                    }}
-                    selected={stations[contextMenuStationId ?? '']?.fareZone === undefined}
-                >
-                    {t('common.none')}
-                </MenuItem>
             </Menu>
 
             {/* Segment hover tooltip */}
