@@ -16,6 +16,7 @@ export default defineConfig({
         actionTimeout: 15_000,
     },
     projects: [
+        // Primary desktop browser for CI
         {
             name: 'chromium',
             use: {
@@ -24,45 +25,52 @@ export default defineConfig({
                 deviceScaleFactor: 1,
             },
         },
-        {
-            name: 'firefox',
-            use: {
-                ...devices['Desktop Firefox'],
-                viewport: { width: 1280, height: 800 },
+        // Secondary browsers (can be run locally or in extended CI)
+        ...(process.env.CI ? [] : [
+            {
+                name: 'firefox',
+                use: {
+                    ...devices['Desktop Firefox'],
+                    viewport: { width: 1280, height: 800 },
+                },
             },
-        },
-        {
-            name: 'webkit',
-            use: {
-                ...devices['Desktop Safari'],
-                viewport: { width: 1280, height: 800 },
+            {
+                name: 'webkit',
+                use: {
+                    ...devices['Desktop Safari'],
+                    viewport: { width: 1280, height: 800 },
+                },
             },
-        },
-        // Mobile devices
+        ]),
+        // Mobile/Tablet - use Chrome for faster execution in CI
         {
             name: 'mobile-chrome',
             use: {
                 ...devices['Pixel 7'],
             },
         },
-        {
-            name: 'mobile-safari',
-            use: {
-                ...devices['iPhone 14'],
+        ...(process.env.CI ? [] : [
+            {
+                name: 'mobile-safari',
+                use: {
+                    ...devices['iPhone 14'],
+                },
             },
-        },
+        ]),
         {
             name: 'tablet-chrome',
             use: {
                 ...devices['Pixel Tablet'],
             },
         },
-        {
-            name: 'tablet-safari',
-            use: {
-                ...devices['iPad (gen 7)'],
+        ...(process.env.CI ? [] : [
+            {
+                name: 'tablet-safari',
+                use: {
+                    ...devices['iPad (gen 7)'],
+                },
             },
-        },
+        ]),
     ],
     webServer: {
         command: 'npm run dev',

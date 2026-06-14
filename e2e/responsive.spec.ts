@@ -1,4 +1,4 @@
-import { test, expect, devices } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 
 test.describe('Responsive Design & Mobile/Desktop Tests', () => {
     test.beforeEach(async ({ page }) => {
@@ -24,22 +24,31 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
         })
 
         test('mouse interactions work on desktop', async ({ page }) => {
-            await page.goto('/editor')
+            await page.goto('/editor', { waitUntil: 'networkidle' })
+
+            // Wait for canvas to be ready
+            const canvas = page.getByTestId('editor-canvas')
+            await expect(canvas).toBeVisible({ timeout: 10000 })
 
             // Activate station tool
-            await page.getByRole('button', { name: 'Station', exact: true }).click()
+            const stationBtn = page.getByRole('button', { name: 'Station', exact: true })
+            await expect(stationBtn).toBeEnabled({ timeout: 5000 })
+            await stationBtn.click()
 
             // Click on canvas with mouse
-            const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 400, y: 300 } })
+            await canvas.click({ position: { x: 400, y: 300 }, force: true })
 
             // Dialog should appear
-            const dialog = page.getByRole('dialog')
-            await expect(dialog).toBeVisible()
-            await dialog.getByRole('button', { name: 'Create' }).click()
+            const dialog = page.getByRole('dialog', { name: /Station Name/i })
+            await expect(dialog).toBeVisible({ timeout: 10000 })
 
-            // Station should be created
-            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
+            const createBtn = dialog.getByRole('button', { name: 'Create' })
+            await expect(createBtn).toBeEnabled()
+            await createBtn.click()
+
+            // Dialog should close and station should be created
+            await expect(dialog).toBeHidden({ timeout: 10000 })
+            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
         })
 
         test('right-click context menu works on desktop', async ({ page }) => {
@@ -99,9 +108,8 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
     })
 
     test.describe('Mobile Devices', () => {
-        test('touch interactions work on mobile', async ({ page, isMobile }) => {
-            test.skip(!isMobile, 'Only runs on mobile devices')
-
+        test('touch interactions work on mobile', async ({ page }) => {
+            await page.setViewportSize({ width: 390, height: 844 })
             await page.goto('/editor')
 
             // Activate station tool
@@ -116,8 +124,8 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(dialog).toBeVisible({ timeout: 5000 })
         })
 
-        test('long-press context menu works on mobile', async ({ page, isMobile }) => {
-            test.skip(!isMobile, 'Only runs on mobile devices')
+        test('long-press context menu works on mobile', async ({ page }) => {
+            await page.setViewportSize({ width: 390, height: 844 })
 
             await page.goto('/editor')
 
@@ -139,8 +147,8 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             })
         })
 
-        test('pinch to zoom works on mobile', async ({ page, isMobile }) => {
-            test.skip(!isMobile, 'Only runs on mobile devices')
+        test('pinch to zoom works on mobile', async ({ page }) => {
+            await page.setViewportSize({ width: 390, height: 844 })
 
             await page.goto('/editor')
             const canvas = page.getByTestId('editor-canvas')
@@ -172,8 +180,8 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(canvas).toBeVisible()
         })
 
-        test('toolbar adapts to mobile viewport', async ({ page, isMobile }) => {
-            test.skip(!isMobile, 'Only runs on mobile devices')
+        test('toolbar adapts to mobile viewport', async ({ page }) => {
+            await page.setViewportSize({ width: 390, height: 844 })
 
             await page.goto('/editor')
 

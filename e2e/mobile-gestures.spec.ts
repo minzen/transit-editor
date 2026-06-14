@@ -7,8 +7,8 @@ test.describe('Mobile Touch Gestures', () => {
         })
     })
 
-    test('single tap selects station', async ({ page, isMobile }) => {
-        test.skip(!isMobile, 'Mobile-only test')
+    test('single tap selects station', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
 
         await page.goto('/editor')
         await page.getByRole('button', { name: 'Station', exact: true }).click()
@@ -27,8 +27,8 @@ test.describe('Mobile Touch Gestures', () => {
         await expect(canvas.locator('circle[stroke-width="4"]').first()).toBeVisible()
     })
 
-    test('two-finger pan gestures', async ({ page, isMobile }) => {
-        test.skip(!isMobile, 'Mobile-only test')
+    test('two-finger pan gestures', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
 
         await page.goto('/editor')
         const canvas = page.getByTestId('editor-canvas')
@@ -77,8 +77,8 @@ test.describe('Mobile Touch Gestures', () => {
         await expect(canvas).toBeVisible()
     })
 
-    test('station drag with touch', async ({ page, isMobile }) => {
-        test.skip(!isMobile, 'Mobile-only test')
+    test('station drag with touch', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
 
         await page.goto('/editor')
         await page.getByRole('button', { name: 'Station', exact: true }).click()
@@ -119,8 +119,8 @@ test.describe('Mobile Touch Gestures', () => {
         expect(finalBox?.x).not.toEqual(initialBox?.x)
     })
 
-    test('swipe to dismiss dialog', async ({ page, isMobile }) => {
-        test.skip(!isMobile, 'Mobile-only test')
+    test('swipe to dismiss dialog', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
 
         await page.goto('/editor')
         await page.getByRole('button', { name: 'Station', exact: true }).click()
@@ -138,8 +138,8 @@ test.describe('Mobile Touch Gestures', () => {
         await expect(dialog).toBeHidden()
     })
 
-    test('tap on toolbar buttons', async ({ page, isMobile }) => {
-        test.skip(!isMobile, 'Mobile-only test')
+    test('tap on toolbar buttons', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 })
 
         await page.goto('/editor')
 
@@ -156,14 +156,14 @@ test.describe('Mobile Touch Gestures', () => {
 })
 
 test.describe('Desktop Mouse Interactions', () => {
-    test.beforeEach(async ({ page, isMobile }) => {
-        test.skip(isMobile === true, 'Desktop-only test')
+    test.beforeEach(async ({ page }) => {
         await page.addInitScript(() => {
             window.localStorage.clear()
         })
     })
 
     test('hover effects on toolbar buttons', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 })
         await page.goto('/editor')
 
         const stationBtn = page.getByRole('button', { name: 'Station', exact: true })
@@ -174,6 +174,7 @@ test.describe('Desktop Mouse Interactions', () => {
     })
 
     test('mouse wheel zoom', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 })
         await page.goto('/editor')
         const canvas = page.getByTestId('editor-canvas')
 
@@ -194,6 +195,7 @@ test.describe('Desktop Mouse Interactions', () => {
     })
 
     test('drag to create segment', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 })
         await page.goto('/editor')
 
         // Create two stations first
@@ -225,6 +227,7 @@ test.describe('Desktop Mouse Interactions', () => {
     })
 
     test('shift+click multi-select', async ({ page }) => {
+        await page.setViewportSize({ width: 1280, height: 800 })
         await page.goto('/editor')
 
         // Create two stations
