@@ -24,6 +24,45 @@ export default defineConfig({
                 deviceScaleFactor: 1,
             },
         },
+        {
+            name: 'firefox',
+            use: {
+                ...devices['Desktop Firefox'],
+                viewport: { width: 1280, height: 800 },
+            },
+        },
+        {
+            name: 'webkit',
+            use: {
+                ...devices['Desktop Safari'],
+                viewport: { width: 1280, height: 800 },
+            },
+        },
+        // Mobile devices
+        {
+            name: 'mobile-chrome',
+            use: {
+                ...devices['Pixel 7'],
+            },
+        },
+        {
+            name: 'mobile-safari',
+            use: {
+                ...devices['iPhone 14'],
+            },
+        },
+        {
+            name: 'tablet-chrome',
+            use: {
+                ...devices['Pixel Tablet'],
+            },
+        },
+        {
+            name: 'tablet-safari',
+            use: {
+                ...devices['iPad (gen 7)'],
+            },
+        },
     ],
     webServer: {
         command: 'npm run dev',
