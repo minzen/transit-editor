@@ -225,12 +225,6 @@ export function scoreLabelPosition(
         score += 15
     }
 
-    // Penalize top position when station has a fare zone,
-    // because the fare-zone badge is shifted upward.
-    if (position === 'top' && station.fareZone !== undefined) {
-        score += 5
-    }
-
     return score
 }
 
