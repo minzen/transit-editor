@@ -7,9 +7,7 @@ const EXPORT_PADDING = 40
  * Wait for fonts to load before drawing to canvas
  */
 async function waitForFonts(): Promise<void> {
-    if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready
-    }
+    await document.fonts?.ready
     // Additional delay for any late-loading resources
     await new Promise((resolve) => setTimeout(resolve, 100))
 }
@@ -143,8 +141,8 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
         const parser = new DOMParser()
         const doc = parser.parseFromString(exportSvgString, 'image/svg+xml')
         const exportSvg = doc.documentElement
-        const width = parseFloat(exportSvg.getAttribute('width') || '800')
-        const height = parseFloat(exportSvg.getAttribute('height') || '600')
+        const width = parseFloat(exportSvg.getAttribute('width') ?? '800')
+        const height = parseFloat(exportSvg.getAttribute('height') ?? '600')
 
         const svgBlob = new Blob([exportSvgString], { type: 'image/svg+xml;charset=utf-8' })
         const svgUrl = URL.createObjectURL(svgBlob)
