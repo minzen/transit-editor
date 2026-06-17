@@ -61,6 +61,7 @@ export default defineConfig({
             name: 'tablet-chrome',
             use: {
                 ...devices['Pixel Tablet'],
+                viewport: { width: 1280, height: 800 },
             },
         },
         ...(process.env.CI ? [] : [

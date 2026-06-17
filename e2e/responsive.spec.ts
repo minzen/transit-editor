@@ -277,11 +277,13 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
                 await page.goto('/editor')
 
                 // Zoom controls should be present
-                const zoomIn = page.locator('button[title="Zoom In"], button[aria-label="Zoom In"]').first()
-                const zoomOut = page.locator('button[title="Zoom Out"], button[aria-label="Zoom Out"]').first()
+                const zoomIn = page.getByRole('button', { name: /zoom in/i }).first()
+                const zoomOut = page.getByRole('button', { name: /zoom out/i }).first()
 
                 // At least one should be visible
-                await expect(zoomIn.or(zoomOut)).toBeVisible()
+                const zoomInVisible = await zoomIn.isVisible().catch(() => false)
+                const zoomOutVisible = await zoomOut.isVisible().catch(() => false)
+                expect(zoomInVisible || zoomOutVisible).toBe(true)
             }
         })
     })
@@ -306,7 +308,8 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
 
             // Switch to mobile viewport
             await page.setViewportSize({ width: 390, height: 844 })
-            await page.waitForTimeout(100)
+            await canvas.waitFor({ state: 'visible' })
+            await page.waitForTimeout(500)
 
             // Stations should still be visible
             await expect(canvas.locator('circle')).toHaveCount(2)
@@ -325,11 +328,12 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
 
             // Change viewport multiple times
             await page.setViewportSize({ width: 768, height: 1024 })
-            await page.waitForTimeout(50)
+            await page.waitForTimeout(200)
             await page.setViewportSize({ width: 390, height: 844 })
-            await page.waitForTimeout(50)
+            await page.waitForTimeout(200)
             await page.setViewportSize({ width: 1280, height: 800 })
-            await page.waitForTimeout(50)
+            await canvas.waitFor({ state: 'visible' })
+            await page.waitForTimeout(200)
 
             // Station should still exist
             await expect(canvas.locator('circle')).toHaveCount(1)
