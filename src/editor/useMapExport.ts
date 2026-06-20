@@ -7,7 +7,7 @@ const EXPORT_PADDING = 40
  * Wait for fonts to load before drawing to canvas
  */
 async function waitForFonts(): Promise<void> {
-    await document.fonts?.ready
+    await document.fonts.ready
     // Additional delay for any late-loading resources
     await new Promise((resolve) => setTimeout(resolve, 100))
 }
