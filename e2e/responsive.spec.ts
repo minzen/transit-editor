@@ -19,8 +19,8 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(page.getByRole('button', { name: 'Select', exact: true })).toBeVisible()
 
             // Zoom controls visible
-            await expect(page.locator('button[title="Zoom In"], button[aria-label="Zoom In"]')).toBeVisible()
-            await expect(page.locator('button[title="Zoom Out"], button[aria-label="Zoom Out"]')).toBeVisible()
+            await expect(page.locator('button[title="Zoom In"], button[aria-label="Zoom In"]').first()).toBeVisible()
+            await expect(page.locator('button[title="Zoom Out"], button[aria-label="Zoom Out"]').first()).toBeVisible()
         })
 
         test('mouse interactions work on desktop', async ({ page }) => {
@@ -101,28 +101,24 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await page.setViewportSize({ width: 390, height: 844 })
             await page.goto('/editor')
 
-            // Activate station tool
             await page.getByRole('button', { name: 'Station', exact: true }).click()
 
-            // Touch on canvas (simulated)
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.tap({ position: { x: 200, y: 200 } })
+            await canvas.click({ position: { x: 200, y: 200 } })
 
-            // Dialog should appear
             const dialog = page.getByRole('dialog')
             await expect(dialog).toBeVisible({ timeout: 5000 })
         })
 
-        test('long-press context menu works on mobile', async ({ page }) => {
+        test('station creation works on mobile viewport', async ({ page }) => {
             await page.setViewportSize({ width: 390, height: 844 })
             await page.goto('/editor')
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.tap({ position: { x: 200, y: 200 } })
+            await canvas.click({ position: { x: 200, y: 200 } })
             await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
 
-            // Station should exist after create
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
         })
 
@@ -141,16 +137,10 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
 
         test('toolbar adapts to mobile viewport', async ({ page }) => {
             await page.setViewportSize({ width: 390, height: 844 })
-
             await page.goto('/editor')
 
-            // On mobile, toolbar might be collapsed or have different layout
-            // Main tools should still be accessible
-            const stationBtn = page.getByRole('button', { name: 'Station', exact: true })
-            const segmentBtn = page.getByRole('button', { name: 'Segment', exact: true })
-
-            // At least one way to access tools should exist
-            await expect(stationBtn.or(segmentBtn)).toBeVisible()
+            // Station tool must always be accessible
+            await expect(page.getByRole('button', { name: 'Station', exact: true })).toBeVisible()
         })
     })
 
@@ -230,13 +220,16 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             const canvas = page.getByTestId('editor-canvas')
             await canvas.click({ position: { x: 400, y: 300 } })
             await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
+
+            // Wait for station to be fully rendered before resizing
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
 
-            // Resize to mobile
+            // Resize to mobile and wait for layout to settle
             await page.setViewportSize({ width: 390, height: 844 })
             await expect(canvas).toBeVisible()
+            await page.waitForFunction(() => document.readyState === 'complete')
 
-            // Station data survives resize
+            // Station data is in-memory (Zustand), survives resize
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
         })
 

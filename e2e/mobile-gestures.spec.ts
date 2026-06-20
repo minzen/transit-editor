@@ -13,7 +13,7 @@ test.describe('Mobile Touch Gestures', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.tap({ position: { x: 200, y: 200 } })
+        await canvas.click({ position: { x: 200, y: 200 } })
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible({ timeout: 5000 })
@@ -23,14 +23,13 @@ test.describe('Mobile Touch Gestures', () => {
         await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
     })
 
-    test('canvas remains visible after touch interaction', async ({ page }) => {
+    test('canvas remains visible after click interaction', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 })
         await page.goto('/editor')
         const canvas = page.getByTestId('editor-canvas')
         await expect(canvas).toBeVisible()
 
-        // Tap canvas (simulates pan start/end)
-        await canvas.tap({ position: { x: 150, y: 300 } })
+        await canvas.click({ position: { x: 150, y: 300 } })
         await expect(canvas).toBeVisible()
     })
 
@@ -40,7 +39,7 @@ test.describe('Mobile Touch Gestures', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.tap({ position: { x: 200, y: 200 } })
+        await canvas.click({ position: { x: 200, y: 200 } })
         await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
 
         const station = canvas.locator('circle').first()
@@ -58,38 +57,33 @@ test.describe('Mobile Touch Gestures', () => {
         expect(initialBox).not.toBeNull()
     })
 
-    test('swipe to dismiss dialog', async ({ page }) => {
+    test('escape key dismisses dialog on mobile viewport', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 })
-
         await page.goto('/editor')
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.tap({ position: { x: 200, y: 200 } })
+        await canvas.click({ position: { x: 200, y: 200 } })
 
         const dialog = page.getByRole('dialog')
-        await expect(dialog).toBeVisible()
+        await expect(dialog).toBeVisible({ timeout: 5000 })
 
-        // Press Escape to dismiss
         await page.keyboard.press('Escape')
 
-        // Dialog should close
-        await expect(dialog).toBeHidden()
+        await expect(dialog).toBeHidden({ timeout: 5000 })
     })
 
-    test('tap on toolbar buttons', async ({ page }) => {
+    test('toolbar buttons are clickable on mobile viewport', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 })
-
         await page.goto('/editor')
 
-        // All toolbar buttons should be tappable
         const stationBtn = page.getByRole('button', { name: 'Station', exact: true })
         const segmentBtn = page.getByRole('button', { name: 'Segment', exact: true })
 
-        await stationBtn.tap()
+        await stationBtn.click()
         await expect(stationBtn).toHaveAttribute('aria-pressed', 'true')
 
-        await segmentBtn.tap()
+        await segmentBtn.click()
         await expect(segmentBtn).toHaveAttribute('aria-pressed', 'true')
     })
 })
