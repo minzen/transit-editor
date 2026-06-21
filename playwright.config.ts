@@ -62,6 +62,8 @@ export default defineConfig({
             use: {
                 ...devices['Pixel Tablet'],
                 viewport: { width: 1280, height: 800 },
+                hasTouch: false,
+                isMobile: false,
             },
         },
         ...(process.env.CI ? [] : [

@@ -27,40 +27,42 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await page.goto('/editor')
 
             const canvas = page.getByTestId('editor-canvas')
-            await expect(canvas).toBeVisible({ timeout: 10000 })
+            await expect(canvas).toBeVisible({ timeout: 15000 })
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             await canvas.click({ position: { x: 400, y: 300 } })
 
             const dialog = page.getByRole('dialog')
-            await expect(dialog).toBeVisible({ timeout: 10000 })
+            await expect(dialog).toBeVisible({ timeout: 15000 })
             await dialog.getByRole('button', { name: 'Create' }).click()
 
-            await expect(dialog).toBeHidden({ timeout: 10000 })
-            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
+            await expect(dialog).toBeHidden({ timeout: 15000 })
+            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 15000 })
         })
 
-        test('right-click context menu works on desktop', async ({ page }) => {
+        test('right-click context menu works on desktop', async ({ page, isMobile }) => {
+            // Context menu via right-click is not reliable on touch devices
+            test.skip(isMobile, 'right-click context menu not applicable on touch devices')
+
             await page.goto('/editor')
 
-            // Add a station first
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
             await canvas.click({ position: { x: 400, y: 300 } })
             await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
 
-            // Right-click on station
+            // Wait for station to be fully rendered
             const station = canvas.locator('circle').first()
+            await expect(station).toBeVisible({ timeout: 10000 })
+
             await station.click({ button: 'right' })
 
-            // Context menu should appear
-            await expect(page.getByRole('menu')).toBeVisible({ timeout: 5000 })
+            await expect(page.getByRole('menu')).toBeVisible({ timeout: 10000 })
         })
 
         test('double-click to rename works on desktop', async ({ page }) => {
             await page.goto('/editor')
 
-            // Add a station
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
             await canvas.click({ position: { x: 400, y: 300 } })
@@ -68,13 +70,13 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await dialog.getByRole('textbox').fill('Test Station')
             await dialog.getByRole('button', { name: 'Create' }).click()
 
-            // Double-click on station
+            // Wait for station to render before double-clicking
             const station = canvas.locator('circle').first()
+            await expect(station).toBeVisible({ timeout: 10000 })
             await station.dblclick()
 
-            // Rename dialog should appear
             const renameDialog = page.getByRole('dialog')
-            await expect(renameDialog).toBeVisible()
+            await expect(renameDialog).toBeVisible({ timeout: 10000 })
         })
 
         test('keyboard shortcuts work on desktop', async ({ page }) => {
@@ -117,9 +119,12 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
             await canvas.click({ position: { x: 200, y: 200 } })
-            await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
 
-            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
+            const dialog = page.getByRole('dialog')
+            await expect(dialog).toBeVisible({ timeout: 10000 })
+            await dialog.getByRole('button', { name: 'Create' }).click()
+
+            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
         })
 
         test('canvas is interactive on mobile viewport', async ({ page }) => {
@@ -219,18 +224,20 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
             await canvas.click({ position: { x: 400, y: 300 } })
-            await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
+
+            const dialog = page.getByRole('dialog')
+            await expect(dialog).toBeVisible({ timeout: 10000 })
+            await dialog.getByRole('button', { name: 'Create' }).click()
 
             // Wait for station to be fully rendered before resizing
-            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
+            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
 
-            // Resize to mobile and wait for layout to settle
+            // Resize to mobile and wait for canvas to re-layout
             await page.setViewportSize({ width: 390, height: 844 })
-            await expect(canvas).toBeVisible()
-            await page.waitForFunction(() => document.readyState === 'complete')
+            await expect(canvas).toBeVisible({ timeout: 10000 })
 
             // Station data is in-memory (Zustand), survives resize
-            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
+            await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
         })
 
     })

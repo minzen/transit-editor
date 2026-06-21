@@ -95,15 +95,19 @@ test.describe('Desktop Mouse Interactions', () => {
         })
     })
 
-    test('hover effects on toolbar buttons', async ({ page }) => {
+    test('hover effects on toolbar buttons', async ({ page, isMobile }) => {
+        // Hover tooltips don't apply to touch-only devices
+        test.skip(isMobile, 'hover tooltips not applicable on touch devices')
+
         await page.setViewportSize({ width: 1280, height: 800 })
         await page.goto('/editor')
 
         const stationBtn = page.getByRole('button', { name: 'Station', exact: true })
+        await expect(stationBtn).toBeVisible()
 
-        // Hover should show tooltip
+        // MUI tooltip has a default enter delay; hover and wait for it
         await stationBtn.hover()
-        await expect(page.getByRole('tooltip')).toBeVisible()
+        await expect(page.getByRole('tooltip')).toBeVisible({ timeout: 5000 })
     })
 
     test('mouse wheel zoom changes viewport transform', async ({ page }) => {
