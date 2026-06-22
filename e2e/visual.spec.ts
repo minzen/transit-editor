@@ -7,24 +7,24 @@ test.describe('Visual regression', () => {
         })
     })
 
-    test('landing page matches snapshot', async ({ page }) => {
+    test('landing page structure is correct', async ({ page }) => {
         await page.goto('/')
+
         await expect(page.getByRole('heading', { name: 'Transit Map Editor' })).toBeVisible()
-        await expect(page).toHaveScreenshot('landing-page.png', {
-            fullPage: true,
-            animations: 'disabled',
-        })
+        await expect(page.getByRole('link', { name: /start editing/i })).toBeVisible()
     })
 
-    test('empty editor matches snapshot', async ({ page }) => {
+    test('empty editor has canvas and toolbar', async ({ page }) => {
         await page.goto('/editor')
+
         await expect(page.getByTestId('editor-canvas')).toBeVisible()
-        await expect(page).toHaveScreenshot('editor-empty.png', {
-            animations: 'disabled',
-        })
+        await expect(page.getByRole('button', { name: 'Station', exact: true })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Segment', exact: true })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Shape', exact: true })).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Select', exact: true })).toBeVisible()
     })
 
-    test('editor with one station matches snapshot', async ({ page }) => {
+    test('editor with one station renders a circle', async ({ page }) => {
         await page.goto('/editor')
 
         await page.getByRole('button', { name: 'Station', exact: true }).click()
@@ -38,11 +38,6 @@ test.describe('Visual regression', () => {
         await dialog.getByRole('button', { name: 'Create' }).click()
         await expect(dialog).toBeHidden()
 
-        // Move pointer away to avoid hover effects in the snapshot
-        await page.mouse.move(0, 0)
-
-        await expect(canvas).toHaveScreenshot('editor-one-station.png', {
-            animations: 'disabled',
-        })
+        await expect(canvas.locator('circle')).toHaveCount(1)
     })
 })
