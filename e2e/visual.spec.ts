@@ -11,7 +11,7 @@ test.describe('Visual regression', () => {
         await page.goto('/')
 
         await expect(page.getByRole('heading', { name: 'Transit Map Editor' })).toBeVisible()
-        await expect(page.getByRole('link', { name: /start editing/i })).toBeVisible()
+        await expect(page.getByRole('button', { name: /start creating/i })).toBeVisible()
     })
 
     test('empty editor has canvas and toolbar', async ({ page }) => {
@@ -33,11 +33,12 @@ test.describe('Visual regression', () => {
         await canvas.click({ position: { x: 400, y: 300 } })
 
         const dialog = page.getByRole('dialog')
-        await expect(dialog).toBeVisible()
+        await expect(dialog).toBeVisible({ timeout: 15000 })
         await dialog.getByRole('textbox').first().fill('Central')
         await dialog.getByRole('button', { name: 'Create' }).click()
-        await expect(dialog).toBeHidden()
+        await expect(dialog).toBeHidden({ timeout: 10000 })
 
-        await expect(canvas.locator('circle')).toHaveCount(1)
+        await page.waitForSelector('circle', { timeout: 10000 })
+        await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
     })
 })

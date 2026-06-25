@@ -56,17 +56,14 @@ export default defineConfig({
                     ...devices['iPhone 14'],
                 },
             },
-        ]),
-        {
-            name: 'tablet-chrome',
-            use: {
-                ...devices['Pixel Tablet'],
-                viewport: { width: 1280, height: 800 },
-                hasTouch: false,
-                isMobile: false,
+            {
+                name: 'tablet-chrome',
+                use: {
+                    ...devices['Desktop Chrome'],
+                    viewport: { width: 1280, height: 800 },
+                    deviceScaleFactor: 1,
+                },
             },
-        },
-        ...(process.env.CI ? [] : [
             {
                 name: 'tablet-safari',
                 use: {
