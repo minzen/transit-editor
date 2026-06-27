@@ -37,6 +37,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await dialog.getByRole('button', { name: 'Create' }).click()
 
             await expect(dialog).toBeHidden({ timeout: 15000 })
+            await page.waitForSelector('circle', { timeout: 15000 })
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 15000 })
         })
 
@@ -124,6 +125,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(dialog).toBeVisible({ timeout: 10000 })
             await dialog.getByRole('button', { name: 'Create' }).click()
 
+            await page.waitForSelector('circle', { timeout: 10000 })
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
         })
 
@@ -230,6 +232,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await dialog.getByRole('button', { name: 'Create' }).click()
 
             // Wait for station to be fully rendered before resizing
+            await page.waitForSelector('circle', { timeout: 10000 })
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
 
             // Resize to mobile and wait for canvas to re-layout
@@ -237,6 +240,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(canvas).toBeVisible({ timeout: 10000 })
 
             // Station data is in-memory (Zustand), survives resize
+            await page.waitForSelector('circle', { timeout: 10000 })
             await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
         })
 

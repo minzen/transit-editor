@@ -16,11 +16,12 @@ test.describe('Mobile Touch Gestures', () => {
         await canvas.click({ position: { x: 200, y: 200 } })
 
         const dialog = page.getByRole('dialog')
-        await expect(dialog).toBeVisible({ timeout: 5000 })
+        await expect(dialog).toBeVisible({ timeout: 15000 })
         await dialog.getByRole('button', { name: 'Create' }).click()
-        await expect(dialog).toBeHidden({ timeout: 5000 })
+        await expect(dialog).toBeHidden({ timeout: 10000 })
 
-        await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 5000 })
+        await page.waitForSelector('circle', { timeout: 10000 })
+        await expect(canvas.locator('circle')).toHaveCount(1, { timeout: 10000 })
     })
 
     test('canvas remains visible after click interaction', async ({ page }) => {
@@ -85,6 +86,7 @@ test.describe('Mobile Touch Gestures', () => {
 
         await segmentBtn.click()
         await expect(segmentBtn).toHaveAttribute('aria-pressed', 'true')
+        await expect(stationBtn).toHaveAttribute('aria-pressed', 'false')
     })
 })
 

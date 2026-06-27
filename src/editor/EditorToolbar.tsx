@@ -211,6 +211,7 @@ export function EditorToolbar({
             {toolKeys.map((tool) => (
                 <Button
                     key={tool.id}
+                    aria-pressed={activeTool === tool.id}
                     variant={activeTool === tool.id ? 'contained' : 'outlined'}
                     onClick={() => {
                         setActiveTool(tool.id)
