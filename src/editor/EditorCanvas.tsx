@@ -244,9 +244,11 @@ export function EditorCanvas() {
         setPendingStationPosition,
     } = useCanvasInteractions({ spacePressed })
 
-    const [svgHasFocus, setSvgHasFocus] = useState(false)
+    const [keyboardCursorVisible, setKeyboardCursorVisible] = useState(false)
 
     const { keyboardCursor, handleKeyDown: handleCanvasKeyDown } = useCanvasKeyboardNavigation({
+        onKeyboardCursorShown: () => setKeyboardCursorVisible(true),
+
         svgRef,
         selectedStationIds,
         setSelectedStationIds,
@@ -509,8 +511,6 @@ export function EditorCanvas() {
                             ? 'grab'
                             : 'default',
                 }}
-                onFocus={() => setSvgHasFocus(true)}
-                onBlur={() => setSvgHasFocus(false)}
                 onKeyDown={handleCanvasKeyDown}
                 onPointerDown={handlePointerDown}
                 onPointerMove={(event) => {
@@ -677,7 +677,7 @@ export function EditorCanvas() {
                     )}
 
                     {/* Keyboard cursor */}
-                    {showInteractiveHandlesForExport && svgHasFocus && (
+                    {showInteractiveHandlesForExport && keyboardCursorVisible && (
                         <g transform={`translate(${keyboardCursor.x} ${keyboardCursor.y})`}>
                             <circle
                                 r={8 / useEditorStore.getState().viewport.zoom}
