@@ -77,6 +77,10 @@ export default defineConfig({
         url: 'http://localhost:5173',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
+        env: {
+            VITE_PLAUSIBLE_DOMAIN: process.env.VITE_PLAUSIBLE_DOMAIN ?? '',
+            VITE_PLAUSIBLE_URL: process.env.VITE_PLAUSIBLE_URL ?? '',
+        },
     },
     expect: {
         toHaveScreenshot: {
