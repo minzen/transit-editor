@@ -31,6 +31,7 @@ describe('BackgroundImageControl', () => {
     it('renders hide button when background is visible', () => {
         useEditorStore.setState({ backgroundImageUrl: 'data:image/png;base64,abc' })
         render(<BackgroundImageControl />)
+        fireEvent.click(screen.getByText('Adjust Image'))
         expect(screen.getByText('Hide BG')).toBeInTheDocument()
     })
 
@@ -40,12 +41,14 @@ describe('BackgroundImageControl', () => {
             showBackgroundImage: false,
         })
         render(<BackgroundImageControl />)
+        fireEvent.click(screen.getByText('Adjust Image'))
         expect(screen.getByText('Show BG')).toBeInTheDocument()
     })
 
     it('toggles background visibility', () => {
         useEditorStore.setState({ backgroundImageUrl: 'data:image/png;base64,abc' })
         render(<BackgroundImageControl />)
+        fireEvent.click(screen.getByText('Adjust Image'))
         fireEvent.click(screen.getByText('Hide BG'))
         expect(useEditorStore.getState().showBackgroundImage).toBe(false)
     })
@@ -53,6 +56,7 @@ describe('BackgroundImageControl', () => {
     it('removes background image', () => {
         useEditorStore.setState({ backgroundImageUrl: 'data:image/png;base64,abc' })
         render(<BackgroundImageControl />)
+        fireEvent.click(screen.getByText('Adjust Image'))
         fireEvent.click(screen.getByText('Remove'))
         expect(useEditorStore.getState().backgroundImageUrl).toBeNull()
     })
@@ -60,6 +64,7 @@ describe('BackgroundImageControl', () => {
     it('renders placement sliders when image is loaded', () => {
         useEditorStore.setState({ backgroundImageUrl: 'data:image/png;base64,abc' })
         render(<BackgroundImageControl />)
+        fireEvent.click(screen.getByText('Adjust Image'))
         expect(screen.getByText('Placement')).toBeInTheDocument()
     })
 })

@@ -76,7 +76,6 @@ export type DataSlice = {
     setStationLabelRotation: (id: string, rotation: number) => void
     autoPlaceLabels: () => void
     setStationServices: (id: string, services: ServiceIcon[]) => void
-    setStationFareZone: (id: string, zone: number | undefined) => void
     deleteStation: (id: string) => void
     updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
     insertBendPoint: (segmentId: string, x: number, y: number) => void
@@ -390,25 +389,6 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                     [id]: {
                         ...station,
                         services: services.length > 0 ? services : undefined,
-                    },
-                },
-            })
-        }),
-
-    setStationFareZone: (id, zone) =>
-        set((state) => {
-            const station = state.stations[id]
-
-            if (!station) {
-                return state
-            }
-
-            return setWithDelta(state, {
-                stations: {
-                    ...state.stations,
-                    [id]: {
-                        ...station,
-                        fareZone: zone,
                     },
                 },
             })

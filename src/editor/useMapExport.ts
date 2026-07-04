@@ -1,8 +1,16 @@
 import { useCallback, useState } from 'react'
 import type { RefObject } from 'react'
-import { processSVGForExport } from '../utils/svgExport'
 
 const EXPORT_PADDING = 40
+
+/**
+ * Wait for fonts to load before drawing to canvas
+ */
+async function waitForFonts(): Promise<void> {
+    await document.fonts.ready
+    // Additional delay for any late-loading resources
+    await new Promise((resolve) => setTimeout(resolve, 100))
+}
 
 /**
  * Hook providing SVG export, PNG export, and browser print of an SVG element.
@@ -31,9 +39,62 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
      * interactive elements before we snapshot or print.
      */
     const waitForRender = useCallback(
-        (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0)),
+        (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 50)),
         []
     )
+
+    /**
+     * Prepare SVG for export by creating a flattened copy with proper dimensions
+     */
+    const prepareExportSVG = useCallback((svgElement: SVGSVGElement): string => {
+        // Get the content group (first <g> child which contains the viewport transform)
+        const contentGroup = svgElement.querySelector('g')
+        if (!contentGroup) {
+            // Fallback: return serialized SVG as-is
+            const serializer = new XMLSerializer()
+            return serializer.serializeToString(svgElement)
+        }
+
+        // Get bounding box of all content (ignoring the viewport transform)
+        const bbox = contentGroup.getBBox()
+
+        // Create a new SVG with explicit dimensions
+        const svgNS = 'http://www.w3.org/2000/svg'
+        const exportSvg = document.createElementNS(svgNS, 'svg')
+        exportSvg.setAttribute('xmlns', svgNS)
+        exportSvg.setAttribute('width', String(Math.ceil(bbox.width + EXPORT_PADDING * 2)))
+        exportSvg.setAttribute('height', String(Math.ceil(bbox.height + EXPORT_PADDING * 2)))
+        exportSvg.setAttribute('viewBox', `${bbox.x - EXPORT_PADDING} ${bbox.y - EXPORT_PADDING} ${bbox.width + EXPORT_PADDING * 2} ${bbox.height + EXPORT_PADDING * 2}`)
+
+        // Copy all styles from original SVG
+        const computedStyle = window.getComputedStyle(svgElement)
+        exportSvg.style.fontFamily = computedStyle.fontFamily
+        exportSvg.style.fontSize = computedStyle.fontSize
+
+        // Clone the content group and reset its transform
+        const clonedGroup = contentGroup.cloneNode(true) as SVGGElement
+        clonedGroup.removeAttribute('transform')
+        exportSvg.appendChild(clonedGroup)
+
+        // Copy defs (for any gradients, patterns, etc.)
+        const defs = svgElement.querySelector('defs')
+        if (defs) {
+            const clonedDefs = defs.cloneNode(true)
+            exportSvg.insertBefore(clonedDefs, clonedGroup)
+        }
+
+        // Add white background rect
+        const bgRect = document.createElementNS(svgNS, 'rect')
+        bgRect.setAttribute('x', String(bbox.x - EXPORT_PADDING))
+        bgRect.setAttribute('y', String(bbox.y - EXPORT_PADDING))
+        bgRect.setAttribute('width', String(bbox.width + EXPORT_PADDING * 2))
+        bgRect.setAttribute('height', String(bbox.height + EXPORT_PADDING * 2))
+        bgRect.setAttribute('fill', '#ffffff')
+        exportSvg.insertBefore(bgRect, clonedGroup)
+
+        const serializer = new XMLSerializer()
+        return serializer.serializeToString(exportSvg)
+    }, [])
 
     const exportAsSVG = useCallback(async () => {
         if (!svgRef.current) return
@@ -47,13 +108,9 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
             return
         }
 
-        const serializer = new XMLSerializer()
-        const svgString = serializer.serializeToString(svgElement)
+        const exportSvgString = prepareExportSVG(svgElement)
 
-        const bbox = svgElement.getBBox()
-        const processedSVG = processSVGForExport(svgString, bbox)
-
-        const blob = new Blob([processedSVG], { type: 'image/svg+xml;charset=utf-8' })
+        const blob = new Blob([exportSvgString], { type: 'image/svg+xml;charset=utf-8' })
         const url = URL.createObjectURL(blob)
 
         const link = document.createElement('a')
@@ -63,13 +120,14 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
 
         URL.revokeObjectURL(url)
         resetExportFlags()
-    }, [svgRef, hideExportFlags, resetExportFlags, waitForRender])
+    }, [svgRef, hideExportFlags, resetExportFlags, waitForRender, prepareExportSVG])
 
     const exportAsPNG = useCallback(async () => {
         if (!svgRef.current) return
 
         hideExportFlags()
         await waitForRender()
+        await waitForFonts()
 
         const svgElement = svgRef.current
         if (!svgElement) {
@@ -77,25 +135,36 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
             return
         }
 
-        const serializer = new XMLSerializer()
-        const svgString = serializer.serializeToString(svgElement)
+        const exportSvgString = prepareExportSVG(svgElement)
 
-        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
+        // Parse to get dimensions
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(exportSvgString, 'image/svg+xml')
+        const exportSvg = doc.documentElement
+        const width = parseFloat(exportSvg.getAttribute('width') ?? '800')
+        const height = parseFloat(exportSvg.getAttribute('height') ?? '600')
+
+        const svgBlob = new Blob([exportSvgString], { type: 'image/svg+xml;charset=utf-8' })
         const svgUrl = URL.createObjectURL(svgBlob)
 
         const img = new Image()
         img.onload = () => {
             const canvas = document.createElement('canvas')
-            const bbox = svgElement.getBBox()
 
-            canvas.width = bbox.width + EXPORT_PADDING * 2
-            canvas.height = bbox.height + EXPORT_PADDING * 2
+            // Use higher resolution for crisp export
+            const scale = 2
+            canvas.width = Math.ceil(width * scale)
+            canvas.height = Math.ceil(height * scale)
 
             const ctx = canvas.getContext('2d')
             if (ctx) {
+                ctx.scale(scale, scale)
                 ctx.fillStyle = '#ffffff'
-                ctx.fillRect(0, 0, canvas.width, canvas.height)
-                ctx.drawImage(img, -bbox.x + EXPORT_PADDING, -bbox.y + EXPORT_PADDING, bbox.width, bbox.height)
+                ctx.fillRect(0, 0, width, height)
+                ctx.drawImage(img, 0, 0, width, height)
+
+                // Reset transform for clean export
+                ctx.setTransform(1, 0, 0, 1, 0, 0)
 
                 const pngUrl = canvas.toDataURL('image/png')
                 const link = document.createElement('a')
@@ -108,7 +177,7 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
             resetExportFlags()
         }
         img.src = svgUrl
-    }, [svgRef, hideExportFlags, resetExportFlags, waitForRender])
+    }, [svgRef, hideExportFlags, resetExportFlags, waitForRender, prepareExportSVG])
 
     const print = useCallback(async () => {
         if (!svgRef.current) return

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { clickCanvas, clickClear } from './helpers'
 
 test.describe('Dialogs', () => {
     test.beforeEach(async ({ page }) => {
@@ -41,7 +42,7 @@ test.describe('Dialogs', () => {
 
     test('Clear button opens a confirmation dialog', async ({ page }) => {
         await page.goto('/editor')
-        await page.getByRole('button', { name: 'Clear', exact: true }).click()
+        await clickClear(page)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -54,7 +55,7 @@ test.describe('Dialogs', () => {
         // Add a station first
         await page.getByRole('button', { name: 'Station', exact: true }).click()
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
         const stationDialog = page.getByRole('dialog')
         await expect(stationDialog).toBeVisible()
         await stationDialog.getByRole('button', { name: 'Create' }).click()
@@ -62,7 +63,7 @@ test.describe('Dialogs', () => {
         await expect(canvas.locator('circle[fill="#fff"][stroke="#111"]')).toHaveCount(1)
 
         // Open clear dialog and cancel
-        await page.getByRole('button', { name: 'Clear', exact: true }).click()
+        await clickClear(page)
         const confirmDialog = page.getByRole('dialog')
         await expect(confirmDialog).toBeVisible()
         await confirmDialog.getByRole('button', { name: 'Cancel' }).click()
@@ -78,7 +79,7 @@ test.describe('Dialogs', () => {
         // Add a station first
         await page.getByRole('button', { name: 'Station', exact: true }).click()
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
         const stationDialog = page.getByRole('dialog')
         await expect(stationDialog).toBeVisible()
         await stationDialog.getByRole('button', { name: 'Create' }).click()
@@ -86,7 +87,7 @@ test.describe('Dialogs', () => {
         await expect(canvas.locator('circle[fill="#fff"][stroke="#111"]')).toHaveCount(1)
 
         // Confirm clear
-        await page.getByRole('button', { name: 'Clear', exact: true }).click()
+        await clickClear(page)
         const confirmDialog = page.getByRole('dialog')
         await expect(confirmDialog).toBeVisible()
         await confirmDialog.getByRole('button', { name: 'Clear' }).last().click()
@@ -105,7 +106,7 @@ test.describe('Dialogs', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -130,7 +131,7 @@ test.describe('Dialogs', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()

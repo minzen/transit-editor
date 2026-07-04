@@ -9,7 +9,7 @@
       (function() {
         const domain = '%VITE_PLAUSIBLE_DOMAIN%';
         const src = '%VITE_PLAUSIBLE_URL%';
-        if (domain && src) {
+        if (domain && src && !domain.startsWith('%') && !src.startsWith('%')) {
           const s = document.createElement('script');
           s.setAttribute('defer', '');
           s.setAttribute('data-domain', domain);

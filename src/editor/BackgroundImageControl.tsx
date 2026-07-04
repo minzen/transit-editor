@@ -1,9 +1,11 @@
-import { Button, Box, Slider, Typography, Stack } from '@mui/material'
+import { Button, Box, Slider, Typography, Stack, Popover } from '@mui/material'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/editorStore'
 
 export function BackgroundImageControl() {
     const { t } = useTranslation()
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
     const backgroundImageUrl = useEditorStore((s) => s.backgroundImageUrl)
     const showBackgroundImage = useEditorStore((s) => s.showBackgroundImage)
     const backgroundImageX = useEditorStore((s) => s.backgroundImageX)
@@ -38,16 +40,37 @@ export function BackgroundImageControl() {
 
     const handleRemove = () => {
         setBackgroundImageUrl(null)
+        setAnchorEl(null)
     }
 
+    const open = Boolean(anchorEl)
+
     return (
-        <Stack direction="column" spacing={1} sx={{ minWidth: 180 }}>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <Button size="small" onClick={handleLoadImage}>
                     {t('backgroundImageControl.loadImage')}
                 </Button>
                 {backgroundImageUrl && (
-                    <>
+                    <Button
+                        size="small"
+                        variant={open ? 'contained' : 'outlined'}
+                        onClick={(e) => setAnchorEl(open ? null : e.currentTarget)}
+                    >
+                        {t('backgroundImageControl.adjustImage')}
+                    </Button>
+                )}
+            </Box>
+
+            <Popover
+                open={open}
+                anchorEl={anchorEl}
+                onClose={() => setAnchorEl(null)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            >
+                <Stack direction="column" spacing={1} sx={{ p: 2, minWidth: 240 }}>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         <Button
                             size="small"
                             variant="outlined"
@@ -58,12 +81,7 @@ export function BackgroundImageControl() {
                         <Button size="small" color="error" variant="outlined" onClick={handleRemove}>
                             {t('backgroundImageControl.removeImage')}
                         </Button>
-                    </>
-                )}
-            </Box>
-
-            {backgroundImageUrl && (
-                <Stack direction="column" spacing={1}>
+                    </Box>
                     <Typography variant="caption">{t('backgroundImageControl.placement')}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Typography variant="caption" sx={{ minWidth: 16 }}>{t('backgroundImageControl.x')}</Typography>
@@ -117,7 +135,7 @@ export function BackgroundImageControl() {
                         onChange={(_, v) => setBackgroundImageOpacity(v)}
                     />
                 </Stack>
-            )}
-        </Stack>
+            </Popover>
+        </>
     )
 }

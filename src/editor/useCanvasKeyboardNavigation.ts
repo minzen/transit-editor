@@ -20,6 +20,7 @@ type Options = {
     setPointerWorldPosition: (pos: Point | null) => void
     setStationNameDialogOpen: (open: boolean) => void
     setPendingStationPosition: (pos: Point | null) => void
+    onKeyboardCursorShown?: () => void
 }
 
 export function useCanvasKeyboardNavigation({
@@ -36,6 +37,7 @@ export function useCanvasKeyboardNavigation({
     setPointerWorldPosition,
     setStationNameDialogOpen,
     setPendingStationPosition,
+    onKeyboardCursorShown,
 }: Options) {
     const [keyboardCursor, setKeyboardCursor] = useState<Point>({ x: 0, y: 0 })
 
@@ -135,6 +137,7 @@ export function useCanvasKeyboardNavigation({
             ) {
                 event.preventDefault()
                 event.stopPropagation()
+                onKeyboardCursorShown?.()
 
                 let dx = 0
                 let dy = 0
@@ -282,6 +285,7 @@ export function useCanvasKeyboardNavigation({
             setPendingStationPosition,
             setStationNameDialogOpen,
             addShape,
+            onKeyboardCursorShown,
         ]
     )
 

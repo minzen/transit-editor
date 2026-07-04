@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { clickCanvas, addStation } from './helpers'
 
 test.describe('Editor interactions', () => {
     test.beforeEach(async ({ page }) => {
@@ -16,7 +17,7 @@ test.describe('Editor interactions', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 300, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -37,7 +38,7 @@ test.describe('Editor interactions', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 300, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -59,7 +60,7 @@ test.describe('Editor interactions', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -75,7 +76,7 @@ test.describe('Editor interactions', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -91,13 +92,13 @@ test.describe('Editor interactions', () => {
 
         const canvas = page.getByTestId('editor-canvas')
 
-        await canvas.click({ position: { x: 300, y: 300 } })
+        await clickCanvas(canvas, 0.3, 0.5)
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
         await dialog.getByRole('button', { name: 'Create' }).click()
         await expect(dialog).toBeHidden()
 
-        await canvas.click({ position: { x: 500, y: 300 } })
+        await clickCanvas(canvas, 0.7, 0.5)
         await expect(dialog).toBeVisible()
         await dialog.getByRole('button', { name: 'Create' }).click()
         await expect(dialog).toBeHidden()
@@ -206,7 +207,7 @@ test.describe('Editor interactions', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()

@@ -7,11 +7,33 @@ import { STATION_RADIUS } from './stationConstants'
 import type { ServiceIcon } from '../model/station'
 
 const SERVICE_ICON_MAP: Record<ServiceIcon, string> = {
+    // Legacy emoji icons
     accessibility: '♿',
     ferry: '⛴',
     rail: '🚂',
     airport: '✈',
     toilet: '🚻',
+    // Material Design inspired elegant icons (using clean Unicode symbols)
+    accessible: '♿',
+    directions_boat: '⛵',
+    train: '🚆',
+    flight: '✈',
+    wc: '🚻',
+    local_taxi: '🚕',
+    directions_bus: '🚌',
+    directions_subway: '🚇',
+    tram: '🚊',
+    directions_bike: '🚲',
+    electric_car: '🔌',
+    local_parking: '🅿',
+    shopping: '🛍',
+    restaurant: '🍽',
+    cafe: '☕',
+    hotel: '🏨',
+    local_hospital: '🏥',
+    school: '🏫',
+    museum: '🏛',
+    park: '🌳',
 }
 
 type Props = {
@@ -104,7 +126,6 @@ export const StationRenderer = memo(function StationRenderer({
     const labelFill = themeMode === 'dark' ? '#eee' : '#111'
     const selectionStroke = themeMode === 'dark' ? '#90caf9' : '#1976d2'
     const badgeStroke = themeMode === 'dark' ? '#1e1e2e' : '#fff'
-    const fareZoneFill = themeMode === 'dark' ? '#888' : '#666'
     // Helper: get the unique line ids connected to a station, in stable order.
     const getConnectedLineIds = (stationId: string): string[] => {
         const connected = new Set<string>()
@@ -291,6 +312,7 @@ export const StationRenderer = memo(function StationRenderer({
 
                         {showSelection && selectedStationIds.includes(s.id) && renderRing(4, 3, 'selected')}
 
+                        {/* Station name text */}
                         {s.name && (
                             <text
                                 x={labelAttrs.x}
@@ -306,43 +328,27 @@ export const StationRenderer = memo(function StationRenderer({
                                 transform={s.labelRotation ? `rotate(${s.labelRotation} ${labelAttrs.x} ${labelAttrs.y})` : undefined}
                             >
                                 {s.name}
-                                {s.services && s.services.length > 0 && (
-                                    <>
-                                        {' • '}
-                                        {s.services.map((service, i) => (
-                                            <tspan key={`service-${s.id}-${service}`}>
-                                                {i > 0 && ' '}
-                                                {SERVICE_ICON_MAP[service]}
-                                            </tspan>
-                                        ))}
-                                    </>
-                                )}
                             </text>
                         )}
 
-                        {/* Fare zone badge: small circle above the station */}
-                        {s.fareZone !== undefined && (
-                            <g style={{ pointerEvents: 'none' }}>
-                                <circle
-                                    cx={s.x}
-                                    cy={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10 - (labelPos === 'top' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0)}
-                                    r={7}
-                                    fill={fareZoneFill}
-                                    stroke={badgeStroke}
-                                    strokeWidth={1}
-                                />
-                                <text
-                                    x={s.x}
-                                    y={s.y - (isCapsule ? capsuleWidth / 2 : STATION_RADIUS) - 10 - (labelPos === 'top' ? APPROX_LABEL_HEIGHT + BADGE_LABEL_GAP : 0)}
-                                    textAnchor="middle"
-                                    dominantBaseline="central"
-                                    fontSize={9}
-                                    fontWeight="bold"
-                                    fill={badgeStroke}
-                                >
-                                    {s.fareZone}
-                                </text>
-                            </g>
+                        {/* Service icons - shown separately below station or name */}
+                        {s.services && s.services.length > 0 && (
+                            <text
+                                x={s.x}
+                                y={s.y + (s.name ? 24 : 12)}
+                                textAnchor="middle"
+                                dominantBaseline="central"
+                                fontSize={14}
+                                fill={labelFill}
+                                style={{ pointerEvents: 'none' }}
+                            >
+                                {s.services.map((service, i) => (
+                                    <tspan key={`service-${s.id}-${service}`}>
+                                        {i > 0 && ' '}
+                                        {SERVICE_ICON_MAP[service]}
+                                    </tspan>
+                                ))}
+                            </text>
                         )}
 
                         {/* Line code bullets: small coloured circles below the station */}

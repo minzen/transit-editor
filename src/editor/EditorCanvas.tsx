@@ -170,10 +170,6 @@ export function EditorCanvas() {
     const setStationServices = useEditorStore(
         (s) => s.setStationServices
     )
-    const setStationFareZone = useEditorStore(
-        (s) => s.setStationFareZone
-    )
-
     const { t } = useTranslation()
 
     // Secret shortcut: Ctrl+Shift+Alt+A
@@ -248,9 +244,11 @@ export function EditorCanvas() {
         setPendingStationPosition,
     } = useCanvasInteractions({ spacePressed })
 
-    const [svgHasFocus, setSvgHasFocus] = useState(false)
+    const [keyboardCursorVisible, setKeyboardCursorVisible] = useState(false)
 
     const { keyboardCursor, handleKeyDown: handleCanvasKeyDown } = useCanvasKeyboardNavigation({
+        onKeyboardCursorShown: () => setKeyboardCursorVisible(true),
+
         svgRef,
         selectedStationIds,
         setSelectedStationIds,
@@ -513,8 +511,6 @@ export function EditorCanvas() {
                             ? 'grab'
                             : 'default',
                 }}
-                onFocus={() => setSvgHasFocus(true)}
-                onBlur={() => setSvgHasFocus(false)}
                 onKeyDown={handleCanvasKeyDown}
                 onPointerDown={handlePointerDown}
                 onPointerMove={(event) => {
@@ -681,7 +677,7 @@ export function EditorCanvas() {
                     )}
 
                     {/* Keyboard cursor */}
-                    {showInteractiveHandlesForExport && svgHasFocus && (
+                    {showInteractiveHandlesForExport && keyboardCursorVisible && (
                         <g transform={`translate(${keyboardCursor.x} ${keyboardCursor.y})`}>
                             <circle
                                 r={8 / useEditorStore.getState().viewport.zoom}
@@ -922,15 +918,36 @@ export function EditorCanvas() {
                     </MenuItem>
                 ))}
                 <Divider />
+                <MenuItem disabled>{t('editorCanvas.services')}</MenuItem>
                 {([
-                    { key: 'accessibility' as const, labelKey: 'editorCanvas.accessibility' },
-                    { key: 'ferry' as const, labelKey: 'editorCanvas.ferry' },
-                    { key: 'rail' as const, labelKey: 'editorCanvas.rail' },
-                    { key: 'airport' as const, labelKey: 'editorCanvas.airport' },
-                    { key: 'toilet' as const, labelKey: 'editorCanvas.toilet' },
-                ]).map(({ key, labelKey }) => (
+                    // Legacy icons
+                    { key: 'accessibility' as const, labelKey: 'editorCanvas.accessibility', icon: '♿' },
+                    { key: 'ferry' as const, labelKey: 'editorCanvas.ferry', icon: '⛴' },
+                    { key: 'rail' as const, labelKey: 'editorCanvas.rail', icon: '🚂' },
+                    { key: 'airport' as const, labelKey: 'editorCanvas.airport', icon: '✈' },
+                    { key: 'toilet' as const, labelKey: 'editorCanvas.toilet', icon: '🚻' },
+                    // Transit icons
+                    { key: 'train' as const, labelKey: 'editorCanvas.train', icon: '🚆' },
+                    { key: 'directions_bus' as const, labelKey: 'editorCanvas.bus', icon: '🚌' },
+                    { key: 'directions_subway' as const, labelKey: 'editorCanvas.subway', icon: '🚇' },
+                    { key: 'tram' as const, labelKey: 'editorCanvas.tram', icon: '🚊' },
+                    { key: 'local_taxi' as const, labelKey: 'editorCanvas.taxi', icon: '🚕' },
+                    { key: 'directions_bike' as const, labelKey: 'editorCanvas.bike', icon: '🚲' },
+                    { key: 'electric_car' as const, labelKey: 'editorCanvas.electricCar', icon: '⚡' },
+                    { key: 'local_parking' as const, labelKey: 'editorCanvas.parking', icon: '🅿' },
+                    // POI icons
+                    { key: 'shopping' as const, labelKey: 'editorCanvas.shopping', icon: '🛍' },
+                    { key: 'restaurant' as const, labelKey: 'editorCanvas.restaurant', icon: '🍽' },
+                    { key: 'cafe' as const, labelKey: 'editorCanvas.cafe', icon: '☕' },
+                    { key: 'hotel' as const, labelKey: 'editorCanvas.hotel', icon: '🏨' },
+                    { key: 'local_hospital' as const, labelKey: 'editorCanvas.hospital', icon: '🏥' },
+                    { key: 'school' as const, labelKey: 'editorCanvas.school', icon: '🏫' },
+                    { key: 'museum' as const, labelKey: 'editorCanvas.museum', icon: '🏛' },
+                    { key: 'park' as const, labelKey: 'editorCanvas.park', icon: '🌳' },
+                ]).map(({ key, labelKey, icon }) => (
                     <MenuItem
                         key={key}
+                        dense
                         onClick={() => {
                             if (contextMenuStationId) {
                                 const current = stations[contextMenuStationId]?.services ?? []
@@ -940,48 +957,20 @@ export function EditorCanvas() {
                                     : [...current, key]
                                 setStationServices(contextMenuStationId, next)
                             }
-                            setContextMenuStationId(null)
-                            setContextMenuPos(null)
+                            // Menu stays open for multi-select convenience
                         }}
                     >
-                        <ListItemIcon>
-                            <Checkbox
-                                checked={stations[contextMenuStationId ?? '']?.services?.includes(key) ?? false}
-                                size="small"
-                            />
+                        <ListItemIcon sx={{ minWidth: 32 }}>
+                            <span style={{ fontSize: 16, opacity: 0.8 }}>{icon}</span>
                         </ListItemIcon>
-                        <ListItemText>{t(labelKey)}</ListItemText>
+                        <ListItemText primary={t(labelKey)} sx={{ flexGrow: 1 }} />
+                        <Checkbox
+                            checked={stations[contextMenuStationId ?? '']?.services?.includes(key) ?? false}
+                            size="small"
+                            sx={{ p: 0.5, mr: -0.5 }}
+                        />
                     </MenuItem>
                 ))}
-                <Divider />
-                <MenuItem disabled>{t('editorCanvas.zone')}</MenuItem>
-                {([1, 2, 3, 4, 5, 6] as const).map((zone) => (
-                    <MenuItem
-                        key={zone}
-                        onClick={() => {
-                            if (contextMenuStationId) {
-                                setStationFareZone(contextMenuStationId, zone)
-                            }
-                            setContextMenuStationId(null)
-                            setContextMenuPos(null)
-                        }}
-                        selected={stations[contextMenuStationId ?? '']?.fareZone === zone}
-                    >
-                        {t('editorCanvas.zoneNumber', { zone })}
-                    </MenuItem>
-                ))}
-                <MenuItem
-                    onClick={() => {
-                        if (contextMenuStationId) {
-                            setStationFareZone(contextMenuStationId, undefined)
-                        }
-                        setContextMenuStationId(null)
-                        setContextMenuPos(null)
-                    }}
-                    selected={stations[contextMenuStationId ?? '']?.fareZone === undefined}
-                >
-                    {t('common.none')}
-                </MenuItem>
             </Menu>
 
             {/* Segment hover tooltip */}
