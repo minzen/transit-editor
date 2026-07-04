@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { clickCanvas } from './helpers'
 
 test.describe('Responsive Design & Mobile/Desktop Tests', () => {
     test.beforeEach(async ({ page }) => {
@@ -30,7 +31,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(canvas).toBeVisible({ timeout: 15000 })
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
-            await canvas.click({ position: { x: 400, y: 300 } })
+            await clickCanvas(canvas, 0.5, 0.5)
 
             const dialog = page.getByRole('dialog')
             await expect(dialog).toBeVisible({ timeout: 15000 })
@@ -49,7 +50,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 400, y: 300 } })
+            await clickCanvas(canvas, 0.5, 0.5)
             await page.getByRole('dialog').getByRole('button', { name: 'Create' }).click()
 
             // Wait for station to be fully rendered
@@ -61,18 +62,26 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await expect(page.getByRole('menu')).toBeVisible({ timeout: 10000 })
         })
 
-        test('double-click to rename works on desktop', async ({ page }) => {
+        test('double-click to rename works on desktop', async ({ page, isMobile }) => {
+            // Double-click rename is not reliable on touch-only devices
+            test.skip(isMobile, 'double-click not applicable on touch devices')
+
             await page.goto('/editor')
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 400, y: 300 } })
+            await clickCanvas(canvas, 0.5, 0.5)
             const dialog = page.getByRole('dialog')
+            await expect(dialog).toBeVisible({ timeout: 15000 })
             await dialog.getByRole('textbox').fill('Test Station')
             await dialog.getByRole('button', { name: 'Create' }).click()
+            await expect(dialog).toBeHidden({ timeout: 10000 })
+
+            // Switch to Select tool so double-click opens the rename dialog
+            await page.getByRole('button', { name: 'Select', exact: true }).click()
 
             // Wait for station to render before double-clicking
-            const station = canvas.locator('circle').first()
+            const station = canvas.locator('circle[fill="#fff"][stroke="#111"]').first()
             await expect(station).toBeVisible({ timeout: 10000 })
             await station.dblclick()
 
@@ -107,7 +116,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             await page.getByRole('button', { name: 'Station', exact: true }).click()
 
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 200, y: 200 } })
+            await clickCanvas(canvas, 0.5, 0.3)
 
             const dialog = page.getByRole('dialog')
             await expect(dialog).toBeVisible({ timeout: 5000 })
@@ -119,7 +128,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 200, y: 200 } })
+            await clickCanvas(canvas, 0.5, 0.3)
 
             const dialog = page.getByRole('dialog')
             await expect(dialog).toBeVisible({ timeout: 10000 })
@@ -171,7 +180,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
             // Can use mouse
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 500, y: 400 } })
+            await clickCanvas(canvas, 0.5, 0.5)
 
             // Dialog should appear
             await expect(page.getByRole('dialog')).toBeVisible()
@@ -225,7 +234,7 @@ test.describe('Responsive Design & Mobile/Desktop Tests', () => {
 
             await page.getByRole('button', { name: 'Station', exact: true }).click()
             const canvas = page.getByTestId('editor-canvas')
-            await canvas.click({ position: { x: 400, y: 300 } })
+            await clickCanvas(canvas, 0.5, 0.5)
 
             const dialog = page.getByRole('dialog')
             await expect(dialog).toBeVisible({ timeout: 10000 })

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { clickCanvas } from './helpers'
 
 test.describe('Visual regression', () => {
     test.beforeEach(async ({ page }) => {
@@ -30,7 +31,7 @@ test.describe('Visual regression', () => {
         await page.getByRole('button', { name: 'Station', exact: true }).click()
 
         const canvas = page.getByTestId('editor-canvas')
-        await canvas.click({ position: { x: 400, y: 300 } })
+        await clickCanvas(canvas, 0.5, 0.5)
 
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible({ timeout: 15000 })
