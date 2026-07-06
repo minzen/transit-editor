@@ -66,6 +66,7 @@ const LineSchema = z.object({
     code: z.string().optional(),
     lineStyle: LineStyleSchema.optional(),
     transitMode: TransitModeSchema.optional(),
+    lineWidth: z.number().int().min(1).max(20).optional(),
 })
 
 const ShapeSchema = z.object({

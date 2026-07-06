@@ -138,4 +138,22 @@ describe('MapDocumentSchema', () => {
         const result = MapDocumentSchema.safeParse(doc)
         expect(result.success).toBe(true)
     })
+
+    it('allows per-line lineWidth within valid range', () => {
+        const doc = validDoc() as Record<string, unknown>
+        const lines = { ...doc.lines as Record<string, unknown> }
+        lines.l1 = { ...lines.l1 as Record<string, unknown>, lineWidth: 6 }
+        doc.lines = lines
+        const result = MapDocumentSchema.safeParse(doc)
+        expect(result.success).toBe(true)
+    })
+
+    it('rejects per-line lineWidth out of range', () => {
+        const doc = validDoc() as Record<string, unknown>
+        const lines = { ...doc.lines as Record<string, unknown> }
+        lines.l1 = { ...lines.l1 as Record<string, unknown>, lineWidth: 25 }
+        doc.lines = lines
+        const result = MapDocumentSchema.safeParse(doc)
+        expect(result.success).toBe(false)
+    })
 })
