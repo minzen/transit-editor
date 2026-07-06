@@ -82,7 +82,7 @@ export type DataSlice = {
     removeBendPoint: (segmentId: string, pointIndex: number) => void
     addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
     deleteSegment: (id: string) => void
-    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
+    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode, lineWidth?: number) => void
     setLineName: (id: string, name: string) => void
     setLineCode: (id: string, code: string) => void
     setLineColor: (id: string, color: string) => void
@@ -640,7 +640,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
         get().setAnnouncement('Redo')
     },
 
-    addLine: (name, color, code, lineStyle, transitMode) => {
+    addLine: (name, color, code, lineStyle, transitMode, lineWidth) => {
         set((state) => {
             const id = nanoid()
 
@@ -654,6 +654,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                         code: code && code.length > 0 ? code : undefined,
                         lineStyle: lineStyle ?? 'solid',
                         transitMode: transitMode ?? 'metro',
+                        ...(lineWidth !== undefined ? { lineWidth } : {}),
                     },
                 },
             })
