@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import { createRef } from 'react'
 import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
 
 describe('useEditorKeyboardShortcuts', () => {
@@ -11,6 +12,7 @@ describe('useEditorKeyboardShortcuts', () => {
     onRedo: vi.fn(),
     canUndo: true,
     canRedo: true,
+    svgRef: createRef<SVGSVGElement>(),
   }
 
   beforeEach(() => {
