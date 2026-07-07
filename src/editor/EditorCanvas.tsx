@@ -221,6 +221,7 @@ export function EditorCanvas() {
         onRedo: redo,
         canUndo: pastStates.length > 0,
         canRedo: futureStates.length > 0,
+        svgRef,
     })
 
     const {
