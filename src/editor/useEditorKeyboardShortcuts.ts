@@ -1,4 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { useEditorStore } from '../store/editorStore'
+
+const PAN_STEP = 80
+const PAN_STEP_FAST = 320
 
 type Options = {
     selectedStationIds: string[]
@@ -8,6 +12,7 @@ type Options = {
     onRedo: () => void
     canUndo: boolean
     canRedo: boolean
+    svgRef: React.RefObject<SVGSVGElement | null>
 }
 
 /**
@@ -30,6 +35,7 @@ export function useEditorKeyboardShortcuts({
     onRedo,
     canUndo,
     canRedo,
+    svgRef,
 }: Options) {
     // Ref tracks the authoritative value for event handlers (no stale closure)
     const spacePressedRef = useRef(false)
@@ -48,10 +54,40 @@ export function useEditorKeyboardShortcuts({
             )
         }
 
+        const isSvgFocused = () => svgRef.current != null && document.activeElement === svgRef.current
+
+        const pan = (dx: number, dy: number) => {
+            const { viewport, setViewport } = useEditorStore.getState()
+            setViewport({
+                zoom: viewport.zoom,
+                offsetX: viewport.offsetX + dx,
+                offsetY: viewport.offsetY + dy,
+            })
+        }
+
         const down = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
                 spacePressedRef.current = true
                 setSpacePressed(true)
+            }
+
+            if (!isInputFocused() && !e.ctrlKey && !e.metaKey) {
+                const step = e.shiftKey ? PAN_STEP_FAST : PAN_STEP
+                const isWasd =
+                    e.code === 'KeyW' || e.code === 'KeyA' ||
+                    e.code === 'KeyS' || e.code === 'KeyD'
+                const isArrow =
+                    e.code === 'ArrowUp' || e.code === 'ArrowDown' ||
+                    e.code === 'ArrowLeft' || e.code === 'ArrowRight'
+
+                if (isWasd || (isArrow && !isSvgFocused())) {
+                    e.preventDefault()
+                    if (e.code === 'KeyW' || e.code === 'ArrowUp')    pan(0, step)
+                    if (e.code === 'KeyS' || e.code === 'ArrowDown')  pan(0, -step)
+                    if (e.code === 'KeyA' || e.code === 'ArrowLeft')  pan(step, 0)
+                    if (e.code === 'KeyD' || e.code === 'ArrowRight') pan(-step, 0)
+                    return
+                }
             }
             if (
                 (e.code === 'Delete' || e.code === 'Backspace') &&
@@ -88,7 +124,7 @@ export function useEditorKeyboardShortcuts({
             window.removeEventListener('keydown', down)
             window.removeEventListener('keyup', up)
         }
-    }, [selectedStationIds, selectedShapeId, onDeleteSelected, onUndo, onRedo, canUndo, canRedo])
+    }, [selectedStationIds, selectedShapeId, onDeleteSelected, onUndo, onRedo, canUndo, canRedo, svgRef])
 
     return { spacePressed }
 }

@@ -42,7 +42,7 @@ type Props = {
     lines: Record<string, Line>
     isCreatingLine: boolean
     setIsCreatingLine: (creating: boolean) => void
-    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode) => void
+    addLine: (name: string, color: string, code?: string, lineStyle?: LineStyle, transitMode?: TransitMode, lineWidth?: number) => void
     setLineName: (id: string, name: string) => void
     setLineCode: (id: string, code: string) => void
     setLineColor: (id: string, color: string) => void
@@ -541,11 +541,7 @@ export function EditorToolbar({
                             colorPalette={colorPalette}
                             anarchyMode={anarchyMode}
                             onSave={(values) => {
-                                addLine(values.name, values.color, values.code, values.lineStyle, values.transitMode)
-                                const newId = Object.keys(useEditorStore.getState().lines).at(-1)
-                                if (newId && values.lineWidth !== undefined) {
-                                    useEditorStore.getState().setLineLineWidth(newId, values.lineWidth)
-                                }
+                                addLine(values.name, values.color, values.code, values.lineStyle, values.transitMode, values.lineWidth)
                                 setIsCreatingLine(false)
                             }}
                             onCancel={() => setIsCreatingLine(false)}
