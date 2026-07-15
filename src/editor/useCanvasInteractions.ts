@@ -9,6 +9,8 @@ import type { DataSnapshot } from '../store/slices/dataSlice'
 
 type Args = {
     spacePressed: boolean
+    selectedStationIds: string[]
+    selectedShapeIds: string[]
 }
 
 // Margin (in screen pixels) of the grid that must remain visible when panning,
@@ -28,7 +30,7 @@ const clamp = (value: number, min: number, max: number): number =>
  * for drag-related state so child renderers (StationRenderer, BendPointRenderer)
  * can initiate drags from their own pointerDown callbacks.
  */
-export function useCanvasInteractions({ spacePressed }: Args) {
+export function useCanvasInteractions({ spacePressed, selectedStationIds, selectedShapeIds }: Args) {
     const stations = useEditorStore((s) => s.stations)
     const segments = useEditorStore((s) => s.segments)
     const setViewport = useEditorStore((s) => s.setViewport)
@@ -37,7 +39,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const activeTool = useEditorStore((s) => s.activeTool)
     const addStation = useEditorStore((s) => s.addStation)
-    const moveStation = useEditorStore((s) => s.moveStation)
+    const translateSelection = useEditorStore((s) => s.translateSelection)
     const updateSegmentPoint = useEditorStore((s) => s.updateSegmentPoint)
 
     const [stationNameDialogOpen, setStationNameDialogOpen] = useState(false)
@@ -80,6 +82,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 })
 
     const stationDragStartRef = useRef<{ x: number; y: number } | null>(null)
+    const lastStationDragPointRef = useRef<Point | null>(null)
     const dragHistoryStartRef = useRef<DataSnapshot | null>(null)
     const suppressNextClickRef = useRef(false)
 
@@ -118,6 +121,11 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             lines: state.lines,
             shapes: state.shapes,
         }
+    }
+
+    const beginStationDrag = (stationId: string) => {
+        const station = useEditorStore.getState().stations[stationId]
+        lastStationDragPointRef.current = station ? { x: station.x, y: station.y } : null
     }
 
     const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -290,15 +298,22 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             }
         }
 
-        // Snap to nearest grid intersection, then clamp to grid bounds
-        const snapped = clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
-
-        // Prevent moving station inside another station
-        if (isPointInsideStation(snapped.x, snapped.y, stations, draggingStationId)) {
+        const snapped = snapPointToGrid(point.x, point.y, gridCellSize)
+        const previousPoint = lastStationDragPointRef.current
+        if (!previousPoint) {
+            lastStationDragPointRef.current = snapped
             return
         }
 
-        moveStation(draggingStationId, snapped.x, snapped.y, false)
+        const dx = snapped.x - previousPoint.x
+        const dy = snapped.y - previousPoint.y
+        if (dx === 0 && dy === 0) return
+
+        const stationsToMove = selectedStationIds.includes(draggingStationId)
+            ? selectedStationIds
+            : [draggingStationId]
+        translateSelection(stationsToMove, selectedShapeIds, dx, dy, false)
+        lastStationDragPointRef.current = snapped
     }
 
     const handlePointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -381,6 +396,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         setDraggingBendPoint,
         stationDragStartRef,
         beginDragHistoryTransaction,
+        beginStationDrag,
         suppressNextClickRef,
         handleWheel,
         handlePointerDown,

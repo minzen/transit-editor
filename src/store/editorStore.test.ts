@@ -531,6 +531,31 @@ describe('editor store', () => {
     expect(useEditorStore.getState().stations[stationId]).toMatchObject({ x: 100, y: 100 })
   })
 
+  it('translates selected stations and shapes together in one undo step', () => {
+    useEditorStore.getState().addStation(100, 100)
+    useEditorStore.getState().addStation(200, 100)
+    useEditorStore.getState().addShape(
+      [{ x: 50, y: 50 }, { x: 100, y: 50 }, { x: 100, y: 100 }],
+      '#a8d5e2'
+    )
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    const shapeId = Object.keys(useEditorStore.getState().shapes)[0]
+    const historyBefore = useEditorStore.getState().pastStates.length
+
+    useEditorStore.getState().translateSelection(stationIds, [shapeId], 50, -50)
+
+    const moved = useEditorStore.getState()
+    expect(moved.stations[stationIds[0]]).toMatchObject({ x: 150, y: 50 })
+    expect(moved.stations[stationIds[1]]).toMatchObject({ x: 250, y: 50 })
+    expect(moved.shapes[shapeId].points[0]).toEqual({ x: 100, y: 0 })
+    expect(moved.pastStates).toHaveLength(historyBefore + 1)
+
+    useEditorStore.getState().undo()
+
+    expect(useEditorStore.getState().stations[stationIds[0]]).toMatchObject({ x: 100, y: 100 })
+    expect(useEditorStore.getState().shapes[shapeId].points[0]).toEqual({ x: 50, y: 50 })
+  })
+
   it('retains at least ten undoable edits', () => {
     for (let index = 0; index < 10; index += 1) {
       useEditorStore.getState().addStation(index * 50, 0)

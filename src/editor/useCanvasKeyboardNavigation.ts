@@ -10,8 +10,8 @@ type Options = {
     svgRef: React.RefObject<SVGSVGElement | null>
     selectedStationIds: string[]
     setSelectedStationIds: (ids: string[]) => void
-    selectedShapeId: string | null
-    setSelectedShapeId: (id: string | null) => void
+    selectedShapeIds: string[]
+    setSelectedShapeIds: (ids: string[]) => void
     shapePoints: Point[]
     setShapePoints: React.Dispatch<React.SetStateAction<Point[]>>
     selectedLineId: string | null
@@ -27,8 +27,8 @@ export function useCanvasKeyboardNavigation({
     svgRef,
     selectedStationIds,
     setSelectedStationIds,
-    selectedShapeId,
-    setSelectedShapeId,
+    selectedShapeIds,
+    setSelectedShapeIds,
     shapePoints,
     setShapePoints,
     selectedLineId,
@@ -47,8 +47,7 @@ export function useCanvasKeyboardNavigation({
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const activeTool = useEditorStore((s) => s.activeTool)
-    const moveStation = useEditorStore((s) => s.moveStation)
-    const updateShape = useEditorStore((s) => s.updateShape)
+    const translateSelection = useEditorStore((s) => s.translateSelection)
     const addSegment = useEditorStore((s) => s.addSegment)
     const addShape = useEditorStore((s) => s.addShape)
 
@@ -119,10 +118,10 @@ export function useCanvasKeyboardNavigation({
             }
 
             setSelectedStationIds([sorted[nextIndex].id])
-            setSelectedShapeId(null)
+            setSelectedShapeIds([])
             setKeyboardCursor({ x: sorted[nextIndex].x, y: sorted[nextIndex].y })
         },
-        [stations, selectedStationIds, setSelectedStationIds, setSelectedShapeId]
+        [stations, selectedStationIds, setSelectedStationIds, setSelectedShapeIds]
     )
 
     const handleKeyDown = useCallback(
@@ -146,28 +145,10 @@ export function useCanvasKeyboardNavigation({
                 if (event.key === 'ArrowLeft') dx = -step
                 if (event.key === 'ArrowRight') dx = step
 
-                if (selectedStationIds.length > 0) {
-                    for (const stationId of selectedStationIds) {
-                        const station = stations[stationId]
-                        if (!station) continue
-                        const newX = station.x + dx
-                        const newY = station.y + dy
-                        const clamped = clampToGrid({ x: newX, y: newY })
-                        const snapped = snapPointToGrid(clamped.x, clamped.y, gridCellSize)
-                        moveStation(stationId, snapped.x, snapped.y)
-                    }
+                if (selectedStationIds.length > 0 || selectedShapeIds.length > 0) {
+                    translateSelection(selectedStationIds, selectedShapeIds, dx, dy)
                     const first = useEditorStore.getState().stations[selectedStationIds[0]]
                     if (first) setKeyboardCursor({ x: first.x, y: first.y })
-                } else if (selectedShapeId && shapes[selectedShapeId]) {
-                    const shape = shapes[selectedShapeId]
-                    const newPoints = shape.points.map((p) => {
-                        const clamped = clampToGrid({ x: p.x + dx, y: p.y + dy })
-                        return snapPointToGrid(clamped.x, clamped.y, gridCellSize)
-                    })
-                    updateShape(selectedShapeId, { points: newPoints })
-                    const cx = newPoints.reduce((sum, p) => sum + p.x, 0) / newPoints.length
-                    const cy = newPoints.reduce((sum, p) => sum + p.y, 0) / newPoints.length
-                    setKeyboardCursor({ x: cx, y: cy })
                 } else {
                     setKeyboardCursor((prev) => {
                         const clamped = clampToGrid({ x: prev.x + dx, y: prev.y + dy })
@@ -229,13 +210,13 @@ export function useCanvasKeyboardNavigation({
                     const nearest = findNearestStation(keyboardCursor)
                     if (nearest) {
                         setSelectedStationIds([nearest.id])
-                        setSelectedShapeId(null)
+                        setSelectedShapeIds([])
                         setKeyboardCursor({ x: nearest.x, y: nearest.y })
                         return
                     }
                     for (const shape of Object.values(shapes)) {
                         if (isPointInPolygon(keyboardCursor, shape.points)) {
-                            setSelectedShapeId(shape.id)
+                            setSelectedShapeIds([shape.id])
                             setSelectedStationIds([])
                             return
                         }
@@ -252,8 +233,8 @@ export function useCanvasKeyboardNavigation({
                 if (shapePoints.length > 0) {
                     setShapePoints(() => [])
                 }
-                if (selectedShapeId) {
-                    setSelectedShapeId(null)
+                if (selectedShapeIds.length > 0) {
+                    setSelectedShapeIds([])
                 }
                 if (selectedStationIds.length > 0) {
                     setSelectedStationIds([])
@@ -263,11 +244,9 @@ export function useCanvasKeyboardNavigation({
         [
             gridCellSize,
             selectedStationIds,
-            stations,
-            moveStation,
-            selectedShapeId,
             shapes,
-            updateShape,
+            selectedShapeIds,
+            translateSelection,
             shapePoints,
             setShapePoints,
             keyboardCursor,
@@ -281,7 +260,7 @@ export function useCanvasKeyboardNavigation({
             setPointerWorldPosition,
             addSegment,
             setSelectedStationIds,
-            setSelectedShapeId,
+            setSelectedShapeIds,
             setPendingStationPosition,
             setStationNameDialogOpen,
             addShape,

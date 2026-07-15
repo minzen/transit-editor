@@ -133,7 +133,9 @@ export function EditorCanvas() {
     const [shapeColor, setShapeColor] = useState('#a8d5e2')
 
     // Shape editing state
-    const [selectedShapeId, setSelectedShapeId] = useState<string | null>(null)
+    const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([])
+    const selectedShapeId = selectedShapeIds[0] ?? null
+    const setSelectedShapeId = useCallback((id: string | null) => setSelectedShapeIds(id ? [id] : []), [])
     const [draggingShapeVertex, setDraggingShapeVertex] = useState<{
         shapeId: string
         pointIndex: number
@@ -205,17 +207,20 @@ export function EditorCanvas() {
 
     const { spacePressed } = useEditorKeyboardShortcuts({
         selectedStationIds,
-        selectedShapeId,
+        selectedShapeIds,
         onDeleteSelected: () => {
-            if (selectedStationIds.length > 0) {
-                for (const stationId of selectedStationIds) {
-                    deleteStation(stationId)
-                }
-                setSelectedStationIds([])
-            } else if (selectedShapeId) {
-                deleteShape(selectedShapeId)
-                setSelectedShapeId(null)
+            for (const stationId of selectedStationIds) {
+                deleteStation(stationId)
             }
+            for (const shapeId of selectedShapeIds) {
+                deleteShape(shapeId)
+            }
+            setSelectedStationIds([])
+            setSelectedShapeIds([])
+        },
+        onSelectAll: () => {
+            setSelectedStationIds(Object.keys(stations))
+            setSelectedShapeIds(Object.keys(shapes))
         },
         onUndo: undo,
         onRedo: redo,
@@ -232,6 +237,7 @@ export function EditorCanvas() {
         setDraggingBendPoint,
         stationDragStartRef,
         beginDragHistoryTransaction,
+        beginStationDrag,
         suppressNextClickRef,
         handleWheel,
         handlePointerDown,
@@ -244,7 +250,7 @@ export function EditorCanvas() {
         handleStationNameSave,
         handleStationNameCancel,
         setPendingStationPosition,
-    } = useCanvasInteractions({ spacePressed })
+    } = useCanvasInteractions({ spacePressed, selectedStationIds, selectedShapeIds })
 
     const [keyboardCursorVisible, setKeyboardCursorVisible] = useState(false)
 
@@ -254,8 +260,8 @@ export function EditorCanvas() {
         svgRef,
         selectedStationIds,
         setSelectedStationIds,
-        selectedShapeId,
-        setSelectedShapeId,
+        selectedShapeIds,
+        setSelectedShapeIds,
         shapePoints,
         setShapePoints,
         selectedLineId,
@@ -809,8 +815,12 @@ export function EditorCanvas() {
                                         : [...prev, stationId]
                                 )
                             } else {
-                                setSelectedStationIds([stationId])
+                                if (!selectedStationIds.includes(stationId)) {
+                                    setSelectedStationIds([stationId])
+                                    setSelectedShapeIds([])
+                                }
                                 beginDragHistoryTransaction()
+                                beginStationDrag(stationId)
                                 setDraggingStationId(stationId)
                                 stationDragStartRef.current = {
                                     x: event.clientX,
