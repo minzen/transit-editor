@@ -70,14 +70,16 @@ export type DataSlice = {
     futureStates: HistoryStep[]
 
     addStation: (x: number, y: number, name?: string) => void
-    moveStation: (id: string, x: number, y: number) => void
+    moveStation: (id: string, x: number, y: number, recordHistory?: boolean) => void
+    translateSelection: (stationIds: string[], shapeIds: string[], dx: number, dy: number, recordHistory?: boolean) => void
     setStationName: (id: string, name: string) => void
     setStationLabelPosition: (id: string, position: LabelPosition) => void
     setStationLabelRotation: (id: string, rotation: number) => void
     autoPlaceLabels: () => void
     setStationServices: (id: string, services: ServiceIcon[]) => void
     deleteStation: (id: string) => void
-    updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number) => void
+    updateSegmentPoint: (segmentId: string, pointIndex: number, x: number, y: number, recordHistory?: boolean) => void
+    commitHistoryTransaction: (before: DataSnapshot) => void
     insertBendPoint: (segmentId: string, x: number, y: number) => void
     removeBendPoint: (segmentId: string, pointIndex: number) => void
     addSegment: (fromStationId: string, toStationId: string, lineId: string) => void
@@ -223,7 +225,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
         get().setAnnouncement('Station added')
     },
 
-    moveStation: (id, x, y) =>
+    moveStation: (id, x, y, recordHistory = true) =>
         set((state) => {
             const station = state.stations[id]
 
@@ -290,13 +292,60 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                 )
             )
 
-            return setWithDelta(state, {
+            const nextState = {
                 stations: {
                     ...state.stations,
                     [id]: newStation,
                 },
                 segments,
-            })
+            }
+
+            return recordHistory ? setWithDelta(state, nextState) : nextState
+        }),
+
+    translateSelection: (stationIds, shapeIds, dx, dy, recordHistory = true) =>
+        set((state) => {
+            const selectedStationIds = new Set(stationIds)
+            const selectedShapeIds = new Set(shapeIds)
+            if ((selectedStationIds.size === 0 && selectedShapeIds.size === 0) || (dx === 0 && dy === 0)) {
+                return state
+            }
+
+            const stations = Object.fromEntries(
+                Object.entries(state.stations).map(([id, station]) => [
+                    id,
+                    selectedStationIds.has(id)
+                        ? { ...station, x: station.x + dx, y: station.y + dy }
+                        : station,
+                ])
+            )
+            const shapes = Object.fromEntries(
+                Object.entries(state.shapes).map(([id, shape]) => [
+                    id,
+                    selectedShapeIds.has(id)
+                        ? { ...shape, points: shape.points.map((point) => ({ x: point.x + dx, y: point.y + dy })) }
+                        : shape,
+                ])
+            )
+            const segments = Object.fromEntries(
+                Object.entries(state.segments).map(([id, segment]) => {
+                    const fromSelected = selectedStationIds.has(segment.fromStationId)
+                    const toSelected = selectedStationIds.has(segment.toStationId)
+                    if (fromSelected && toSelected) {
+                        return [id, { ...segment, points: segment.points.map((point) => ({ x: point.x + dx, y: point.y + dy })) }]
+                    }
+                    if (!fromSelected && !toSelected) {
+                        return [id, segment]
+                    }
+
+                    const points = [...segment.points]
+                    if (fromSelected) points[0] = { x: points[0].x + dx, y: points[0].y + dy }
+                    if (toSelected) points[points.length - 1] = { x: points[points.length - 1].x + dx, y: points[points.length - 1].y + dy }
+                    return [id, { ...segment, points }]
+                })
+            )
+            const nextState = { stations, segments, shapes }
+            return recordHistory ? setWithDelta(state, nextState) : nextState
         }),
 
     setStationName: (id, name) =>
@@ -418,7 +467,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
         get().setAnnouncement('Station deleted')
     },
 
-    updateSegmentPoint: (segmentId, pointIndex, x, y) =>
+    updateSegmentPoint: (segmentId, pointIndex, x, y, recordHistory = true) =>
         set((state) => {
             const segment = state.segments[segmentId]
 
@@ -433,7 +482,7 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
             const newPoints = [...segment.points]
             newPoints[pointIndex] = { x, y }
 
-            return setWithDelta(state, {
+            const nextState = {
                 segments: {
                     ...state.segments,
                     [segmentId]: {
@@ -441,7 +490,22 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                         points: newPoints,
                     },
                 },
-            })
+            }
+
+            return recordHistory ? setWithDelta(state, nextState) : nextState
+        }),
+
+    commitHistoryTransaction: (before) =>
+        set((state) => {
+            const step = createDelta(before, createSnapshot(state))
+            if (!hasChanges(step.redo)) {
+                return state
+            }
+
+            return {
+                pastStates: [...state.pastStates, step],
+                futureStates: [],
+            }
         }),
 
     insertBendPoint: (segmentId, x, y) =>

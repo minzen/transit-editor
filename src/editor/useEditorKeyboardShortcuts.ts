@@ -6,8 +6,9 @@ const PAN_STEP_FAST = 320
 
 type Options = {
     selectedStationIds: string[]
-    selectedShapeId: string | null
+    selectedShapeIds: string[]
     onDeleteSelected: () => void
+    onSelectAll: () => void
     onUndo: () => void
     onRedo: () => void
     canUndo: boolean
@@ -29,8 +30,9 @@ type Options = {
  */
 export function useEditorKeyboardShortcuts({
     selectedStationIds,
-    selectedShapeId,
+    selectedShapeIds,
     onDeleteSelected,
+    onSelectAll,
     onUndo,
     onRedo,
     canUndo,
@@ -71,6 +73,12 @@ export function useEditorKeyboardShortcuts({
                 setSpacePressed(true)
             }
 
+            if (!isInputFocused() && (e.ctrlKey || e.metaKey) && e.code === 'KeyA') {
+                e.preventDefault()
+                onSelectAll()
+                return
+            }
+
             if (!isInputFocused() && !e.ctrlKey && !e.metaKey) {
                 const step = e.shiftKey ? PAN_STEP_FAST : PAN_STEP
                 const isWasd =
@@ -92,7 +100,7 @@ export function useEditorKeyboardShortcuts({
             if (
                 (e.code === 'Delete' || e.code === 'Backspace') &&
                 !isInputFocused() &&
-                (selectedStationIds.length > 0 || selectedShapeId) &&
+                (selectedStationIds.length > 0 || selectedShapeIds.length > 0) &&
                 !spacePressedRef.current
             ) {
                 e.preventDefault()
@@ -124,7 +132,7 @@ export function useEditorKeyboardShortcuts({
             window.removeEventListener('keydown', down)
             window.removeEventListener('keyup', up)
         }
-    }, [selectedStationIds, selectedShapeId, onDeleteSelected, onUndo, onRedo, canUndo, canRedo, svgRef])
+    }, [selectedStationIds, selectedShapeIds, onDeleteSelected, onSelectAll, onUndo, onRedo, canUndo, canRedo, svgRef])
 
     return { spacePressed }
 }

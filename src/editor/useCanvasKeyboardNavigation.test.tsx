@@ -7,7 +7,7 @@ import type { Point } from '../types/geometry'
 
 function TestSvg(props: {
     selectedStationIds?: string[]
-    selectedShapeId?: string | null
+    selectedShapeIds?: string[]
     shapePoints?: Point[]
     selectedLineId?: string | null
     pendingStationId?: string | null
@@ -16,8 +16,8 @@ function TestSvg(props: {
     const [selectedStationIds, setSelectedStationIds] = useState(
         props.selectedStationIds ?? []
     )
-    const [selectedShapeId, setSelectedShapeId] = useState<string | null>(
-        props.selectedShapeId ?? null
+    const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>(
+        props.selectedShapeIds ?? []
     )
     const [shapePoints, setShapePoints] = useState<Point[]>(
         props.shapePoints ?? []
@@ -33,8 +33,8 @@ function TestSvg(props: {
         svgRef,
         selectedStationIds,
         setSelectedStationIds,
-        selectedShapeId,
-        setSelectedShapeId,
+        selectedShapeIds,
+        setSelectedShapeIds,
         shapePoints,
         setShapePoints,
         selectedLineId: props.selectedLineId ?? null,
@@ -242,7 +242,7 @@ describe('useCanvasKeyboardNavigation', () => {
         const shapeId = Object.keys(useEditorStore.getState().shapes)[0]
 
         const { getByTestId } = render(
-            <TestSvg selectedShapeId={shapeId} />
+            <TestSvg selectedShapeIds={[shapeId]} />
         )
         const svg = getByTestId('test-svg')
         svg.focus()

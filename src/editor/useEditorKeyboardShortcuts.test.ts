@@ -6,8 +6,9 @@ import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
 describe('useEditorKeyboardShortcuts', () => {
   const defaultProps = {
     selectedStationIds: [],
-    selectedShapeId: null,
+    selectedShapeIds: [],
     onDeleteSelected: vi.fn(),
+    onSelectAll: vi.fn(),
     onUndo: vi.fn(),
     onRedo: vi.fn(),
     canUndo: true,
@@ -71,7 +72,7 @@ describe('useEditorKeyboardShortcuts', () => {
   })
 
   it('calls onDeleteSelected when Delete key is pressed with selected shape', () => {
-    const props = { ...defaultProps, selectedShapeId: 'shape1' }
+    const props = { ...defaultProps, selectedShapeIds: ['shape1'] }
     renderHook(() => useEditorKeyboardShortcuts(props))
     
     act(() => {
@@ -79,6 +80,16 @@ describe('useEditorKeyboardShortcuts', () => {
     })
     
     expect(props.onDeleteSelected).toHaveBeenCalled()
+  })
+
+  it('calls onSelectAll when Ctrl+A is pressed', () => {
+    renderHook(() => useEditorKeyboardShortcuts(defaultProps))
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyA', ctrlKey: true }))
+    })
+
+    expect(defaultProps.onSelectAll).toHaveBeenCalled()
   })
 
   it('does not call onDeleteSelected when Space is held', () => {
