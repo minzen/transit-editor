@@ -103,6 +103,58 @@ test.describe('Keyboard shortcuts', () => {
         await expect(canvas.locator('circle[fill="#fff"][stroke="#111"]')).toHaveCount(1)
     })
 
+    test('Ctrl+A selects all stations and arrow keys move them together', async ({ page }) => {
+        await page.goto('/editor')
+        await addStation(page, 0.3, 0.5, 'Alpha')
+        await addStation(page, 0.6, 0.5, 'Beta')
+
+        const canvas = page.getByTestId('editor-canvas')
+        await page.getByRole('button', { name: 'Select', exact: true }).click()
+        await canvas.focus()
+        const stations = canvas.locator('circle[fill="#fff"][stroke="#111"]')
+        const before = await stations.evaluateAll((elements) =>
+            elements.map((element) => Number(element.getAttribute('cx')))
+        )
+
+        await page.keyboard.press('Control+a')
+        await expect(canvas.locator('circle[fill="none"][stroke="#1976d2"][stroke-width="3"]')).toHaveCount(2)
+        await page.keyboard.press('ArrowRight')
+
+        const after = await stations.evaluateAll((elements) =>
+            elements.map((element) => Number(element.getAttribute('cx')))
+        )
+        expect(after).toEqual(before.map((x) => x + 50))
+    })
+
+    test('dragging a selected station moves the complete selection', async ({ page }) => {
+        await page.goto('/editor')
+        await addStation(page, 0.3, 0.5, 'Alpha')
+        await addStation(page, 0.6, 0.5, 'Beta')
+
+        const canvas = page.getByTestId('editor-canvas')
+        await page.getByRole('button', { name: 'Select', exact: true }).click()
+        await canvas.focus()
+        const stations = canvas.locator('circle[fill="#fff"][stroke="#111"]')
+        const before = await stations.evaluateAll((elements) =>
+            elements.map((element) => Number(element.getAttribute('cx')))
+        )
+
+        await page.keyboard.press('Control+a')
+        const firstStation = stations.first()
+        const box = await firstStation.boundingBox()
+        if (!box) throw new Error('First station is not visible')
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.down()
+        await page.mouse.move(box.x + box.width / 2 + 60, box.y + box.height / 2)
+        await page.mouse.up()
+
+        const after = await stations.evaluateAll((elements) =>
+            elements.map((element) => Number(element.getAttribute('cx')))
+        )
+        expect(after[0] - before[0]).toBe(after[1] - before[1])
+        expect(after[0]).toBeGreaterThan(before[0])
+    })
+
     test('multiple Ctrl+Z operations undo multiple stations', async ({ page }) => {
         await page.goto('/editor')
 
