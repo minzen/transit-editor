@@ -231,6 +231,7 @@ export function EditorCanvas() {
         setDraggingStationId,
         setDraggingBendPoint,
         stationDragStartRef,
+        beginDragHistoryTransaction,
         suppressNextClickRef,
         handleWheel,
         handlePointerDown,
@@ -749,6 +750,7 @@ export function EditorCanvas() {
                         <BendPointRenderer
                             segments={segmentsList}
                             onBendPointDragStart={(segmentId, pointIndex) => {
+                                beginDragHistoryTransaction()
                                 setDraggingBendPoint({ segmentId, pointIndex })
                             }}
                             onBendPointDoubleClick={(segmentId, pointIndex) => {
@@ -808,6 +810,7 @@ export function EditorCanvas() {
                                 )
                             } else {
                                 setSelectedStationIds([stationId])
+                                beginDragHistoryTransaction()
                                 setDraggingStationId(stationId)
                                 stationDragStartRef.current = {
                                     x: event.clientX,

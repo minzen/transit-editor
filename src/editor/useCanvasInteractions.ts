@@ -5,6 +5,7 @@ import { snapPointToGrid } from '../geometry/snap'
 import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
 import { isPointInsideStation } from '../utils/stationUtils'
 import type { Point } from '../types/geometry'
+import type { DataSnapshot } from '../store/slices/dataSlice'
 
 type Args = {
     spacePressed: boolean
@@ -79,6 +80,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
     const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 })
 
     const stationDragStartRef = useRef<{ x: number; y: number } | null>(null)
+    const dragHistoryStartRef = useRef<DataSnapshot | null>(null)
     const suppressNextClickRef = useRef(false)
 
     const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map())
@@ -106,6 +108,16 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             offsetX: newOffsetX,
             offsetY: newOffsetY,
         })
+    }
+
+    const beginDragHistoryTransaction = () => {
+        const state = useEditorStore.getState()
+        dragHistoryStartRef.current = {
+            stations: state.stations,
+            segments: state.segments,
+            lines: state.lines,
+            shapes: state.shapes,
+        }
     }
 
     const handlePointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -260,7 +272,8 @@ export function useCanvasInteractions({ spacePressed }: Args) {
                     draggingBendPoint.segmentId,
                     draggingBendPoint.pointIndex,
                     snappedPoint.x,
-                    snappedPoint.y
+                    snappedPoint.y,
+                    false
                 )
             }
             return
@@ -285,7 +298,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
             return
         }
 
-        moveStation(draggingStationId, snapped.x, snapped.y)
+        moveStation(draggingStationId, snapped.x, snapped.y, false)
     }
 
     const handlePointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -304,6 +317,10 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         if (activePointersRef.current.size === 0) {
             if (wasMultiTouch) {
                 suppressNextClickRef.current = true
+            }
+            if (dragHistoryStartRef.current) {
+                useEditorStore.getState().commitHistoryTransaction(dragHistoryStartRef.current)
+                dragHistoryStartRef.current = null
             }
             setDraggingStationId(null)
             stationDragStartRef.current = null
@@ -363,6 +380,7 @@ export function useCanvasInteractions({ spacePressed }: Args) {
         draggingBendPoint,
         setDraggingBendPoint,
         stationDragStartRef,
+        beginDragHistoryTransaction,
         suppressNextClickRef,
         handleWheel,
         handlePointerDown,
