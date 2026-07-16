@@ -61,12 +61,6 @@ export function HelpDialog({ open, onClose }: Props) {
                     <List dense>
                         <ListItem>
                             <ListItemText
-                                primary={t('helpDialog.fareZones')}
-                                secondary={t('helpDialog.fareZonesDesc')}
-                            />
-                        </ListItem>
-                        <ListItem>
-                            <ListItemText
                                 primary={t('helpDialog.serviceIcons')}
                                 secondary={t('helpDialog.serviceIconsDesc')}
                             />
@@ -124,6 +118,9 @@ export function HelpDialog({ open, onClose }: Props) {
                             <ListItemText primary="Shift + click" secondary={t('helpDialog.multiSelectShortcut')} />
                         </ListItem>
                         <ListItem>
+                            <ListItemText primary="Ctrl+A / Cmd+A" secondary={t('helpDialog.selectAllShortcut')} />
+                        </ListItem>
+                        <ListItem>
                             <ListItemText primary="Backspace / Delete (during shape drawing)" secondary={t('helpDialog.removeShapePointShortcut')} />
                         </ListItem>
                         <ListItem>
@@ -160,6 +157,18 @@ export function HelpDialog({ open, onClose }: Props) {
                         </ListItem>
                         <ListItem>
                             <ListItemText primary={t('helpDialog.themeToggleControl')} secondary={t('helpDialog.themeToggleControlDesc')} />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText primary={t('helpDialog.canvasBackgroundControl')} secondary={t('helpDialog.canvasBackgroundControlDesc')} />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText primary={t('helpDialog.languageControl')} secondary={t('helpDialog.languageControlDesc')} />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText primary={t('helpDialog.lineCodesControl')} secondary={t('helpDialog.lineCodesControlDesc')} />
+                        </ListItem>
+                        <ListItem>
+                            <ListItemText primary={t('helpDialog.autoPlaceLabelsControl')} secondary={t('helpDialog.autoPlaceLabelsControlDesc')} />
                         </ListItem>
                     </List>
                 </Box>
