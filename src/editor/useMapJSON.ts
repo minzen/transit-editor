@@ -2,6 +2,12 @@ import { useCallback } from 'react'
 import { useEditorStore } from '../store/editorStore'
 import { validateMapDocument } from '../validation/mapSchema'
 
+export const MAX_MAP_IMPORT_FILE_BYTES = 5 * 1024 * 1024
+
+export function getMapImportFileSizeError(fileSize: number): string | null {
+    return fileSize > MAX_MAP_IMPORT_FILE_BYTES ? 'Map file exceeds the 5 MB import limit' : null
+}
+
 export type ImportResult =
     | { success: true }
     | { success: false; errors: string[] }
@@ -72,13 +78,18 @@ export function useMapJSON() {
 
     const handleImportFile = useCallback(
         (file: File): Promise<ImportResult> => {
+            const fileSizeError = getMapImportFileSizeError(file.size)
+            if (fileSizeError) {
+                return Promise.resolve({ success: false, errors: [fileSizeError] })
+            }
+
             return new Promise((resolve) => {
                 const reader = new FileReader()
                 reader.onload = (event) => {
                     try {
                         const raw: unknown = JSON.parse(event.target?.result as string)
                         const result = validateMapDocument(raw)
-                        if (!result.success) {
+                        if (result.success === false) {
                             resolve({ success: false, errors: result.errors })
                             return
                         }

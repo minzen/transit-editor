@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validateMapDocument, MapDocumentSchema } from './mapSchema'
+import { validateMapDocument, MapDocumentSchema, MAP_IMPORT_LIMITS } from './mapSchema'
 
 function validDoc() {
     return {
@@ -48,7 +48,7 @@ describe('validateMapDocument', () => {
     it('rejects wrong version', () => {
         const result = validateMapDocument({ ...validDoc(), version: 2 })
         expect(result.success).toBe(false)
-        if (!result.success) {
+        if (result.success === false) {
             expect(result.errors.some((e) => e.includes('version'))).toBe(true)
         }
     })
@@ -108,6 +108,55 @@ describe('validateMapDocument', () => {
     it('rejects non-object input', () => {
         const result = validateMapDocument('not an object')
         expect(result.success).toBe(false)
+    })
+
+    it('rejects records that exceed collection limits', () => {
+        const stations = Object.fromEntries(
+            Array.from({ length: MAP_IMPORT_LIMITS.maxStations + 1 }, (_, index) => {
+                const id = `station-${index}`
+                return [id, { id, x: 0, y: 0 }]
+            })
+        )
+
+        expect(validateMapDocument({ ...validDoc(), stations }).success).toBe(false)
+    })
+
+    it('rejects excessive segment geometry and coordinates outside the map bounds', () => {
+        const points = Array.from(
+            { length: MAP_IMPORT_LIMITS.maxPointsPerSegment + 1 },
+            () => ({ x: 0, y: 0 })
+        )
+        const withTooManyPoints = {
+            ...validDoc(),
+            segments: {
+                seg1: { id: 'seg1', fromStationId: 'st1', toStationId: 'st1', lineIds: ['l1'], points },
+            },
+        }
+        const withOutOfBoundsCoordinate = {
+            ...validDoc(),
+            stations: {
+                st1: { id: 'st1', x: MAP_IMPORT_LIMITS.maxCoordinate + 1, y: 0 },
+            },
+        }
+
+        expect(validateMapDocument(withTooManyPoints).success).toBe(false)
+        expect(validateMapDocument(withOutOfBoundsCoordinate).success).toBe(false)
+    })
+
+    it('rejects IDs and names that exceed their limits', () => {
+        const tooLong = 'x'.repeat(MAP_IMPORT_LIMITS.maxIdLength + 1)
+        const tooLongName = 'x'.repeat(MAP_IMPORT_LIMITS.maxNameLength + 1)
+        const withLongId = {
+            ...validDoc(),
+            stations: { [tooLong]: { id: tooLong, x: 0, y: 0 } },
+        }
+        const withLongName = {
+            ...validDoc(),
+            lines: { l1: { id: 'l1', name: tooLongName, color: '#ff0000' } },
+        }
+
+        expect(validateMapDocument(withLongId).success).toBe(false)
+        expect(validateMapDocument(withLongName).success).toBe(false)
     })
 })
 

@@ -1,8 +1,26 @@
 import { z } from 'zod'
 
+export const MAP_IMPORT_LIMITS = {
+    maxStations: 5_000,
+    maxSegments: 10_000,
+    maxLines: 500,
+    maxShapes: 2_000,
+    maxPointsPerSegment: 100,
+    maxPointsPerShape: 500,
+    maxLineIdsPerSegment: 32,
+    maxServicesPerStation: 25,
+    maxIdLength: 128,
+    maxNameLength: 50,
+    maxLineCodeLength: 20,
+    maxCoordinate: 1_000_000,
+} as const
+
+const BoundedString = z.string().min(1).max(MAP_IMPORT_LIMITS.maxIdLength)
+const BoundedCoordinate = z.number().finite().min(-MAP_IMPORT_LIMITS.maxCoordinate).max(MAP_IMPORT_LIMITS.maxCoordinate)
+
 const PointSchema = z.object({
-    x: z.number(),
-    y: z.number(),
+    x: BoundedCoordinate,
+    y: BoundedCoordinate,
 })
 
 const LabelPositionSchema = z.enum(['top', 'bottom', 'left', 'right'])
@@ -38,64 +56,70 @@ const ServiceIconSchema = z.enum([
 ])
 
 const StationSchema = z.object({
-    id: z.string().min(1),
-    x: z.number(),
-    y: z.number(),
-    name: z.string().optional(),
+    id: BoundedString,
+    x: BoundedCoordinate,
+    y: BoundedCoordinate,
+    name: z.string().max(MAP_IMPORT_LIMITS.maxNameLength).optional(),
     labelPosition: LabelPositionSchema.optional(),
-    labelRotation: z.number().optional(),
-    services: z.array(ServiceIconSchema).optional(),
-    fareZone: z.number().optional(),
+    labelRotation: z.number().finite().min(-360).max(360).optional(),
+    services: z.array(ServiceIconSchema).max(MAP_IMPORT_LIMITS.maxServicesPerStation).optional(),
+    fareZone: z.number().finite().optional(),
 })
 
 const SegmentSchema = z.object({
-    id: z.string().min(1),
-    fromStationId: z.string().min(1),
-    toStationId: z.string().min(1),
-    lineIds: z.array(z.string().min(1)),
-    points: z.array(PointSchema),
+    id: BoundedString,
+    fromStationId: BoundedString,
+    toStationId: BoundedString,
+    lineIds: z.array(BoundedString).max(MAP_IMPORT_LIMITS.maxLineIdsPerSegment),
+    points: z.array(PointSchema).max(MAP_IMPORT_LIMITS.maxPointsPerSegment),
 })
 
 const LineStyleSchema = z.enum(['solid', 'dashed', 'double'])
 const TransitModeSchema = z.enum(['metro', 'rail', 'tram', 'bus', 'ferry'])
 
 const LineSchema = z.object({
-    id: z.string().min(1),
-    name: z.string().min(1),
-    color: z.string().min(1),
-    code: z.string().optional(),
+    id: BoundedString,
+    name: z.string().min(1).max(MAP_IMPORT_LIMITS.maxNameLength),
+    color: z.string().min(1).max(64),
+    code: z.string().max(MAP_IMPORT_LIMITS.maxLineCodeLength).optional(),
     lineStyle: LineStyleSchema.optional(),
     transitMode: TransitModeSchema.optional(),
     lineWidth: z.number().int().min(1).max(20).optional(),
 })
 
 const ShapeSchema = z.object({
-    id: z.string().min(1),
-    points: z.array(PointSchema),
-    color: z.string().min(1),
-    name: z.string().optional(),
+    id: BoundedString,
+    points: z.array(PointSchema).max(MAP_IMPORT_LIMITS.maxPointsPerShape),
+    color: z.string().min(1).max(64),
+    name: z.string().max(MAP_IMPORT_LIMITS.maxNameLength).optional(),
     opacity: z.number().min(0).max(1).optional(),
 })
 
 const ViewportSchema = z.object({
-    zoom: z.number(),
-    offsetX: z.number(),
-    offsetY: z.number(),
+    zoom: z.number().finite().min(0.1).max(100),
+    offsetX: BoundedCoordinate,
+    offsetY: BoundedCoordinate,
 })
 
 const EditorToolSchema = z.enum(['select', 'station', 'segment', 'shape'])
 
+const boundedRecord = <T extends z.ZodType>(valueSchema: T, maxEntries: number) =>
+    z.record(BoundedString, valueSchema).refine(
+        (record) => Object.keys(record).length <= maxEntries,
+        `Must contain at most ${maxEntries} entries`,
+    )
+
 export const MapDocumentSchema = z.object({
     version: z.literal(1),
-    stations: z.record(z.string().min(1), StationSchema),
-    segments: z.record(z.string().min(1), SegmentSchema),
-    lines: z.record(z.string().min(1), LineSchema),
-    shapes: z.record(z.string().min(1), ShapeSchema),
+    stations: boundedRecord(StationSchema, MAP_IMPORT_LIMITS.maxStations),
+    segments: boundedRecord(SegmentSchema, MAP_IMPORT_LIMITS.maxSegments),
+    lines: boundedRecord(LineSchema, MAP_IMPORT_LIMITS.maxLines),
+    shapes: boundedRecord(ShapeSchema, MAP_IMPORT_LIMITS.maxShapes),
     activeTool: EditorToolSchema.optional(),
-    lineWidth: z.number().optional(),
-    gridCellSize: z.number().optional(),
-    gridCellsWidth: z.number().optional(),
-    gridCellsHeight: z.number().optional(),
+    lineWidth: z.number().finite().min(1).max(20).optional(),
+    gridCellSize: z.number().finite().min(10).max(1_000).optional(),
+    gridCellsWidth: z.number().finite().min(10).max(1_000).optional(),
+    gridCellsHeight: z.number().finite().min(10).max(1_000).optional(),
     showLineCodes: z.boolean().optional(),
     language: z.enum(['en', 'de']).optional(),
     viewport: ViewportSchema.optional(),
