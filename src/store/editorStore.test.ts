@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useEditorStore } from './editorStore'
+import { getValidatedPersistedState, useEditorStore } from './editorStore'
 
 describe('editor store', () => {
   beforeEach(() => {
@@ -1281,5 +1281,44 @@ describe('editor store', () => {
     const state = useEditorStore.getState()
     expect(state.lines.styledLine.lineStyle).toBe('dashed')
     expect(state.lines.styledLine.transitMode).toBe('rail')
+  })
+
+  it('hydrates a valid persisted map and backfills legacy line fields', () => {
+    const currentState = useEditorStore.getState()
+    const persisted = {
+      activeTool: 'station',
+      stations: { station: { id: 'station', x: 10, y: 20 } },
+      segments: {},
+      lines: { line: { id: 'line', name: 'Line', color: '#ff0000' } },
+      shapes: {},
+      lineWidth: 12,
+      gridCellSize: 60,
+      gridCellsWidth: 100,
+      gridCellsHeight: 120,
+      showLineCodes: false,
+      language: 'de',
+      themeMode: 'dark',
+    }
+
+    const hydrated = getValidatedPersistedState(persisted, currentState)
+
+    expect(hydrated.activeTool).toBe('station')
+    expect(hydrated.stations).toEqual(persisted.stations)
+    expect(hydrated.lines?.line.lineStyle).toBe('solid')
+    expect(hydrated.lines?.line.transitMode).toBe('metro')
+    expect(hydrated.themeMode).toBe('dark')
+  })
+
+  it('ignores malformed persisted state and preserves current defaults', () => {
+    const currentState = useEditorStore.getState()
+    const hydrated = getValidatedPersistedState({
+      activeTool: 'invalid-tool',
+      stations: { station: { id: 'station', x: Infinity, y: 0 } },
+      segments: [],
+      lines: {},
+      shapes: {},
+    }, currentState)
+
+    expect(hydrated).toEqual({})
   })
 })
