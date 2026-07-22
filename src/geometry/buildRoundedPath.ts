@@ -1,4 +1,5 @@
 import type { Point } from '../types/geometry'
+import { distance as dist, lerp } from './vector'
 
 /**
  * Convert an array of polyline points into an SVG path string with
@@ -16,14 +17,6 @@ export function buildRoundedPolylinePath(points: Point[], radius = 12): string {
     if (points.length === 2) {
         return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`
     }
-
-    const dist = (a: Point, b: Point): number =>
-        Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
-
-    const lerp = (a: Point, b: Point, t: number): Point => ({
-        x: a.x + (b.x - a.x) * t,
-        y: a.y + (b.y - a.y) * t,
-    })
 
     let d = `M ${points[0].x} ${points[0].y}`
 

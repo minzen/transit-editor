@@ -7,10 +7,9 @@ import {
     List,
     ListItem,
     ListItemText,
-    useMediaQuery,
-    useTheme,
 } from '@mui/material'
 import { useTranslation } from 'react-i18next'
+import { useIsMobile } from '../hooks/useResponsive'
 
 type Props = {
     open: boolean
@@ -19,8 +18,7 @@ type Props = {
 }
 
 export function ImportErrorDialog({ open, errors, onClose }: Props) {
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMobile = useIsMobile()
     const { t } = useTranslation()
 
     return (

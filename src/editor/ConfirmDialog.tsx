@@ -5,10 +5,9 @@ import {
     DialogContentText,
     DialogActions,
     Button,
-    useMediaQuery,
-    useTheme,
 } from '@mui/material'
 import { useTranslation } from 'react-i18next'
+import { useIsMobile } from '../hooks/useResponsive'
 
 type Props = {
     open: boolean
@@ -29,8 +28,7 @@ export function ConfirmDialog({
     onConfirm,
     onCancel,
 }: Props) {
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMobile = useIsMobile()
     const { t } = useTranslation()
 
     return (

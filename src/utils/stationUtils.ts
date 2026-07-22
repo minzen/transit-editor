@@ -1,4 +1,5 @@
 import type { Station } from '../model/station'
+import { distance } from '../geometry/vector'
 
 const STATION_RADIUS = 8
 
@@ -20,10 +21,7 @@ export function isPointInsideStation(
         if (excludeStationId && station.id === excludeStationId) {
             continue
         }
-        const dx = x - station.x
-        const dy = y - station.y
-        const distance = Math.sqrt(dx * dx + dy * dy)
-        if (distance < STATION_RADIUS * 2) {
+        if (distance({ x, y }, { x: station.x, y: station.y }) < STATION_RADIUS * 2) {
             return true
         }
     }

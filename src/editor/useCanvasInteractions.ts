@@ -4,6 +4,7 @@ import { screenToWorld } from '../viewport/coordinates'
 import { snapPointToGrid } from '../geometry/snap'
 import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
 import { isPointInsideStation } from '../utils/stationUtils'
+import { distance } from '../geometry/vector'
 import type { Point } from '../types/geometry'
 import type { DataSnapshot } from '../store/slices/dataSlice'
 
@@ -138,12 +139,10 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
 
         if (activePointersRef.current.size === 2) {
             const pointers = Array.from(activePointersRef.current.values())
-            const dx = pointers[1].x - pointers[0].x
-            const dy = pointers[1].y - pointers[0].y
             previousPinchRef.current = {
                 centerX: (pointers[0].x + pointers[1].x) / 2,
                 centerY: (pointers[0].y + pointers[1].y) / 2,
-                distance: Math.hypot(dx, dy),
+                distance: distance(pointers[0], pointers[1]),
             }
             // Cancel single-pointer interactions so pinch doesn't fight them
             setIsPanning(false)
@@ -173,9 +172,7 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
 
         if (activePointersRef.current.size >= 2) {
             const pointers = Array.from(activePointersRef.current.values())
-            const dx = pointers[1].x - pointers[0].x
-            const dy = pointers[1].y - pointers[0].y
-            const newDistance = Math.hypot(dx, dy)
+            const newDistance = distance(pointers[0], pointers[1])
             const newCenterX = (pointers[0].x + pointers[1].x) / 2
             const newCenterY = (pointers[0].y + pointers[1].y) / 2
 
@@ -290,10 +287,12 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
         if (!draggingStationId) return
 
         if (stationDragStartRef.current) {
-            const dx = event.clientX - stationDragStartRef.current.x
-            const dy = event.clientY - stationDragStartRef.current.y
+            const dragDelta = distance(
+                { x: event.clientX, y: event.clientY },
+                stationDragStartRef.current
+            )
 
-            if (Math.hypot(dx, dy) > 3) {
+            if (dragDelta > 3) {
                 suppressNextClickRef.current = true
             }
         }

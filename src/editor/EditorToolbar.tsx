@@ -10,13 +10,14 @@ import { ConfirmDialog } from './ConfirmDialog'
 import { ImportErrorDialog } from './ImportErrorDialog'
 import { useMapJSON } from './useMapJSON'
 
-import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, useMediaQuery, useTheme, Popover, Dialog, FormControl, InputLabel, Menu } from '@mui/material'
+import { Button, Box, Divider, Select, MenuItem, IconButton, Tooltip, Popover, Dialog, FormControl, InputLabel, Menu } from '@mui/material'
 import { Undo, Redo, Home, Help, ZoomIn, ZoomOut, FitScreen, MoreVert, DarkMode, LightMode, RestartAlt } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n/i18n.ts'
 import { useEditorStore } from '../store/editorStore'
+import { useIsMobile } from '../hooks/useResponsive'
 
 type Props = {
     activeTool: EditorTool
@@ -121,8 +122,7 @@ export function EditorToolbar({
     const navigate = useNavigate()
     const [helpOpen, setHelpOpen] = useState(false)
     const [deleteLineConfirmOpen, setDeleteLineConfirmOpen] = useState(false)
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMobile = useIsMobile()
     const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null)
     const [clearConfirmOpen, setClearConfirmOpen] = useState(false)
     const [editLineOpen, setEditLineOpen] = useState(false)

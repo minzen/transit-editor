@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { TextField, Box, Typography, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem, useMediaQuery, useTheme } from '@mui/material'
+import { TextField, Box, Typography, Button, IconButton, Stack, InputAdornment, FormControl, InputLabel, Select, MenuItem } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { validateLineName, VALIDATION } from '../validation/constants'
+import { useIsMobile, useIsTablet } from '../hooks/useResponsive'
+import { onEnterKey } from '../utils/keyboard'
 import type { Line, LineStyle, TransitMode } from '../model/line'
 
 type Props = {
@@ -22,9 +24,8 @@ function isValidHexColor(hex: string): boolean {
 
 export function LineCreator({ colorPalette, onSave, onCancel, initialLine, anarchyMode = false }: Props) {
     const { t } = useTranslation()
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-    const isTablet = useMediaQuery(theme.breakpoints.down('md'))
+    const isMobile = useIsMobile()
+    const isTablet = useIsTablet()
 
     const [name, setName] = useState(initialLine?.name ?? '')
     const [color, setColor] = useState(initialLine?.color ?? '#1976d2')
@@ -57,11 +58,7 @@ export function LineCreator({ colorPalette, onSave, onCancel, initialLine, anarc
         }
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            handleSave()
-        }
-    }
+    const handleKeyDown = onEnterKey<HTMLInputElement>(handleSave)
 
     const handleHexColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value

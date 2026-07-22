@@ -8,11 +8,11 @@ import {
     TextField,
     Stack,
     Box,
-    useMediaQuery,
-    useTheme,
 } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { validateStationName, VALIDATION } from '../validation/constants'
+import { useIsMobile } from '../hooks/useResponsive'
+import { onEnterKey } from '../utils/keyboard'
 
 type Props = {
     open: boolean
@@ -23,8 +23,7 @@ type Props = {
 
 export function StationNameDialog({ open, onSave, onCancel, anarchyMode = false }: Props) {
     const { t } = useTranslation()
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMobile = useIsMobile()
 
     const [name, setName] = useState('')
 
@@ -43,11 +42,7 @@ export function StationNameDialog({ open, onSave, onCancel, anarchyMode = false 
         onCancel()
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            handleSave()
-        }
-    }
+    const handleKeyDown = onEnterKey<HTMLInputElement>(handleSave)
 
     return (
         <Dialog
