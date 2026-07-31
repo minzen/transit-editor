@@ -8,6 +8,7 @@ export type ViewSlice = {
     gridCellsWidth: number
     gridCellsHeight: number
     showLineCodes: boolean
+    freeformMode: boolean
     language: 'en' | 'de'
     backgroundImageUrl: string | null
     showBackgroundImage: boolean
@@ -27,6 +28,7 @@ export type ViewSlice = {
     setGridCellsWidth: (width: number) => void
     setGridCellsHeight: (height: number) => void
     setShowLineCodes: (show: boolean) => void
+    setFreeformMode: (enabled: boolean) => void
     setLanguage: (lang: 'en' | 'de') => void
     setBackgroundImageUrl: (url: string | null) => void
     setShowBackgroundImage: (show: boolean) => void
@@ -48,6 +50,7 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
     gridCellsWidth: 80,
     gridCellsHeight: 80,
     showLineCodes: true,
+    freeformMode: false,
     language: 'en',
     backgroundImageUrl: null,
     showBackgroundImage: true,
@@ -135,6 +138,9 @@ export const createViewSlice: StateCreator<ViewSlice, [], [], ViewSlice> = (set)
 
     setShowLineCodes: (show) =>
         set({ showLineCodes: show }),
+
+    setFreeformMode: (enabled) =>
+        set({ freeformMode: enabled }),
 
     setLanguage: (lang) =>
         set({ language: lang }),

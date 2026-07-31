@@ -37,6 +37,7 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
+    const freeformMode = useEditorStore((s) => s.freeformMode)
     const activeTool = useEditorStore((s) => s.activeTool)
     const addStation = useEditorStore((s) => s.addStation)
     const translateSelection = useEditorStore((s) => s.translateSelection)
@@ -252,7 +253,17 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
                 const fromStation = stations[segment.fromStationId]
                 const toStation = stations[segment.toStationId]
 
-                // First snap to grid, then to octolinear angles
+                if (freeformMode) {
+                    updateSegmentPoint(
+                        draggingBendPoint.segmentId,
+                        draggingBendPoint.pointIndex,
+                        point.x,
+                        point.y,
+                        false
+                    )
+                    return
+                }
+
                 const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
                 let snappedPoint: { x: number; y: number }
@@ -298,7 +309,7 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
             }
         }
 
-        const snapped = snapPointToGrid(point.x, point.y, gridCellSize)
+        const snapped = freeformMode ? point : snapPointToGrid(point.x, point.y, gridCellSize)
         const previousPoint = lastStationDragPointRef.current
         if (!previousPoint) {
             lastStationDragPointRef.current = snapped
@@ -361,8 +372,9 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
 
         const point = screenToWorld(x, y, viewport)
 
-        // Snap to grid, then clamp to grid bounds
-        const snapped = clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
+        const snapped = freeformMode
+            ? point
+            : clampToGridBounds(snapPointToGrid(point.x, point.y, gridCellSize))
 
         // Prevent placing station inside another station
         if (isPointInsideStation(snapped.x, snapped.y, stations)) {

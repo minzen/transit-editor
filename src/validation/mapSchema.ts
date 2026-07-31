@@ -121,6 +121,7 @@ export const MapDocumentSchema = z.object({
     gridCellsWidth: z.number().finite().min(10).max(1_000).optional(),
     gridCellsHeight: z.number().finite().min(10).max(1_000).optional(),
     showLineCodes: z.boolean().optional(),
+    freeformMode: z.boolean().optional(),
     language: z.enum(['en', 'de']).optional(),
     viewport: ViewportSchema.optional(),
 })

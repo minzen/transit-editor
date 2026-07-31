@@ -11,6 +11,7 @@ describe('editor store', () => {
       shapes: {},
       pastStates: [],
       futureStates: [],
+      freeformMode: false,
       canvasBackgroundColor: '',
     })
   })
@@ -69,6 +70,20 @@ describe('editor store', () => {
     expect(segmentIds).toHaveLength(1)
     expect(updatedState.segments[segmentIds[0]].fromStationId).toBe(stationIds[0])
     expect(updatedState.segments[segmentIds[0]].toStationId).toBe(stationIds[1])
+  })
+
+  it('creates a direct segment in freeform mode', () => {
+    useEditorStore.getState().setFreeformMode(true)
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(320, 250)
+
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segment = Object.values(useEditorStore.getState().segments)[0]
+    expect(segment.points).toEqual([{ x: 100, y: 200 }, { x: 320, y: 250 }])
   })
 
   it('adds a segment between two stations (L-shaped)', () => {
@@ -1296,6 +1311,7 @@ describe('editor store', () => {
       gridCellsWidth: 100,
       gridCellsHeight: 120,
       showLineCodes: false,
+      freeformMode: true,
       language: 'de',
       themeMode: 'dark',
     }
@@ -1306,6 +1322,7 @@ describe('editor store', () => {
     expect(hydrated.stations).toEqual(persisted.stations)
     expect(hydrated.lines?.line.lineStyle).toBe('solid')
     expect(hydrated.lines?.line.transitMode).toBe('metro')
+    expect(hydrated.freeformMode).toBe(true)
     expect(hydrated.themeMode).toBe('dark')
   })
 

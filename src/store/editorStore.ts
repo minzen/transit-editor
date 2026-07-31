@@ -24,6 +24,7 @@ type PersistedEditorState = Pick<
     | 'gridCellsWidth'
     | 'gridCellsHeight'
     | 'showLineCodes'
+    | 'freeformMode'
     | 'language'
     | 'themeMode'
 >
@@ -49,6 +50,7 @@ export function getValidatedPersistedState(
         gridCellsWidth: persisted.gridCellsWidth,
         gridCellsHeight: persisted.gridCellsHeight,
         showLineCodes: persisted.showLineCodes,
+        freeformMode: persisted.freeformMode,
         language: persisted.language,
     })
 
@@ -81,6 +83,7 @@ export function getValidatedPersistedState(
         gridCellsWidth: map.data.gridCellsWidth ?? currentState.gridCellsWidth,
         gridCellsHeight: map.data.gridCellsHeight ?? currentState.gridCellsHeight,
         showLineCodes: map.data.showLineCodes ?? currentState.showLineCodes,
+        freeformMode: map.data.freeformMode ?? currentState.freeformMode,
         language: map.data.language ?? currentState.language,
         themeMode,
     }
@@ -109,6 +112,7 @@ export const useEditorStore = create<EditorState>()(
                 gridCellsWidth: state.gridCellsWidth,
                 gridCellsHeight: state.gridCellsHeight,
                 showLineCodes: state.showLineCodes,
+                freeformMode: state.freeformMode,
                 language: state.language,
                 themeMode: state.themeMode,
             }),

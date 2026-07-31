@@ -132,6 +132,8 @@ export function EditorToolbar({
     const canvasBackgroundColor = useEditorStore((s) => s.canvasBackgroundColor)
     const setCanvasBackgroundColor = useEditorStore((s) => s.setCanvasBackgroundColor)
     const themeMode = useEditorStore((s) => s.themeMode)
+    const freeformMode = useEditorStore((s) => s.freeformMode)
+    const setFreeformMode = useEditorStore((s) => s.setFreeformMode)
     const anarchyMode = useEditorStore((s) => s.anarchyMode)
 
     // Track line creation to auto-select the new line
@@ -157,7 +159,7 @@ export function EditorToolbar({
 
     const handleImport = async () => {
         const result = await triggerImport()
-        if (!result.success) {
+        if (result.success === false) {
             setImportErrors(result.errors)
             setImportErrorOpen(true)
         }
@@ -306,6 +308,13 @@ export function EditorToolbar({
                                 setLineWidth={setLineWidth}
                             />
                             <Button
+                                aria-pressed={freeformMode}
+                                variant={freeformMode ? 'contained' : 'outlined'}
+                                onClick={() => setFreeformMode(!freeformMode)}
+                            >
+                                {freeformMode ? t('toolbar.disableFreeformMode') : t('toolbar.enableFreeformMode')}
+                            </Button>
+                            <Button
                                 variant={showLineCodes ? 'contained' : 'outlined'}
                                 onClick={() => setShowLineCodes(!showLineCodes)}
                             >
@@ -365,6 +374,16 @@ export function EditorToolbar({
                         lineWidth={lineWidth}
                         setLineWidth={setLineWidth}
                     />
+
+                    <Tooltip title={freeformMode ? t('toolbar.disableFreeformMode') : t('toolbar.enableFreeformMode')}>
+                        <Button
+                            aria-pressed={freeformMode}
+                            variant={freeformMode ? 'contained' : 'outlined'}
+                            onClick={() => setFreeformMode(!freeformMode)}
+                        >
+                            {t('toolbar.freeformMode')}
+                        </Button>
+                    </Tooltip>
 
                     <Tooltip title={showLineCodes ? t('toolbar.hideLineCodes') : t('toolbar.showLineCodes')}>
                         <Button

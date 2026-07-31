@@ -49,7 +49,10 @@
     "autoPlaceLabels": "Beschriftungen automatisch platzieren",
     "toggleTheme": "Design wechseln",
     "backgroundColor": "Hintergrundfarbe",
-    "resetBackgroundColor": "Hintergrund zurücksetzen"
+    "resetBackgroundColor": "Hintergrund zurücksetzen",
+    "freeformMode": "Freies Platzieren",
+    "enableFreeformMode": "Freies Platzieren aktivieren",
+    "disableFreeformMode": "Freies Platzieren deaktivieren"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Linienname",

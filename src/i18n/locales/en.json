@@ -50,7 +50,10 @@
     "autoPlaceLabels": "Auto-place Labels",
     "toggleTheme": "Toggle Theme",
     "backgroundColor": "Canvas Background",
-    "resetBackgroundColor": "Reset Background"
+    "resetBackgroundColor": "Reset Background",
+    "freeformMode": "Freeform",
+    "enableFreeformMode": "Enable Freeform Mode",
+    "disableFreeformMode": "Disable Freeform Mode"
   },
   "lineCreator": {
     "lineNamePlaceholder": "Line name",

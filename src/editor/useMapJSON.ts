@@ -23,6 +23,7 @@ export function useMapJSON() {
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const showLineCodes = useEditorStore((s) => s.showLineCodes)
+    const freeformMode = useEditorStore((s) => s.freeformMode)
     const language = useEditorStore((s) => s.language)
     const viewport = useEditorStore((s) => s.viewport)
 
@@ -33,6 +34,7 @@ export function useMapJSON() {
     const setGridCellsWidth = useEditorStore((s) => s.setGridCellsWidth)
     const setGridCellsHeight = useEditorStore((s) => s.setGridCellsHeight)
     const setShowLineCodes = useEditorStore((s) => s.setShowLineCodes)
+    const setFreeformMode = useEditorStore((s) => s.setFreeformMode)
     const setLanguage = useEditorStore((s) => s.setLanguage)
     const setViewport = useEditorStore((s) => s.setViewport)
 
@@ -49,6 +51,7 @@ export function useMapJSON() {
             gridCellsWidth,
             gridCellsHeight,
             showLineCodes,
+            freeformMode,
             language,
             viewport,
         }
@@ -72,6 +75,7 @@ export function useMapJSON() {
         gridCellsWidth,
         gridCellsHeight,
         showLineCodes,
+        freeformMode,
         language,
         viewport,
     ])
@@ -108,6 +112,7 @@ export function useMapJSON() {
                         if (typeof data.gridCellsWidth === 'number') setGridCellsWidth(data.gridCellsWidth)
                         if (typeof data.gridCellsHeight === 'number') setGridCellsHeight(data.gridCellsHeight)
                         if (typeof data.showLineCodes === 'boolean') setShowLineCodes(data.showLineCodes)
+                        if (typeof data.freeformMode === 'boolean') setFreeformMode(data.freeformMode)
                         if (data.language) setLanguage(data.language)
                         if (data.viewport) setViewport(data.viewport)
 
@@ -130,6 +135,7 @@ export function useMapJSON() {
             setGridCellsWidth,
             setGridCellsHeight,
             setShowLineCodes,
+            setFreeformMode,
             setLanguage,
             setViewport,
         ]
