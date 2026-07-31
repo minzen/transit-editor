@@ -1,4 +1,5 @@
 import type { Point } from '../types/geometry'
+import { distance } from './vector'
 
 /**
  * Calculate the perpendicular distance from a point to a finite line segment.
@@ -37,10 +38,7 @@ export function pointToLineSegmentDistance(
         yy = lineStart.y + param * D
     }
 
-    const dx = point.x - xx
-    const dy = point.y - yy
-
-    return Math.sqrt(dx * dx + dy * dy)
+    return distance(point, { x: xx, y: yy })
 }
 
 /**

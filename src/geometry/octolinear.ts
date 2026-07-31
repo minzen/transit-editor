@@ -1,5 +1,6 @@
 import type { Point } from '../types/geometry'
 import { pointToLineSegmentDistance } from './distance'
+import { distance } from './vector'
 
 // Helper function to find intersection of two lines
 // Given two lines defined by points (p1, p2) and (p3, p4),
@@ -44,11 +45,11 @@ export function snapPointToOctolinear(
   const angle = Math.atan2(dy, dx)
   const step = Math.PI / 4
   const snappedAngle = Math.round(angle / step) * step
-  const distance = Math.hypot(dx, dy)
+  const dist = Math.hypot(dx, dy)
 
   return {
-    x: origin.x + Math.cos(snappedAngle) * distance,
-    y: origin.y + Math.sin(snappedAngle) * distance,
+    x: origin.x + Math.cos(snappedAngle) * dist,
+    y: origin.y + Math.sin(snappedAngle) * dist,
   }
 }
 
@@ -57,21 +58,15 @@ export function isOctolinear(
   target: Point
 ) {
   const snapped = snapPointToOctolinear(origin, target)
-  const distance = Math.hypot(
-    target.x - origin.x,
-    target.y - origin.y
-  )
+  const dist = distance(origin, target)
 
-  if (distance === 0) {
+  if (dist === 0) {
     return true
   }
 
-  const deviation = Math.hypot(
-    snapped.x - target.x,
-    snapped.y - target.y
-  )
+  const deviation = distance(snapped, target)
 
-  return deviation / distance < 0.05
+  return deviation / dist < 0.05
 }
 
 export function createOctolinearPath(
@@ -118,7 +113,7 @@ function countObstacleCollisions(
 function pathLength(path: Point[]): number {
   let len = 0
   for (let i = 0; i < path.length - 1; i++) {
-    len += Math.hypot(path[i + 1].x - path[i].x, path[i + 1].y - path[i].y)
+    len += distance(path[i], path[i + 1])
   }
   return len
 }

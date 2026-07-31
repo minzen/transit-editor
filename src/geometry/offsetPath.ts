@@ -1,4 +1,5 @@
 import type { Point } from '../types/geometry'
+import { distance } from './vector'
 
 /**
  * Offsets a polyline (array of points) perpendicularly by a distance d.
@@ -21,7 +22,7 @@ export function offsetPath(points: Point[], d: number): Point[] {
     const getSegmentNormal = (p1: Point, p2: Point): Point => {
         const dx = p2.x - p1.x
         const dy = p2.y - p1.y
-        const len = Math.sqrt(dx * dx + dy * dy)
+        const len = distance(p1, p2)
         if (len === 0) return { x: 0, y: 0 }
         return { x: -dy / len, y: dx / len }
     }

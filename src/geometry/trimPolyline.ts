@@ -1,4 +1,5 @@
 import type { Point } from '../types/geometry'
+import { distance } from './vector'
 
 /**
  * Trim the first and last segments of a polyline by the given pixel amounts
@@ -29,7 +30,7 @@ export function trimPolyline(
         const p1 = result[1]
         const dx = p1.x - p0.x
         const dy = p1.y - p0.y
-        const len = Math.hypot(dx, dy)
+        const len = distance(p0, p1)
         if (len > 0) {
             const t = Math.min(startTrim, len) / len
             result[0] = {
@@ -45,7 +46,7 @@ export function trimPolyline(
         const pm = result[last - 1]
         const dx = pm.x - pn.x
         const dy = pm.y - pn.y
-        const len = Math.hypot(dx, dy)
+        const len = distance(pn, pm)
         if (len > 0) {
             const t = Math.min(endTrim, len) / len
             result[last] = {

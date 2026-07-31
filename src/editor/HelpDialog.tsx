@@ -1,5 +1,6 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, List, ListItem, ListItemText, Divider, useMediaQuery, useTheme } from '@mui/material'
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, List, ListItem, ListItemText, Divider } from '@mui/material'
 import { useTranslation } from 'react-i18next'
+import { useIsMobile } from '../hooks/useResponsive'
 
 type Props = {
     open: boolean
@@ -7,8 +8,7 @@ type Props = {
 }
 
 export function HelpDialog({ open, onClose }: Props) {
-    const theme = useTheme()
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+    const isMobile = useIsMobile()
     const { t } = useTranslation()
 
     return (
