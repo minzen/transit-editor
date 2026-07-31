@@ -72,6 +72,7 @@ describe('useCanvasKeyboardNavigation', () => {
             shapes: {},
             pastStates: [],
             futureStates: [],
+            freeformMode: false,
         })
     })
 
@@ -91,6 +92,19 @@ describe('useCanvasKeyboardNavigation', () => {
 
         fireEvent.keyDown(svg, { key: 'ArrowUp' })
         expect(getByTestId('cursor').textContent).toBe('0,0')
+    })
+
+    it('allows the cursor to move outside grid bounds in freeform mode', () => {
+        useEditorStore.getState().setFreeformMode(true)
+
+        const { getByTestId } = render(<TestSvg />)
+        const svg = getByTestId('test-svg')
+        svg.focus()
+
+        fireEvent.keyDown(svg, { key: 'ArrowLeft' })
+        fireEvent.keyDown(svg, { key: 'ArrowUp' })
+
+        expect(getByTestId('cursor').textContent).toBe('-50,-50')
     })
 
     it('moves cursor 10x with shift+arrow', () => {

@@ -37,4 +37,15 @@ describe('HelpDialog', () => {
     expect(screen.getByText('Grid Size')).toBeInTheDocument()
     expect(screen.getByText('Tips')).toBeInTheDocument()
   })
+
+  it('documents supported selection and editor controls', () => {
+    render(<HelpDialog open={true} onClose={vi.fn()} />)
+
+    expect(screen.getByText('Select all stations and shapes')).toBeInTheDocument()
+    expect(screen.getByText('Canvas Background')).toBeInTheDocument()
+    expect(screen.getByText('Language')).toBeInTheDocument()
+    expect(screen.getByText('Line Codes')).toBeInTheDocument()
+    expect(screen.getByText('Auto-place Labels')).toBeInTheDocument()
+    expect(screen.queryByText('helpDialog.fareZones')).not.toBeInTheDocument()
+  })
 })

@@ -5,16 +5,15 @@ A browser-based reactive editor for schematic transit maps.
 ## Features
 
 ### Core Editing
-- **Station creation and movement** - Add stations to the map and move them with your mouse
-- **Station deletion** - Select stations and delete them with Delete or Backspace key
-- **Multi-select stations** - Hold Shift and click to select multiple stations at once; Delete removes all selected
+- **Station creation and movement** - Add stations to the map and move them with the mouse or arrow keys
+- **Station deletion** - Select stations or shapes and delete them with Delete or Backspace
+- **Multi-select and Select All** - Hold Shift and click stations to select multiple; use Ctrl+A or Cmd+A to select all stations and shapes, then drag or use arrow keys to move the selection
 - **Station renaming** - Double-click a station to rename it, or right-click for a context menu
 - **Station label placement** - Right-click a station to choose label position: top, bottom, left, or right
 - **Station label rotation** - Right-click a station to rotate its label to avoid collisions and improve readability
 - **Capsule and circle stations** - Stations automatically render as capsules when connected to multiple lines, circles otherwise
-- **Fare zones** - Assign fare zone numbers to stations; shown as small grey badges
 - **Service icons** - Tag stations with service icons (accessibility, ferry, rail, airport, toilet)
-- **Line code badges** - Small coloured pills with line codes (e.g. "M1", "A") appear next to stations
+- **Line code badges** - Small coloured pills with line codes (e.g. "M1", "A") appear next to stations and can be shown or hidden
 
 ### Segments and Lines
 - **Segment creation** - Create connections between stations in octolinear style (45° and 90° angles)
@@ -39,11 +38,13 @@ A browser-based reactive editor for schematic transit maps.
 - **Undo/Redo** - Undo and redo changes with Ctrl+Z / Ctrl+Y
 - **Theme toggle** - Switch between light and dark mode; preference is saved across sessions
 - **i18n** - Interface available in English and German
+- **Canvas background** - Choose a custom canvas background colour or follow the active theme
+- **Auto-place labels** - Position station labels automatically
 - **Export** - Export maps in SVG or PNG format (compatible with external editors like Gimp and Inkscape)
 - **Print** - Print the map directly from the browser; interactive handles are hidden automatically
 - **Import/Export JSON** - Save and load complete map data as JSON for backup or sharing
 - **Background image** - Load a background image onto the map (e.g., city map)
-- **Adjustable grid** - Change grid size for more precise placement
+- **Adjustable grid** - Set the map width and height in grid cells
 - **Adjustable line width** - Customize line thickness (1-20 pixels)
 - **Zoom controls** - Zoom in, zoom out, and reset view with toolbar buttons or mouse wheel
 - **Panning** - Hold Space and drag to pan the canvas, or use the middle mouse button
@@ -167,6 +168,12 @@ Run unit tests with Vitest:
 npm run test
 ```
 
+Run unit tests with the enforced coverage thresholds:
+
+```bash
+npm test -- --coverage
+```
+
 ### End-to-End and Visual Regression Tests
 
 The project uses [Playwright](https://playwright.dev/) for E2E and visual regression tests located in `e2e/`.
@@ -203,100 +210,9 @@ npm run e2e:report
 
 Snapshots are stored next to their spec files under `e2e/*.spec.ts-snapshots/` and are committed to the repository. The `playwright-report/` and `test-results/` folders are git-ignored.
 
-## Docker Containerization
+## Deployment and analytics
 
-The project includes Dockerfile and docker-compose.yml for easy containerization.
-
-### Build Docker Image
-
-```bash
-docker-compose build
-```
-
-### Start Containers
-
-```bash
-docker-compose up
-```
-
-The editor will be available at `http://localhost:80`
-
-## Analytics (Optional)
-
-The project includes Plausible Analytics for privacy-focused visitor tracking.
-
-### Setup
-
-1. **Configure Plausible environment variables** in `plausible-conf.env`:
-   - Set `SECRET_KEY` to a random string
-   - Adjust `BASE_URL` to match your domain
-
-2. **Enable tracking in the app** by setting environment variables in `.env`:
-   ```bash
-   VITE_PLAUSIBLE_DOMAIN=your-domain.com
-   VITE_PLAUSIBLE_URL=http://localhost:8002
-   ```
-
-3. **Start Plausible containers** on the server where you want analytics running:
-   ```bash
-   docker compose -f docker-compose.plausible.yml up -d
-   ```
-
-4. **Access Plausible dashboard** at `http://localhost:8002`
-   - First login: register an admin account
-   - Create a new site with your domain
-   - Copy the tracking script URL (already configured in `index.html`)
-
-### Architecture
-
-- **Plausible**: Main analytics service (port 8002), deployed via `docker-compose.plausible.yml`
-- **Web app**: Deployed via `docker-compose.yml` on the same or a different server
-- **PostgreSQL**: Stores user accounts and site configuration
-- **ClickHouse**: Stores analytics events for fast queries
-
-### Production Notes
-
-- Change `BASE_URL` in `plausible-conf.env` to your public domain
-- Set `DISABLE_REGISTRATION=true` to prevent public signups
-- Configure SMTP settings for password reset emails (optional)
-- For production, use reverse proxy (nginx) with SSL for Plausible
-
-## Deploy to VPS
-
-The project includes a deploy.sh script for SSH-based deployment.
-
-### Configuration
-
-Create a `.env` file in the project root (copy from `.env.example`):
-
-```bash
-VPS_USER=your_username
-VPS_HOST=your_vps_ip_or_domain
-VPS_PATH=/opt/transit-editor
-```
-
-The `.env` file is included in `.gitignore` to protect sensitive credentials.
-
-### Deploy
-
-```bash
-chmod +x deploy.sh
-./deploy.sh
-```
-
-The script will:
-1. Load environment variables from `.env` file
-2. Copy files to VPS (rsync)
-3. Build Docker image on VPS
-4. Restart containers
-
-### Node Version
-
-The project requires Node 24. Ensure the correct version:
-
-```bash
-nvm use  # Reads .nvmrc file
-```
+Docker, VPS deployment, Node version, and optional Plausible Analytics configuration are documented in [the deployment guide](docs/deployment.md).
 
 ## Technologies
 

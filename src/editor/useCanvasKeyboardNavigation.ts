@@ -46,6 +46,7 @@ export function useCanvasKeyboardNavigation({
     const gridCellSize = useEditorStore((s) => s.gridCellSize)
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
+    const freeformMode = useEditorStore((s) => s.freeformMode)
     const activeTool = useEditorStore((s) => s.activeTool)
     const translateSelection = useEditorStore((s) => s.translateSelection)
     const addSegment = useEditorStore((s) => s.addSegment)
@@ -64,12 +65,14 @@ export function useCanvasKeyboardNavigation({
 
         const viewport = useEditorStore.getState().viewport
         const world = screenToWorld(rect.width / 2, rect.height / 2, viewport)
-        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
-        setKeyboardCursor({
-            x: Math.max(0, Math.min(worldWidth, snapped.x)),
-            y: Math.max(0, Math.min(worldHeight, snapped.y)),
+        const position = freeformMode
+            ? world
+            : snapPointToGrid(world.x, world.y, gridCellSize)
+        setKeyboardCursor(freeformMode ? position : {
+            x: Math.max(0, Math.min(worldWidth, position.x)),
+            y: Math.max(0, Math.min(worldHeight, position.y)),
         })
-    }, [svgRef, gridCellSize, worldWidth, worldHeight])
+    }, [svgRef, freeformMode, gridCellSize, worldWidth, worldHeight])
 
     const clampToGrid = useCallback(
         (point: Point): Point => ({
@@ -151,7 +154,9 @@ export function useCanvasKeyboardNavigation({
                     if (first) setKeyboardCursor({ x: first.x, y: first.y })
                 } else {
                     setKeyboardCursor((prev) => {
-                        const clamped = clampToGrid({ x: prev.x + dx, y: prev.y + dy })
+                        const next = { x: prev.x + dx, y: prev.y + dy }
+                        if (freeformMode) return next
+                        const clamped = clampToGrid(next)
                         return snapPointToGrid(clamped.x, clamped.y, gridCellSize)
                     })
                 }
@@ -170,9 +175,10 @@ export function useCanvasKeyboardNavigation({
                 event.stopPropagation()
 
                 if (activeTool === 'station') {
-                    const snapped = snapPointToGrid(keyboardCursor.x, keyboardCursor.y, gridCellSize)
-                    const clamped = clampToGrid(snapped)
-                    setPendingStationPosition(clamped)
+                    const position = freeformMode
+                        ? keyboardCursor
+                        : clampToGrid(snapPointToGrid(keyboardCursor.x, keyboardCursor.y, gridCellSize))
+                    setPendingStationPosition(position)
                     setStationNameDialogOpen(true)
                     return
                 }
@@ -199,9 +205,10 @@ export function useCanvasKeyboardNavigation({
                         addShape(shapePoints, '#a8d5e2')
                         setShapePoints([])
                     } else {
-                        const snapped = snapPointToGrid(keyboardCursor.x, keyboardCursor.y, gridCellSize)
-                        const clamped = clampToGrid(snapped)
-                        setShapePoints((prev) => [...prev, clamped])
+                        const position = freeformMode
+                            ? keyboardCursor
+                            : clampToGrid(snapPointToGrid(keyboardCursor.x, keyboardCursor.y, gridCellSize))
+                        setShapePoints((prev) => [...prev, position])
                     }
                     return
                 }
@@ -242,6 +249,7 @@ export function useCanvasKeyboardNavigation({
             }
         },
         [
+            freeformMode,
             gridCellSize,
             selectedStationIds,
             shapes,

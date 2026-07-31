@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { useEditorStore } from './editorStore'
+import { getValidatedPersistedState, useEditorStore } from './editorStore'
 
 describe('editor store', () => {
   beforeEach(() => {
@@ -11,6 +11,7 @@ describe('editor store', () => {
       shapes: {},
       pastStates: [],
       futureStates: [],
+      freeformMode: false,
       canvasBackgroundColor: '',
     })
   })
@@ -69,6 +70,20 @@ describe('editor store', () => {
     expect(segmentIds).toHaveLength(1)
     expect(updatedState.segments[segmentIds[0]].fromStationId).toBe(stationIds[0])
     expect(updatedState.segments[segmentIds[0]].toStationId).toBe(stationIds[1])
+  })
+
+  it('creates a direct segment in freeform mode', () => {
+    useEditorStore.getState().setFreeformMode(true)
+    useEditorStore.getState().addStation(100, 200)
+    useEditorStore.getState().addStation(320, 250)
+
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+
+    const segment = Object.values(useEditorStore.getState().segments)[0]
+    expect(segment.points).toEqual([{ x: 100, y: 200 }, { x: 320, y: 250 }])
   })
 
   it('adds a segment between two stations (L-shaped)', () => {
@@ -554,6 +569,65 @@ describe('editor store', () => {
 
     expect(useEditorStore.getState().stations[stationIds[0]]).toMatchObject({ x: 100, y: 100 })
     expect(useEditorStore.getState().shapes[shapeId].points[0]).toEqual({ x: 50, y: 50 })
+  })
+
+  it('translates every point of a segment when both endpoints are selected', () => {
+    useEditorStore.getState().addStation(100, 100)
+    useEditorStore.getState().addStation(300, 100)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+    const segmentId = Object.keys(useEditorStore.getState().segments)[0]
+    useEditorStore.setState((state) => ({
+      segments: { ...state.segments, [segmentId]: { ...state.segments[segmentId], points: [{ x: 100, y: 100 }, { x: 200, y: 50 }, { x: 300, y: 100 }] } },
+    }))
+
+    useEditorStore.getState().translateSelection(stationIds, [], 50, 25)
+
+    expect(useEditorStore.getState().segments[segmentId].points).toEqual([
+      { x: 150, y: 125 },
+      { x: 250, y: 75 },
+      { x: 350, y: 125 },
+    ])
+  })
+
+  it('moves only the selected segment endpoint when one station is selected', () => {
+    useEditorStore.getState().addStation(100, 100)
+    useEditorStore.getState().addStation(300, 100)
+    useEditorStore.getState().addLine('Line 1', '#00ff00')
+    const stationIds = Object.keys(useEditorStore.getState().stations)
+    const lineId = Object.keys(useEditorStore.getState().lines)[0]
+    useEditorStore.getState().addSegment(stationIds[0], stationIds[1], lineId)
+    const segmentId = Object.keys(useEditorStore.getState().segments)[0]
+    useEditorStore.setState((state) => ({
+      segments: { ...state.segments, [segmentId]: { ...state.segments[segmentId], points: [{ x: 100, y: 100 }, { x: 200, y: 50 }, { x: 300, y: 100 }] } },
+    }))
+
+    useEditorStore.getState().translateSelection([stationIds[0]], [], 50, 25)
+    expect(useEditorStore.getState().segments[segmentId].points).toEqual([
+      { x: 150, y: 125 },
+      { x: 200, y: 50 },
+      { x: 300, y: 100 },
+    ])
+
+    useEditorStore.getState().translateSelection([stationIds[1]], [], -50, 25)
+    expect(useEditorStore.getState().segments[segmentId].points).toEqual([
+      { x: 150, y: 125 },
+      { x: 200, y: 50 },
+      { x: 250, y: 125 },
+    ])
+  })
+
+  it('does not create history for an empty or zero-distance translation', () => {
+    useEditorStore.getState().addStation(100, 100)
+    const stationId = Object.keys(useEditorStore.getState().stations)[0]
+    const historyBefore = useEditorStore.getState().pastStates.length
+
+    useEditorStore.getState().translateSelection([], [], 50, 50)
+    useEditorStore.getState().translateSelection([stationId], [], 0, 0)
+
+    expect(useEditorStore.getState().pastStates).toHaveLength(historyBefore)
   })
 
   it('retains at least ten undoable edits', () => {
@@ -1222,5 +1296,46 @@ describe('editor store', () => {
     const state = useEditorStore.getState()
     expect(state.lines.styledLine.lineStyle).toBe('dashed')
     expect(state.lines.styledLine.transitMode).toBe('rail')
+  })
+
+  it('hydrates a valid persisted map and backfills legacy line fields', () => {
+    const currentState = useEditorStore.getState()
+    const persisted = {
+      activeTool: 'station',
+      stations: { station: { id: 'station', x: 10, y: 20 } },
+      segments: {},
+      lines: { line: { id: 'line', name: 'Line', color: '#ff0000' } },
+      shapes: {},
+      lineWidth: 12,
+      gridCellSize: 60,
+      gridCellsWidth: 100,
+      gridCellsHeight: 120,
+      showLineCodes: false,
+      freeformMode: true,
+      language: 'de',
+      themeMode: 'dark',
+    }
+
+    const hydrated = getValidatedPersistedState(persisted, currentState)
+
+    expect(hydrated.activeTool).toBe('station')
+    expect(hydrated.stations).toEqual(persisted.stations)
+    expect(hydrated.lines?.line.lineStyle).toBe('solid')
+    expect(hydrated.lines?.line.transitMode).toBe('metro')
+    expect(hydrated.freeformMode).toBe(true)
+    expect(hydrated.themeMode).toBe('dark')
+  })
+
+  it('ignores malformed persisted state and preserves current defaults', () => {
+    const currentState = useEditorStore.getState()
+    const hydrated = getValidatedPersistedState({
+      activeTool: 'invalid-tool',
+      stations: { station: { id: 'station', x: Infinity, y: 0 } },
+      segments: [],
+      lines: {},
+      shapes: {},
+    }, currentState)
+
+    expect(hydrated).toEqual({})
   })
 })

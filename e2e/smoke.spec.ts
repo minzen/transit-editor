@@ -3,7 +3,10 @@ import { test, expect } from '@playwright/test'
 test.describe('Editor smoke tests', () => {
     test.beforeEach(async ({ page }) => {
         await page.addInitScript(() => {
-            window.localStorage.clear()
+            if (!window.sessionStorage.getItem('e2e-storage-cleared')) {
+                window.localStorage.clear()
+                window.sessionStorage.setItem('e2e-storage-cleared', 'true')
+            }
         })
     })
 
@@ -62,6 +65,31 @@ test.describe('Editor smoke tests', () => {
 
         // Canvas should still be visible after viewport changes
         await expect(page.getByTestId('editor-canvas')).toBeVisible()
+    })
+
+    test('freeform mode hides the grid and persists after reload', async ({ page, isMobile }) => {
+        await page.goto('/editor')
+
+        const canvas = page.getByTestId('editor-canvas')
+        const gridLines = canvas.locator('line[stroke="#e2e2e2"]')
+        if (isMobile) {
+            await page.getByRole('button', { name: 'More' }).click()
+        }
+        const freeformButton = page.getByRole('button', { name: /Freeform/ })
+
+        await expect(gridLines).not.toHaveCount(0)
+        await expect(freeformButton).toHaveAttribute('aria-pressed', 'false')
+
+        await freeformButton.click()
+        await expect(freeformButton).toHaveAttribute('aria-pressed', 'true')
+        await expect(gridLines).toHaveCount(0)
+
+        await page.reload()
+        if (isMobile) {
+            await page.getByRole('button', { name: 'More' }).click()
+        }
+        await expect(page.getByRole('button', { name: /Freeform/ })).toHaveAttribute('aria-pressed', 'true')
+        await expect(page.getByTestId('editor-canvas').locator('line[stroke="#e2e2e2"]')).toHaveCount(0)
     })
 
     test('undo button is disabled on a fresh editor', async ({ page }) => {

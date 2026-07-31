@@ -2,6 +2,12 @@ import { useCallback } from 'react'
 import { useEditorStore } from '../store/editorStore'
 import { validateMapDocument } from '../validation/mapSchema'
 
+export const MAX_MAP_IMPORT_FILE_BYTES = 5 * 1024 * 1024
+
+export function getMapImportFileSizeError(fileSize: number): string | null {
+    return fileSize > MAX_MAP_IMPORT_FILE_BYTES ? 'Map file exceeds the 5 MB import limit' : null
+}
+
 export type ImportResult =
     | { success: true }
     | { success: false; errors: string[] }
@@ -17,6 +23,7 @@ export function useMapJSON() {
     const gridCellsWidth = useEditorStore((s) => s.gridCellsWidth)
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const showLineCodes = useEditorStore((s) => s.showLineCodes)
+    const freeformMode = useEditorStore((s) => s.freeformMode)
     const language = useEditorStore((s) => s.language)
     const viewport = useEditorStore((s) => s.viewport)
 
@@ -27,6 +34,7 @@ export function useMapJSON() {
     const setGridCellsWidth = useEditorStore((s) => s.setGridCellsWidth)
     const setGridCellsHeight = useEditorStore((s) => s.setGridCellsHeight)
     const setShowLineCodes = useEditorStore((s) => s.setShowLineCodes)
+    const setFreeformMode = useEditorStore((s) => s.setFreeformMode)
     const setLanguage = useEditorStore((s) => s.setLanguage)
     const setViewport = useEditorStore((s) => s.setViewport)
 
@@ -43,6 +51,7 @@ export function useMapJSON() {
             gridCellsWidth,
             gridCellsHeight,
             showLineCodes,
+            freeformMode,
             language,
             viewport,
         }
@@ -66,19 +75,25 @@ export function useMapJSON() {
         gridCellsWidth,
         gridCellsHeight,
         showLineCodes,
+        freeformMode,
         language,
         viewport,
     ])
 
     const handleImportFile = useCallback(
         (file: File): Promise<ImportResult> => {
+            const fileSizeError = getMapImportFileSizeError(file.size)
+            if (fileSizeError) {
+                return Promise.resolve({ success: false, errors: [fileSizeError] })
+            }
+
             return new Promise((resolve) => {
                 const reader = new FileReader()
                 reader.onload = (event) => {
                     try {
                         const raw: unknown = JSON.parse(event.target?.result as string)
                         const result = validateMapDocument(raw)
-                        if (!result.success) {
+                        if (result.success === false) {
                             resolve({ success: false, errors: result.errors })
                             return
                         }
@@ -97,6 +112,7 @@ export function useMapJSON() {
                         if (typeof data.gridCellsWidth === 'number') setGridCellsWidth(data.gridCellsWidth)
                         if (typeof data.gridCellsHeight === 'number') setGridCellsHeight(data.gridCellsHeight)
                         if (typeof data.showLineCodes === 'boolean') setShowLineCodes(data.showLineCodes)
+                        if (typeof data.freeformMode === 'boolean') setFreeformMode(data.freeformMode)
                         if (data.language) setLanguage(data.language)
                         if (data.viewport) setViewport(data.viewport)
 
@@ -119,6 +135,7 @@ export function useMapJSON() {
             setGridCellsWidth,
             setGridCellsHeight,
             setShowLineCodes,
+            setFreeformMode,
             setLanguage,
             setViewport,
         ]

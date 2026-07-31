@@ -48,6 +48,7 @@ export function EditorCanvas() {
     const gridCellsHeight = useEditorStore((s) => s.gridCellsHeight)
     const showLineCodes = useEditorStore((s) => s.showLineCodes)
     const setShowLineCodes = useEditorStore((s) => s.setShowLineCodes)
+    const freeformMode = useEditorStore((s) => s.freeformMode)
     const themeMode = useEditorStore((s) => s.themeMode)
     const canvasBackgroundColor = useEditorStore((s) => s.canvasBackgroundColor)
 
@@ -422,7 +423,7 @@ export function EditorCanvas() {
         const x = event.clientX - rect.left
         const y = event.clientY - rect.top
         const world = screenToWorld(x, y, viewportRef.current)
-        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
+        const snapped = freeformMode ? world : snapPointToGrid(world.x, world.y, gridCellSize)
 
         // Hit-test against each segment polyline; threshold is in world units.
         const threshold = 10 / viewportRef.current.zoom
@@ -441,10 +442,9 @@ export function EditorCanvas() {
 
     const previewEndPoint =
         pendingStation && pointerWorldPosition
-            ? snapPointToOctolinear(
-                pendingStation,
-                pointerWorldPosition
-            )
+            ? freeformMode
+                ? pointerWorldPosition
+                : snapPointToOctolinear(pendingStation, pointerWorldPosition)
             : null
 
     const handleSetActiveTool = useCallback((tool: EditorTool) => {
@@ -527,7 +527,7 @@ export function EditorCanvas() {
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
                         const world = screenToWorld(x, y, viewportRef.current)
-                        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
+                        const snapped = freeformMode ? world : snapPointToGrid(world.x, world.y, gridCellSize)
                         const shape = shapes[draggingShapeVertex.shapeId]
                         if (shape) {
                             const newPoints = [...shape.points]
@@ -558,7 +558,7 @@ export function EditorCanvas() {
                         const x = event.clientX - rect.left
                         const y = event.clientY - rect.top
                         const world = screenToWorld(x, y, viewportRef.current)
-                        const snapped = snapPointToGrid(world.x, world.y, gridCellSize)
+                        const snapped = freeformMode ? world : snapPointToGrid(world.x, world.y, gridCellSize)
                         setShapePoints((prev) => [...prev, snapped])
                         return
                     }
@@ -624,7 +624,7 @@ export function EditorCanvas() {
                         gridCellSize={gridCellSize}
                         gridCellsWidth={gridCellsWidth}
                         gridCellsHeight={gridCellsHeight}
-                        showGrid={showGridForExport}
+                        showGrid={showGridForExport && !freeformMode}
                         themeMode={themeMode}
                     />
 
