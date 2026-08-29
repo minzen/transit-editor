@@ -148,10 +148,9 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
             let newSegments = state.segments
 
             if (segmentToSplit) {
-                const lineIds = segmentToSplit.lineIds
-                const validLines = lineIds.map(lineId => state.lines[lineId]).filter(line => line !== undefined)
+                const validLineIds = segmentToSplit.lineIds.filter((lineId) => state.lines[lineId] !== undefined)
 
-                if (validLines.length === 0) {
+                if (validLineIds.length === 0) {
                     return setWithDelta(state, {
                         stations: {
                             ...state.stations,
@@ -181,36 +180,26 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                     : createOctolinearPath(newStation, toStation)
 
                 const { [segmentToSplit.id]: _removedSegment, ...remainingSegments } = state.segments
+                const segment1Id = nanoid()
+                const segment2Id = nanoid()
 
-                const newSegmentsEntries: Record<string, Segment>[] = lineIds.flatMap((lineId) => {
-                    const segment1Id = nanoid()
-                    const segment2Id = nanoid()
-                    return [
-                        {
-                            [segment1Id]: {
-                                id: segment1Id,
-                                fromStationId: segmentToSplit.fromStationId,
-                                toStationId: id,
-                                lineIds: [lineId],
-                                points: path1,
-                            },
-                        },
-                        {
-                            [segment2Id]: {
-                                id: segment2Id,
-                                fromStationId: id,
-                                toStationId: segmentToSplit.toStationId,
-                                lineIds: [lineId],
-                                points: path2,
-                            },
-                        },
-                    ]
-                })
-
-                newSegments = newSegmentsEntries.reduce(
-                    (acc, entry) => ({ ...acc, ...entry }),
-                    remainingSegments
-                )
+                newSegments = {
+                    ...remainingSegments,
+                    [segment1Id]: {
+                        id: segment1Id,
+                        fromStationId: segmentToSplit.fromStationId,
+                        toStationId: id,
+                        lineIds: validLineIds,
+                        points: path1,
+                    },
+                    [segment2Id]: {
+                        id: segment2Id,
+                        fromStationId: id,
+                        toStationId: segmentToSplit.toStationId,
+                        lineIds: validLineIds,
+                        points: path2,
+                    },
+                }
             }
 
             return setWithDelta(state, {

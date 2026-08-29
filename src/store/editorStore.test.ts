@@ -1138,7 +1138,7 @@ describe('editor store', () => {
       expect(segment.lineIds).toHaveLength(3)
     })
 
-    it('splits segment with multiple lineIds into multiple segments', () => {
+    it('preserves a shared corridor when splitting a segment with multiple lineIds', () => {
       useEditorStore.getState().addStation(100, 200)
       useEditorStore.getState().addStation(300, 400)
       useEditorStore.getState().addLine('Line 1', '#ff0000')
@@ -1167,14 +1167,25 @@ describe('editor store', () => {
         },
       })
 
-      // Add a station on the segment (should split for each line)
+      // Add a station on the shared segment
       useEditorStore.getState().addStation(200, 300)
 
       const updatedState = useEditorStore.getState()
       // Original segment should be removed
       expect(updatedState.segments[segmentId]).toBeUndefined()
-      // Should have 2 new segments per line = 4 segments total
-      expect(Object.keys(updatedState.segments).length).toBe(4)
+      // The corridor becomes two shared segments, each retaining all lines.
+      const splitSegments = Object.values(updatedState.segments)
+      expect(splitSegments).toHaveLength(2)
+      expect(splitSegments.every((segment) => segment.lineIds.length === lineIds.length)).toBe(true)
+      expect(splitSegments.every((segment) => lineIds.every((lineId) => segment.lineIds.includes(lineId)))).toBe(true)
+
+      const insertedStationId = Object.keys(updatedState.stations).find(
+        (stationId) => !stationIds.includes(stationId)
+      )
+      expect(insertedStationId).toBeDefined()
+      expect(splitSegments.every((segment) =>
+        segment.fromStationId === insertedStationId || segment.toStationId === insertedStationId
+      )).toBe(true)
     })
   })
 
