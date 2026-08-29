@@ -6,6 +6,7 @@ import { useMapExport } from './useMapExport'
 import { useEditorKeyboardShortcuts } from './useEditorKeyboardShortcuts'
 import { useCanvasInteractions } from './useCanvasInteractions'
 import { useCanvasKeyboardNavigation } from './useCanvasKeyboardNavigation'
+import { useCanvasSelection } from './useCanvasSelection'
 
 import { GridLayer } from '../renderer/GridLayer'
 import { SegmentLayer } from '../renderer/SegmentLayer'
@@ -123,7 +124,19 @@ export function EditorCanvas() {
         '#616161',
     ]
 
-    const [selectedStationIds, setSelectedStationIds] = useState<string[]>([])
+    const {
+        selectedStationIds,
+        setSelectedStationIds,
+        selectedShapeIds,
+        setSelectedShapeIds,
+        selectedShapeId,
+        setSelectedShapeId,
+        selectShape,
+        clearSelection,
+        deleteSelected,
+        selectAll,
+        removeStationFromSelection,
+    } = useCanvasSelection()
     const [contextMenuStationId, setContextMenuStationId] = useState<string | null>(null)
     const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null)
     const [renameDialogOpen, setRenameDialogOpen] = useState(false)
@@ -134,9 +147,6 @@ export function EditorCanvas() {
     const [shapeColor, setShapeColor] = useState('#a8d5e2')
 
     // Shape editing state
-    const [selectedShapeIds, setSelectedShapeIds] = useState<string[]>([])
-    const selectedShapeId = selectedShapeIds[0] ?? null
-    const setSelectedShapeId = useCallback((id: string | null) => setSelectedShapeIds(id ? [id] : []), [])
     const [draggingShapeVertex, setDraggingShapeVertex] = useState<{
         shapeId: string
         pointIndex: number
@@ -196,8 +206,6 @@ export function EditorCanvas() {
     const setLineName = useEditorStore((s) => s.setLineName)
     const addShape = useEditorStore((s) => s.addShape)
     const updateShape = useEditorStore((s) => s.updateShape)
-    const deleteShape = useEditorStore((s) => s.deleteShape)
-
     const undo = useEditorStore((s) => s.undo)
     const redo = useEditorStore((s) => s.redo)
     const clear = useEditorStore((s) => s.clear)
@@ -209,20 +217,8 @@ export function EditorCanvas() {
     const { spacePressed } = useEditorKeyboardShortcuts({
         selectedStationIds,
         selectedShapeIds,
-        onDeleteSelected: () => {
-            for (const stationId of selectedStationIds) {
-                deleteStation(stationId)
-            }
-            for (const shapeId of selectedShapeIds) {
-                deleteShape(shapeId)
-            }
-            setSelectedStationIds([])
-            setSelectedShapeIds([])
-        },
-        onSelectAll: () => {
-            setSelectedStationIds(Object.keys(stations))
-            setSelectedShapeIds(Object.keys(shapes))
-        },
+        onDeleteSelected: deleteSelected,
+        onSelectAll: selectAll,
         onUndo: undo,
         onRedo: redo,
         canUndo: pastStates.length > 0,
@@ -323,11 +319,8 @@ export function EditorCanvas() {
                 if (shapePoints.length > 0) {
                     setShapePoints([])
                 }
-                if (selectedShapeId) {
-                    setSelectedShapeId(null)
-                }
-                if (selectedStationIds.length > 0) {
-                    setSelectedStationIds([])
+                if (selectedShapeId || selectedStationIds.length > 0) {
+                    clearSelection()
                 }
             }
             if ((e.key === 'Backspace' || e.key === 'Delete') && activeTool === 'shape' && shapePoints.length > 0) {
@@ -336,7 +329,7 @@ export function EditorCanvas() {
         }
         window.addEventListener('keydown', onKeyDown)
         return () => window.removeEventListener('keydown', onKeyDown)
-    }, [shapePoints.length, selectedShapeId, activeTool, selectedStationIds, setSelectedStationIds, setSelectedShapeId, setShapePoints])
+    }, [shapePoints.length, selectedShapeId, activeTool, selectedStationIds, clearSelection, setShapePoints])
 
     const insertBendPoint = useEditorStore((s) => s.insertBendPoint)
     const removeBendPoint = useEditorStore((s) => s.removeBendPoint)
@@ -403,7 +396,7 @@ export function EditorCanvas() {
     const handleDeleteStation = () => {
         if (!contextMenuStationId) return
         deleteStation(contextMenuStationId)
-        setSelectedStationIds((prev) => prev.filter((id) => id !== contextMenuStationId))
+        removeStationFromSelection(contextMenuStationId)
         setContextMenuStationId(null)
         setContextMenuPos(null)
     }
@@ -448,16 +441,11 @@ export function EditorCanvas() {
             : null
 
     const handleSetActiveTool = useCallback((tool: EditorTool) => {
-        if (tool !== 'select') {
-            if (selectedStationIds.length > 0) {
-                setSelectedStationIds([])
-            }
-            if (selectedShapeId) {
-                setSelectedShapeId(null)
-            }
+        if (tool !== 'select' && (selectedStationIds.length > 0 || selectedShapeId)) {
+            clearSelection()
         }
         setActiveTool(tool)
-    }, [selectedStationIds, selectedShapeId, setSelectedStationIds, setSelectedShapeId, setActiveTool])
+    }, [clearSelection, selectedStationIds, selectedShapeId, setActiveTool])
 
     return (
         <div className="editor-canvas" data-theme={themeMode}>
@@ -570,18 +558,12 @@ export function EditorCanvas() {
                         const world = screenToWorld(x, y, viewportRef.current)
                         for (const shape of Object.values(shapes)) {
                             if (isPointInPolygon(world, shape.points)) {
-                                setSelectedShapeId(shape.id)
-                                if (selectedStationIds.length > 0) {
-                                    setSelectedStationIds([])
-                                }
+                                selectShape(shape.id)
                                 return
                             }
                         }
-                        if (selectedShapeId) {
-                            setSelectedShapeId(null)
-                        }
-                        if (selectedStationIds.length > 0) {
-                            setSelectedStationIds([])
+                        if (selectedShapeId || selectedStationIds.length > 0) {
+                            clearSelection()
                         }
                         handleClick(event)
                         return
