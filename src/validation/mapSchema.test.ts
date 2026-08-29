@@ -195,6 +195,9 @@ describe('MapDocumentSchema', () => {
         doc.lines = lines
         const result = MapDocumentSchema.safeParse(doc)
         expect(result.success).toBe(true)
+        if (result.success) {
+            expect(result.data.lines.l1.lineWidth).toBe(6)
+        }
     })
 
     it('rejects per-line lineWidth out of range', () => {
