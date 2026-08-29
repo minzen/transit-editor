@@ -23,6 +23,7 @@ The technology stack is:
 - Docker
 - Nginx
 
+We work with feature branches. A new feature is started from the develop branch. When the work is finished the branch is pushed to Github and a Merge Request is made. Do not override this convention.
 All tests must pass before considering a task complete. 
 If a test fails that was passing before your change, fix it before moving on.
 
