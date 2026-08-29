@@ -3,13 +3,23 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
+    "check:node": "node -e \"const major = Number(process.versions.node.split('.')[0]); if (major < 24) { console.error('Node.js 24 or newer is required. Run nvm use.'); process.exit(1) }\"",
+    "predev": "npm run check:node",
     "dev": "vite",
+    "prebuild": "npm run check:node",
     "build": "tsc -b && vite build",
+    "prelint": "npm run check:node",
     "lint": "eslint .",
     "preview": "vite preview",
+    "pretest": "npm run check:node",
     "test": "vitest run",
+    "prebenchmark": "npm run check:node",
     "benchmark": "vitest run --config vitest.benchmark.config.ts",
+    "pree2e": "npm run check:node",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "e2e:update-snapshots": "playwright test --update-snapshots",
