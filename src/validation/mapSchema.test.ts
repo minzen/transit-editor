@@ -6,15 +6,16 @@ function validDoc() {
         version: 1,
         stations: {
             st1: { id: 'st1', x: 0, y: 0, name: 'Station 1' },
+            st2: { id: 'st2', x: 100, y: 100, name: 'Station 2' },
         },
         segments: {
-            seg1: { id: 'seg1', fromStationId: 'st1', toStationId: 'st1', lineIds: ['l1'], points: [{ x: 0, y: 0 }] },
+            seg1: { id: 'seg1', fromStationId: 'st1', toStationId: 'st2', lineIds: ['l1'], points: [{ x: 0, y: 0 }, { x: 100, y: 100 }] },
         },
         lines: {
             l1: { id: 'l1', name: 'Line 1', color: '#ff0000' },
         },
         shapes: {
-            sh1: { id: 'sh1', points: [{ x: 0, y: 0 }], color: '#00ff00' },
+            sh1: { id: 'sh1', points: [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 0, y: 100 }], color: '#00ff00' },
         },
     }
 }
@@ -103,6 +104,103 @@ describe('validateMapDocument', () => {
     it('rejects invalid activeTool value', () => {
         const result = validateMapDocument({ ...validDoc(), activeTool: 'pan' })
         expect(result.success).toBe(false)
+    })
+
+    it('rejects entity IDs that do not match their record keys', () => {
+        const doc = {
+            ...validDoc(),
+            stations: {
+                ...validDoc().stations,
+                st1: { id: 'different-id', x: 0, y: 0 },
+            },
+        }
+
+        const result = validateMapDocument(doc)
+        expect(result.success).toBe(false)
+        if (result.success === false) {
+            expect(result.errors).toContain('stations.st1.id: ID must match record key "st1"')
+        }
+    })
+
+    it('rejects segments that reference missing stations or lines', () => {
+        const doc = {
+            ...validDoc(),
+            segments: {
+                seg1: {
+                    id: 'seg1',
+                    fromStationId: 'missing-station',
+                    toStationId: 'st2',
+                    lineIds: ['missing-line'],
+                    points: [{ x: 0, y: 0 }, { x: 100, y: 100 }],
+                },
+            },
+        }
+
+        const result = validateMapDocument(doc)
+        expect(result.success).toBe(false)
+        if (result.success === false) {
+            expect(result.errors.some((error) => error.includes('segments.seg1.fromStationId: Unknown station'))).toBe(true)
+            expect(result.errors.some((error) => error.includes('segments.seg1.lineIds.0: Unknown line'))).toBe(true)
+        }
+    })
+
+    it('rejects self-loop segments and duplicate line references', () => {
+        const doc = {
+            ...validDoc(),
+            segments: {
+                seg1: {
+                    id: 'seg1',
+                    fromStationId: 'st1',
+                    toStationId: 'st1',
+                    lineIds: ['l1', 'l1'],
+                    points: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
+                },
+            },
+        }
+
+        const result = validateMapDocument(doc)
+        expect(result.success).toBe(false)
+        if (result.success === false) {
+            expect(result.errors.some((error) => error.includes('endpoints must reference different stations'))).toBe(true)
+            expect(result.errors.some((error) => error.includes('line IDs must be unique'))).toBe(true)
+        }
+    })
+
+    it('rejects segment paths whose endpoints do not match their stations', () => {
+        const doc = {
+            ...validDoc(),
+            segments: {
+                seg1: {
+                    ...validDoc().segments.seg1,
+                    points: [{ x: 1, y: 0 }, { x: 100, y: 99 }],
+                },
+            },
+        }
+
+        const result = validateMapDocument(doc)
+        expect(result.success).toBe(false)
+        if (result.success === false) {
+            expect(result.errors.some((error) => error.includes('First point must match'))).toBe(true)
+            expect(result.errors.some((error) => error.includes('Last point must match'))).toBe(true)
+        }
+    })
+
+    it('rejects insufficient segment and shape geometry', () => {
+        const withShortSegment = {
+            ...validDoc(),
+            segments: {
+                seg1: { ...validDoc().segments.seg1, points: [{ x: 0, y: 0 }] },
+            },
+        }
+        const withShortShape = {
+            ...validDoc(),
+            shapes: {
+                sh1: { ...validDoc().shapes.sh1, points: [{ x: 0, y: 0 }, { x: 1, y: 1 }] },
+            },
+        }
+
+        expect(validateMapDocument(withShortSegment).success).toBe(false)
+        expect(validateMapDocument(withShortShape).success).toBe(false)
     })
 
     it('rejects non-object input', () => {

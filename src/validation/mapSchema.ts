@@ -70,8 +70,8 @@ const SegmentSchema = z.object({
     id: BoundedString,
     fromStationId: BoundedString,
     toStationId: BoundedString,
-    lineIds: z.array(BoundedString).max(MAP_IMPORT_LIMITS.maxLineIdsPerSegment),
-    points: z.array(PointSchema).max(MAP_IMPORT_LIMITS.maxPointsPerSegment),
+    lineIds: z.array(BoundedString).min(1).max(MAP_IMPORT_LIMITS.maxLineIdsPerSegment),
+    points: z.array(PointSchema).min(2).max(MAP_IMPORT_LIMITS.maxPointsPerSegment),
 })
 
 const LineStyleSchema = z.enum(['solid', 'dashed', 'double'])
@@ -89,7 +89,7 @@ const LineSchema = z.object({
 
 const ShapeSchema = z.object({
     id: BoundedString,
-    points: z.array(PointSchema).max(MAP_IMPORT_LIMITS.maxPointsPerShape),
+    points: z.array(PointSchema).min(3).max(MAP_IMPORT_LIMITS.maxPointsPerShape),
     color: z.string().min(1).max(64),
     name: z.string().max(MAP_IMPORT_LIMITS.maxNameLength).optional(),
     opacity: z.number().min(0).max(1).optional(),
@@ -109,7 +109,7 @@ const boundedRecord = <T extends z.ZodType>(valueSchema: T, maxEntries: number) 
         `Must contain at most ${maxEntries} entries`,
     )
 
-export const MapDocumentSchema = z.object({
+const MapDocumentBaseSchema = z.object({
     version: z.literal(1),
     stations: boundedRecord(StationSchema, MAP_IMPORT_LIMITS.maxStations),
     segments: boundedRecord(SegmentSchema, MAP_IMPORT_LIMITS.maxSegments),
@@ -124,6 +124,92 @@ export const MapDocumentSchema = z.object({
     freeformMode: z.boolean().optional(),
     language: z.enum(['en', 'de']).optional(),
     viewport: ViewportSchema.optional(),
+})
+
+function addRecordIdIssues(
+    record: Record<string, { id: string }>,
+    collection: 'stations' | 'segments' | 'lines' | 'shapes',
+    ctx: z.RefinementCtx,
+): void {
+    for (const [key, entity] of Object.entries(record)) {
+        if (key !== entity.id) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [collection, key, 'id'],
+                message: `ID must match record key "${key}"`,
+            })
+        }
+    }
+}
+
+export const MapDocumentSchema = MapDocumentBaseSchema.superRefine((document, ctx) => {
+    addRecordIdIssues(document.stations, 'stations', ctx)
+    addRecordIdIssues(document.segments, 'segments', ctx)
+    addRecordIdIssues(document.lines, 'lines', ctx)
+    addRecordIdIssues(document.shapes, 'shapes', ctx)
+
+    for (const [segmentKey, segment] of Object.entries(document.segments)) {
+        const path = ['segments', segmentKey] as const
+        const fromStation = document.stations[segment.fromStationId]
+        const toStation = document.stations[segment.toStationId]
+
+        if (!fromStation) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [...path, 'fromStationId'],
+                message: `Unknown station "${segment.fromStationId}"`,
+            })
+        }
+        if (!toStation) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [...path, 'toStationId'],
+                message: `Unknown station "${segment.toStationId}"`,
+            })
+        }
+        if (segment.fromStationId === segment.toStationId) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [...path, 'toStationId'],
+                message: 'Segment endpoints must reference different stations',
+            })
+        }
+
+        const uniqueLineIds = new Set(segment.lineIds)
+        if (uniqueLineIds.size !== segment.lineIds.length) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [...path, 'lineIds'],
+                message: 'Segment line IDs must be unique',
+            })
+        }
+        for (const [lineIndex, lineId] of segment.lineIds.entries()) {
+            if (!document.lines[lineId]) {
+                ctx.addIssue({
+                    code: 'custom',
+                    path: [...path, 'lineIds', lineIndex],
+                    message: `Unknown line "${lineId}"`,
+                })
+            }
+        }
+
+        const firstPoint = segment.points[0]
+        const lastPoint = segment.points[segment.points.length - 1]
+        if (fromStation && (firstPoint.x !== fromStation.x || firstPoint.y !== fromStation.y)) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [...path, 'points', 0],
+                message: 'First point must match the from-station coordinates',
+            })
+        }
+        if (toStation && (lastPoint.x !== toStation.x || lastPoint.y !== toStation.y)) {
+            ctx.addIssue({
+                code: 'custom',
+                path: [...path, 'points', segment.points.length - 1],
+                message: 'Last point must match the to-station coordinates',
+            })
+        }
+    }
 })
 
 export type MapDocument = z.infer<typeof MapDocumentSchema>
