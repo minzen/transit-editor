@@ -1,6 +1,11 @@
 import { describe, expect, it, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { BackgroundImageControl } from './BackgroundImageControl'
+import {
+    getBackgroundImageDimensionError,
+    getBackgroundImageFileError,
+    MAX_BACKGROUND_IMAGE_FILE_BYTES,
+} from './backgroundImageValidation'
 import { useEditorStore } from '../store/editorStore'
 
 describe('BackgroundImageControl', () => {
@@ -66,5 +71,22 @@ describe('BackgroundImageControl', () => {
         render(<BackgroundImageControl />)
         fireEvent.click(screen.getByText('Adjust Image'))
         expect(screen.getByText('Placement')).toBeInTheDocument()
+    })
+
+    it('rejects unsupported and oversized image files', () => {
+        expect(getBackgroundImageFileError({ size: 100, type: 'image/svg+xml' }))
+            .toBe('Background images must be PNG, JPEG, or WebP files')
+        expect(getBackgroundImageFileError({
+            size: MAX_BACKGROUND_IMAGE_FILE_BYTES + 1,
+            type: 'image/png',
+        })).toBe('Background image exceeds the 10 MB limit')
+    })
+
+    it('rejects excessive decoded image dimensions', () => {
+        expect(getBackgroundImageDimensionError(10_000, 4_000)).toBeNull()
+        expect(getBackgroundImageDimensionError(10_001, 100))
+            .toBe('Background image dimensions exceed the 40 megapixel limit')
+        expect(getBackgroundImageDimensionError(8_000, 8_000))
+            .toBe('Background image dimensions exceed the 40 megapixel limit')
     })
 })

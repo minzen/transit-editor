@@ -1,6 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useMapExport } from './useMapExport'
+import {
+    getPngExportDimensions,
+    MAX_PNG_EXPORT_DIMENSION,
+} from './useMapExport'
 
 function createMockSVG(): SVGSVGElement {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -67,6 +71,16 @@ describe('useMapExport', () => {
         expect(result.current.showInteractiveHandlesForExport).toBe(false)
 
         vi.useRealTimers()
+    })
+
+    it('bounds PNG dimensions and total pixel allocation', () => {
+        expect(getPngExportDimensions(100, 200)).toEqual({ width: 200, height: 400 })
+        expect(() => getPngExportDimensions(MAX_PNG_EXPORT_DIMENSION, 1))
+            .toThrow('Map is too large to export as PNG')
+        expect(() => getPngExportDimensions(5_000, 5_000))
+            .toThrow('Map is too large to export as PNG')
+        expect(() => getPngExportDimensions(Number.NaN, 100))
+            .toThrow('Map is too large to export as PNG')
     })
 
 })
