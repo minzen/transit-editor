@@ -2,10 +2,15 @@ import { Button, Box, Slider, Typography, Stack, Popover } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useEditorStore } from '../store/editorStore'
+import {
+    getBackgroundImageDimensionError,
+    getBackgroundImageFileError,
+} from './backgroundImageValidation'
 
 export function BackgroundImageControl() {
     const { t } = useTranslation()
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+    const [imageError, setImageError] = useState<string | null>(null)
     const backgroundImageUrl = useEditorStore((s) => s.backgroundImageUrl)
     const showBackgroundImage = useEditorStore((s) => s.showBackgroundImage)
     const backgroundImageX = useEditorStore((s) => s.backgroundImageX)
@@ -24,15 +29,46 @@ export function BackgroundImageControl() {
     const handleLoadImage = () => {
         const input = document.createElement('input')
         input.type = 'file'
-        input.accept = 'image/*'
+        input.accept = 'image/png,image/jpeg,image/webp'
         input.onchange = (e) => {
             const file = (e.target as HTMLInputElement).files?.[0]
             if (file) {
-                const reader = new FileReader()
-                reader.onload = (event) => {
-                    setBackgroundImageUrl(event.target?.result as string)
+                const fileError = getBackgroundImageFileError(file)
+                if (fileError) {
+                    setImageError(fileError)
+                    return
                 }
-                reader.readAsDataURL(file)
+
+                const objectUrl = URL.createObjectURL(file)
+                const image = new Image()
+                image.onload = () => {
+                    URL.revokeObjectURL(objectUrl)
+                    const dimensionError = getBackgroundImageDimensionError(
+                        image.naturalWidth,
+                        image.naturalHeight,
+                    )
+                    if (dimensionError) {
+                        setImageError(dimensionError)
+                        return
+                    }
+
+                    const reader = new FileReader()
+                    reader.onload = (event) => {
+                        if (typeof event.target?.result !== 'string') {
+                            setImageError('Failed to read background image')
+                            return
+                        }
+                        setBackgroundImageUrl(event.target.result)
+                        setImageError(null)
+                    }
+                    reader.onerror = () => setImageError('Failed to read background image')
+                    reader.readAsDataURL(file)
+                }
+                image.onerror = () => {
+                    URL.revokeObjectURL(objectUrl)
+                    setImageError('Background image could not be decoded')
+                }
+                image.src = objectUrl
             }
         }
         input.click()
@@ -61,6 +97,11 @@ export function BackgroundImageControl() {
                     </Button>
                 )}
             </Box>
+            {imageError && (
+                <Typography role="alert" color="error" variant="caption">
+                    {imageError}
+                </Typography>
+            )}
 
             <Popover
                 open={open}

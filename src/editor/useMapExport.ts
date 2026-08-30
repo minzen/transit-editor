@@ -2,6 +2,30 @@ import { useCallback, useState } from 'react'
 import type { RefObject } from 'react'
 
 const EXPORT_PADDING = 40
+export const PNG_EXPORT_SCALE = 2
+export const MAX_PNG_EXPORT_DIMENSION = 16_384
+export const MAX_PNG_EXPORT_PIXELS = 64_000_000
+
+export function getPngExportDimensions(
+    width: number,
+    height: number,
+    scale = PNG_EXPORT_SCALE,
+): { width: number; height: number } {
+    const scaledWidth = Math.ceil(width * scale)
+    const scaledHeight = Math.ceil(height * scale)
+    if (
+        !Number.isFinite(scaledWidth)
+        || !Number.isFinite(scaledHeight)
+        || scaledWidth <= 0
+        || scaledHeight <= 0
+        || scaledWidth > MAX_PNG_EXPORT_DIMENSION
+        || scaledHeight > MAX_PNG_EXPORT_DIMENSION
+        || scaledWidth * scaledHeight > MAX_PNG_EXPORT_PIXELS
+    ) {
+        throw new Error('Map is too large to export as PNG')
+    }
+    return { width: scaledWidth, height: scaledHeight }
+}
 
 /**
  * Wait for fonts to load before drawing to canvas
@@ -126,57 +150,62 @@ export function useMapExport(svgRef: RefObject<SVGSVGElement | null>) {
         if (!svgRef.current) return
 
         hideExportFlags()
-        await waitForRender()
-        await waitForFonts()
+        try {
+            await waitForRender()
+            await waitForFonts()
 
-        const svgElement = svgRef.current
-        if (!svgElement) {
-            resetExportFlags()
-            return
-        }
+            const svgElement = svgRef.current
+            if (!svgElement) return
 
-        const exportSvgString = prepareExportSVG(svgElement)
+            const exportSvgString = prepareExportSVG(svgElement)
 
-        // Parse to get dimensions
-        const parser = new DOMParser()
-        const doc = parser.parseFromString(exportSvgString, 'image/svg+xml')
-        const exportSvg = doc.documentElement
-        const width = parseFloat(exportSvg.getAttribute('width') ?? '800')
-        const height = parseFloat(exportSvg.getAttribute('height') ?? '600')
+            // Parse to get dimensions
+            const parser = new DOMParser()
+            const doc = parser.parseFromString(exportSvgString, 'image/svg+xml')
+            const exportSvg = doc.documentElement
+            const width = parseFloat(exportSvg.getAttribute('width') ?? '800')
+            const height = parseFloat(exportSvg.getAttribute('height') ?? '600')
+            const canvasDimensions = getPngExportDimensions(width, height)
 
-        const svgBlob = new Blob([exportSvgString], { type: 'image/svg+xml;charset=utf-8' })
-        const svgUrl = URL.createObjectURL(svgBlob)
+            const svgBlob = new Blob([exportSvgString], { type: 'image/svg+xml;charset=utf-8' })
+            const svgUrl = URL.createObjectURL(svgBlob)
 
-        const img = new Image()
-        img.onload = () => {
-            const canvas = document.createElement('canvas')
+            const img = new Image()
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas')
+                    canvas.width = canvasDimensions.width
+                    canvas.height = canvasDimensions.height
 
-            // Use higher resolution for crisp export
-            const scale = 2
-            canvas.width = Math.ceil(width * scale)
-            canvas.height = Math.ceil(height * scale)
+                    const ctx = canvas.getContext('2d')
+                    if (ctx) {
+                        ctx.scale(PNG_EXPORT_SCALE, PNG_EXPORT_SCALE)
+                        ctx.fillStyle = '#ffffff'
+                        ctx.fillRect(0, 0, width, height)
+                        ctx.drawImage(img, 0, 0, width, height)
 
-            const ctx = canvas.getContext('2d')
-            if (ctx) {
-                ctx.scale(scale, scale)
-                ctx.fillStyle = '#ffffff'
-                ctx.fillRect(0, 0, width, height)
-                ctx.drawImage(img, 0, 0, width, height)
+                        // Reset transform for clean export
+                        ctx.setTransform(1, 0, 0, 1, 0, 0)
 
-                // Reset transform for clean export
-                ctx.setTransform(1, 0, 0, 1, 0, 0)
-
-                const pngUrl = canvas.toDataURL('image/png')
-                const link = document.createElement('a')
-                link.href = pngUrl
-                link.download = 'transit-map.png'
-                link.click()
+                        const pngUrl = canvas.toDataURL('image/png')
+                        const link = document.createElement('a')
+                        link.href = pngUrl
+                        link.download = 'transit-map.png'
+                        link.click()
+                    }
+                } finally {
+                    URL.revokeObjectURL(svgUrl)
+                    resetExportFlags()
+                }
             }
-
-            URL.revokeObjectURL(svgUrl)
+            img.onerror = () => {
+                URL.revokeObjectURL(svgUrl)
+                resetExportFlags()
+            }
+            img.src = svgUrl
+        } catch {
             resetExportFlags()
         }
-        img.src = svgUrl
     }, [svgRef, hideExportFlags, resetExportFlags, waitForRender, prepareExportSVG])
 
     const print = useCallback(async () => {
