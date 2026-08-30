@@ -2,6 +2,16 @@
 
 A browser-based reactive editor for schematic transit maps.
 
+## Continuing work on another computer
+
+Project handoff information is kept in version control:
+
+- [`STATE.md`](STATE.md) records the current focus, blockers, next step, and verification status.
+- [`TODO.md`](TODO.md) records work in progress and the prioritized backlog.
+- [`DECISIONS.md`](DECISIONS.md) records durable decisions and their rationale.
+
+Update these files with the related work, commit and push the branch on the first computer, then pull it on the other. Uncommitted changes and browser `localStorage` do not synchronize through Git.
+
 ## Features
 
 ### Core Editing
