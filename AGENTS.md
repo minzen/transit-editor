@@ -27,6 +27,22 @@ We work with feature branches. A new feature is started from the develop branch.
 All tests must pass before considering a task complete. 
 If a test fails that was passing before your change, fix it before moving on.
 
+## Shared project context
+
+At the start of a work session, read these version-controlled files:
+
+- `STATE.md` for the current handoff and verification status.
+- `TODO.md` for active and upcoming work.
+- `DECISIONS.md` for durable technical and product decisions.
+
+Keep them useful across computers and contributors:
+
+- Update `STATE.md` when the working focus, blockers, or last verified commit changes.
+- Update `TODO.md` when work is added, started, completed, or deliberately dropped.
+- Append to `DECISIONS.md` when a decision will constrain future work; do not rewrite old decisions silently. Mark a superseded decision and link to its replacement.
+- Never put secrets, credentials, personal data, or machine-specific absolute paths in these files.
+- Commit and push context-file changes with the related code, subject to the confirmation rule below. Uncommitted files do not transfer between computers.
+
 Never:
 - commit and push changes without the user confirmation
 - Use `any` in TypeScript without a comment explaining why.
