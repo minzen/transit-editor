@@ -1,3 +1,4 @@
+import { LABEL_POSITIONS } from '../model/station'
 import { z } from 'zod'
 
 export const MAP_IMPORT_LIMITS = {
@@ -23,7 +24,7 @@ const PointSchema = z.object({
     y: BoundedCoordinate,
 })
 
-const LabelPositionSchema = z.enum(['top', 'bottom', 'left', 'right'])
+const LabelPositionSchema = z.enum(LABEL_POSITIONS)
 
 const ServiceIconSchema = z.enum([
     // Legacy emoji icons

@@ -307,3 +307,13 @@ describe('MapDocumentSchema', () => {
         expect(result.success).toBe(false)
     })
 })
+
+
+it.each(['top', 'bottom', 'left', 'right', 'topRight', 'bottomRight', 'bottomLeft', 'topLeft'])('round-trips %s labels through JSON validation', (labelPosition) => {
+    const doc = validDoc()
+    const result = validateMapDocument(JSON.parse(JSON.stringify({ ...doc,
+        stations: { ...doc.stations, st1: { ...doc.stations.st1, labelPosition } },
+    })))
+    expect(result.success).toBe(true)
+    if (result.success) expect(result.data.stations.st1.labelPosition).toBe(labelPosition)
+})
