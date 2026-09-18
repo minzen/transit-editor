@@ -19,7 +19,7 @@ Update these files with the related work, commit and push the branch on the firs
 - **Station deletion** - Select stations or shapes and delete them with Delete or Backspace
 - **Multi-select and Select All** - Hold Shift and click stations to select multiple; use Ctrl+A or Cmd+A to select all stations and shapes, then drag or use arrow keys to move the selection
 - **Station renaming** - Double-click a station to rename it, or right-click for a context menu
-- **Station label placement** - Right-click a station to choose label position: top, bottom, left, or right
+- **Station label placement** - Right-click a station to choose from eight compass positions, including diagonals
 - **Station label rotation** - Right-click a station to rotate its label to avoid collisions and improve readability
 - **Capsule and circle stations** - Stations automatically render as capsules when connected to multiple lines, circles otherwise
 - **Service icons** - Tag stations with service icons (accessibility, ferry, rail, airport, toilet)
@@ -49,7 +49,7 @@ Update these files with the related work, commit and push the branch on the firs
 - **Theme toggle** - Switch between light and dark mode; preference is saved across sessions
 - **i18n** - Interface available in English and German
 - **Canvas background** - Choose a custom canvas background colour or follow the active theme
-- **Auto-place labels** - Position station labels automatically
+- **Auto-place labels** - Choose among eight compass positions to reduce overlaps. Moving stations automatically updates labels in the affected neighborhood; undo restores the movement and label changes together. The toolbar action still places labels across the whole map
 - **Export** - Export maps in SVG or PNG format (compatible with external editors like Gimp and Inkscape)
 - **Print** - Print the map directly from the browser; interactive handles are hidden automatically
 - **Import/Export JSON** - Save and load complete map data as JSON for backup or sharing

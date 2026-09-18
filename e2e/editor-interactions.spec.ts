@@ -12,6 +12,39 @@ test.describe('Editor interactions', () => {
     // Station creation
     // ---------------------------------------------------------------------------
 
+    test('diagonal labels render and dragging recomputes placement in one undo step', async ({ page }) => {
+        await page.goto('/editor')
+        await addStation(page, 0.4, 0.5, 'Central')
+        await page.getByRole('button', { name: 'Select', exact: true }).click()
+        const canvas = page.getByTestId('editor-canvas')
+        const station = canvas.locator('circle[fill="#fff"][stroke="#111"]').first()
+        const label = canvas.locator('text').filter({ hasText: /^Central$/ })
+        for (const [name, anchor, baseline] of [
+            ['Top Right', 'start', 'auto'], ['Bottom Right', 'start', 'hanging'],
+            ['Bottom Left', 'end', 'hanging'], ['Top Left', 'end', 'auto'],
+        ]) {
+            await station.click({ button: 'right' })
+            await page.getByRole('menuitem', { name: `Label ${name}`, exact: true }).click()
+            await expect(label).toHaveAttribute('text-anchor', anchor)
+            await expect(label).toHaveAttribute('dominant-baseline', baseline)
+        }
+        // Wait for the menu's closing backdrop to stop intercepting pointer input.
+        await station.click({ trial: true })
+        const originalX = await station.getAttribute('cx')
+        if (originalX === null) throw new Error('Missing station coordinate')
+        const box = await station.boundingBox()
+        if (!box) throw new Error('Station is not visible')
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.down()
+        await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2, { steps: 5 })
+        await page.mouse.up()
+        await expect(station).not.toHaveAttribute('cx', originalX)
+        await expect(label).toHaveAttribute('text-anchor', 'middle')
+        await page.getByRole('button', { name: 'Undo', exact: true }).click()
+        await expect(station).toHaveAttribute('cx', originalX)
+        await expect(label).toHaveAttribute('text-anchor', 'end')
+    })
+
     test('station Create button is disabled when name is empty after whitespace-only input', async ({ page }) => {
         await page.goto('/editor')
         await page.getByRole('button', { name: 'Station', exact: true }).click()

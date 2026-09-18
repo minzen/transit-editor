@@ -6,7 +6,7 @@ import type { Line, LineStyle, TransitMode } from '../../model/line'
 import type { Shape } from '../../model/shape'
 import type { Point } from '../../types/geometry'
 import { createOctolinearPath, createSmartOctolinearPath } from '../../geometry/octolinear'
-import { chooseBestLabelPositions } from '../../geometry/labelPlacement'
+import { chooseBestLabelPositions, placeLabelsAfterMovement } from '../../geometry/labelPlacement'
 import { isPointNearPolyline, pointToLineSegmentDistance } from '../../geometry/distance'
 import { validateLineName, validateStationName } from '../../validation/constants'
 import type { ToolSlice } from './toolSlice'
@@ -286,10 +286,10 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
             )
 
             const nextState = {
-                stations: {
-                    ...state.stations,
-                    [id]: newStation,
-                },
+                stations: placeLabelsAfterMovement(
+                    state.stations, { ...state.stations, [id]: newStation },
+                    state.segments, segments,
+                ),
                 segments,
             }
 
@@ -337,7 +337,10 @@ export const createDataSlice: StateCreator<FullState, [], [], DataSlice> = (set,
                     return [id, { ...segment, points }]
                 })
             )
-            const nextState = { stations, segments, shapes }
+            const nextState = {
+                stations: placeLabelsAfterMovement(state.stations, stations, state.segments, segments),
+                segments, shapes,
+            }
             return recordHistory ? setWithDelta(state, nextState) : nextState
         }),
 

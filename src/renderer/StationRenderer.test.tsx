@@ -29,6 +29,22 @@ describe('StationRenderer', () => {
         onStationDoubleClick: mockOnStationDoubleClick,
     }
 
+    it.each([
+        ['topRight', 'start', 'auto', 1, -1],
+        ['bottomRight', 'start', 'hanging', 1, 1],
+        ['bottomLeft', 'end', 'hanging', -1, 1],
+        ['topLeft', 'end', 'auto', -1, -1],
+    ] as const)('renders %s with the correct SVG anchor', (labelPosition, anchor, baseline, dx, dy) => {
+        const { container } = render(<svg><StationRenderer {...defaultProps}
+            stations={{ a: { id: 'a', x: 100, y: 100, name: 'A', labelPosition } }} /></svg>)
+        const label = container.querySelector('text')
+        if (!label) throw new Error('Missing station label')
+        expect(label).toHaveAttribute('text-anchor', anchor)
+        expect(label).toHaveAttribute('dominant-baseline', baseline)
+        expect((Number(label.getAttribute('x')) - 100) * dx).toBeGreaterThan(0)
+        expect((Number(label.getAttribute('y')) - 100) * dy).toBeGreaterThan(0)
+    })
+
     it('renders all stations', () => {
         const { container } = render(<StationRenderer {...defaultProps} />)
 

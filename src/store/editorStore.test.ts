@@ -16,6 +16,27 @@ describe('editor store', () => {
     })
   })
 
+  it.each(['moveStation', 'translateSelection'] as const)('updates local labels atomically with %s and undo/redo', (action) => {
+    const stations = {
+      moving: { id: 'moving', x: 0, y: -23 },
+      old: { id: 'old', x: 0, y: 0, name: 'Old', labelPosition: 'right' as const },
+      next: { id: 'next', x: 500, y: 0, name: 'Next' },
+      far: { id: 'far', x: 2000, y: 2000, name: 'Far', labelPosition: 'left' as const },
+    }
+    useEditorStore.setState({ stations })
+    if (action === 'moveStation') useEditorStore.getState().moveStation('moving', 500, -23)
+    else useEditorStore.getState().translateSelection(['moving'], [], 500, 0)
+    const after = useEditorStore.getState().stations
+    expect(after.old.labelPosition).toBe('top')
+    expect(after.next.labelPosition).not.toBe('top')
+    expect(after.far).toBe(stations.far)
+    expect(useEditorStore.getState().pastStates).toHaveLength(1)
+    useEditorStore.getState().undo()
+    expect(useEditorStore.getState().stations).toEqual(stations)
+    useEditorStore.getState().redo()
+    expect(useEditorStore.getState().stations).toEqual(after)
+  })
+
   it('starts with empty state', () => {
     const state = useEditorStore.getState()
 

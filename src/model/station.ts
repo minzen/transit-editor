@@ -1,4 +1,5 @@
-export type LabelPosition = 'top' | 'bottom' | 'left' | 'right'
+export const LABEL_POSITIONS = ['top', 'right', 'bottom', 'left', 'topRight', 'bottomRight', 'bottomLeft', 'topLeft'] as const
+export type LabelPosition = typeof LABEL_POSITIONS[number]
 
 export type ServiceIcon = 
   // Legacy emoji-based icons
