@@ -12,6 +12,7 @@ Status markers:
 ## In progress
 
 Station-movement routing fix is verified on `feature/eight-position-label-placement`; ready for review against `develop`.
+No implementation work remains; the snapping fix is ready for review against `develop`.
 
 When starting an item, move it here and add its branch name and immediate next action. Reflect that same focus in `STATE.md`.
 
@@ -31,6 +32,7 @@ No prioritized items are currently recorded.
 - [x] Recompute label placement incrementally for the affected neighborhood after station movement; retain the on-demand placement action (former roadmap 6.1).
 
 - [x] Retire the improvements roadmap and preserve its remaining label-placement and routing work in this backlog (2026-09-18).
+- [x] Fix 45°/90° bend dragging using neighboring vertices and valid parallel-axis handling; add regression tests (2026-09-18).
 
 - [x] Add repository-based handoff records for state, TODOs, and decisions (2026-08-30).
 

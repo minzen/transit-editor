@@ -2,6 +2,7 @@
 
 Last updated: 2026-09-18
 Verified implementation: eight-position label placement on `feature/eight-position-label-placement`, based on `5bfd75f`.
+Base commit: `5bfd75f` on `develop`; snapping fix verified in the working tree
 
 This is the short-lived handoff record for continuing work on another computer. Update it at the end of a work session and after pulling changes. Detailed feature documentation belongs in `README.md`; durable rationale belongs in `DECISIONS.md`.
 
@@ -17,18 +18,19 @@ This is the short-lived handoff record for continuing work on another computer. 
 Follow-up fix on `feature/eight-position-label-placement` for station movement producing invalid line angles. Pointer/keyboard translation and direct station movement now share routing: simple connections reroute, custom routes adjust the adjoining bend, and freeform mode remains unconstrained. Angle validation now accepts only multiples of 45° with floating-point tolerance. Route and label updates remain in the movement history transaction.
 
 Eight-position labels and roadmap cleanup are committed at `012c870`. The verified station-movement fix is ready for review on the same feature branch. The separate bend-dragging fix remains on `fix/line-angle-snapping` at `c9c4b38`; its bend-snapping geometry is reused here, but its canvas handler change remains on that branch.
+- The snapping fix is on `fix/line-angle-snapping`, verified and ready for review against `develop`.
+
+Bend dragging now uses adjacent polyline vertices and the nearest valid intersection or coincident-axis projection. Freeform dragging remains unconstrained. Regression coverage includes zoomed dragging and exact angle constraints across pointer positions.
 
 ## Verification
 
 Verified on 2026-09-18 with Node.js 24:
 
-- `npm test -- --maxWorkers=2`: 37 files, 432 tests passed.
+- `npm test -- --maxWorkers=2`: 38 files, 412 tests passed.
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
-- `npm run build`: passed, with the existing bundle-size advisory.
-- `npm run e2e -- e2e/editor-interactions.spec.ts --project=chromium`: 15 passed, including station routing during drag/keyboard movement and undo.
-- Prior label-placement benchmark verification: 5 passed in isolation.
-- `git diff --check`: passed; no stale links to the retired roadmap found.
+- `npm run build`: passed (bundle-size advisory).
+- `npm run e2e -- e2e/editor-interactions.spec.ts --project=chromium`: 13 passed.
 
 ## Blockers and handoff notes
 

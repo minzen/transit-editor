@@ -5,6 +5,7 @@ import {
   isOctolinear,
   snapPointToOctolinear,
   findLineIntersection,
+  snapBendToOctolinear,
 } from './octolinear'
 
 describe('octolinear geometry', () => {
@@ -169,5 +170,29 @@ describe('createSmartOctolinearPath', () => {
       { x: 100, y: 0 },
       { x: 100, y: 80 },
     ])
+  })
+})
+
+
+describe('snapBendToOctolinear', () => {
+  it('projects onto coincident axes instead of falling back to the grid', () => {
+    expect(snapBendToOctolinear({ x: 0, y: 0 }, { x: 200, y: 0 }, { x: 80, y: 20 }))
+      .toEqual({ x: 80, y: 0 })
+  })
+
+  it('keeps both adjoining edges exact across pointer positions and quadrants', () => {
+    for (const to of [{ x: 200, y: 40 }, { x: -80, y: 160 }, { x: 0, y: 0 }]) {
+      const from = { x: 0, y: 0 }
+      for (let x = -240; x <= 240; x += 20) {
+        for (let y = -240; y <= 240; y += 20) {
+          const bend = snapBendToOctolinear(from, to, { x, y })
+          for (const neighbor of [from, to]) {
+            const dx = Math.abs(bend.x - neighbor.x)
+            const dy = Math.abs(bend.y - neighbor.y)
+            expect(Math.min(dx, dy, Math.abs(dx - dy))).toBeLessThan(1e-8)
+          }
+        }
+      }
+    }
   })
 })
