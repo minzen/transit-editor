@@ -1,7 +1,7 @@
 # Project State
 
-Last updated: 2026-08-30  
-Last verified commit: `1409a8e` on `develop`
+Last updated: 2026-09-18
+Base commit: `5bfd75f` on `develop`; snapping fix verified in the working tree
 
 This is the short-lived handoff record for continuing work on another computer. Update it at the end of a work session and after pulling changes. Detailed feature documentation belongs in `README.md`; durable rationale belongs in `DECISIONS.md`.
 
@@ -9,23 +9,21 @@ This is the short-lived handoff record for continuing work on another computer. 
 
 - The browser-based React/TypeScript transit map editor is functional and documented in `README.md`.
 - The shared integration branch is `develop`; feature work starts from `develop` and is merged back through a pull request.
-- The latest recorded change on `develop` is the security-hardening merge at `1409a8e`.
-- No active implementation handoff is recorded.
+- The snapping fix is on `fix/line-angle-snapping`, verified and ready for review against `develop`.
 
 ## Active work
 
-None recorded. Before starting work, claim an item in `TODO.md` or add one, then describe the branch and immediate next step here.
+Bend dragging now uses adjacent polyline vertices and the nearest valid intersection or coincident-axis projection. Freeform dragging remains unconstrained. Regression coverage includes zoomed dragging and exact angle constraints across pointer positions.
 
 ## Verification
 
-No new verification run was required for this documentation-only change. For code changes, record the commands and results here, for example:
+Verified on 2026-09-18 with Node.js 24:
 
-```text
-npm run typecheck  # pass/fail, YYYY-MM-DD
-npm run lint       # pass/fail, YYYY-MM-DD
-npm run test       # pass/fail, YYYY-MM-DD
-npm run build      # pass/fail, YYYY-MM-DD
-```
+- `npm test -- --maxWorkers=2`: 38 files, 412 tests passed.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed.
+- `npm run build`: passed (bundle-size advisory).
+- `npm run e2e -- e2e/editor-interactions.spec.ts --project=chromium`: 13 passed.
 
 ## Blockers and handoff notes
 

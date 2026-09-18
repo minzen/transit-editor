@@ -11,7 +11,7 @@ Status markers:
 
 ## In progress
 
-No work is currently recorded.
+No implementation work remains; the snapping fix is ready for review against `develop`.
 
 When starting an item, move it here and add its branch name and immediate next action. Reflect that same focus in `STATE.md`.
 
@@ -24,6 +24,8 @@ No prioritized items are currently recorded.
 No backlog items are currently recorded.
 
 ## Recently completed
+
+- [x] Fix 45°/90° bend dragging using neighboring vertices and valid parallel-axis handling; add regression tests (2026-09-18).
 
 - [x] Add repository-based handoff records for state, TODOs, and decisions (2026-08-30).
 
