@@ -11,6 +11,7 @@ Status markers:
 
 ## In progress
 
+
 Station-movement routing fix is verified on `feature/eight-position-label-placement`; ready for review against `develop`.
 No implementation work remains; the snapping fix is ready for review against `develop`.
 
@@ -25,6 +26,8 @@ No prioritized items are currently recorded.
 - [ ] Include shapes as obstacles in segment auto-routing; current routing considers only other station centers (former roadmap 6.2).
 
 ## Recently completed
+
+- [x] Fix mobile station-routing browser regression with a viewport-relative fixture and exact per-step movement assertions; 30 desktop/mobile interaction tests pass.
 
 - [x] Keep station connections at exact 45° multiples during dragging and keyboard movement, preserving freeform behavior and undo/redo (2026-09-18).
 

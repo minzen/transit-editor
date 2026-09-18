@@ -15,6 +15,8 @@ This is the short-lived handoff record for continuing work on another computer. 
 
 ## Active work
 
+Mobile CI follow-up: the station-routing browser fixture now uses viewport-relative coordinates below the toolbar, waits for pointer actionability, and asserts exact coordinates after each drag step. All 30 editor interaction tests pass across desktop and mobile Chrome; type checking and lint also pass. Verified fix is ready for the user to push.
+
 Follow-up fix on `feature/eight-position-label-placement` for station movement producing invalid line angles. Pointer/keyboard translation and direct station movement now share routing: simple connections reroute, custom routes adjust the adjoining bend, and freeform mode remains unconstrained. Angle validation now accepts only multiples of 45° with floating-point tolerance. Route and label updates remain in the movement history transaction.
 
 Eight-position labels and roadmap cleanup are committed at `012c870`. The verified station-movement fix is ready for review on the same feature branch. The separate bend-dragging fix remains on `fix/line-angle-snapping` at `c9c4b38`; its bend-snapping geometry is reused here, but its canvas handler change remains on that branch.

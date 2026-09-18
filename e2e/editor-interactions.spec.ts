@@ -13,19 +13,25 @@ test.describe('Editor interactions', () => {
     // ---------------------------------------------------------------------------
 
     test('station dragging and keyboard movement keep connected sections at 45-degree multiples', async ({ page }) => {
-        await page.addInitScript(() => {
+        const viewport = page.viewportSize()
+        if (!viewport) throw new Error('Missing test viewport')
+        // Keep the fixture and drag path below the wrapping mobile toolbar.
+        const x = Math.floor(viewport.width * 0.5 / 20) * 20
+        const y = Math.floor(viewport.height * 0.6 / 20) * 20
+        await page.addInitScript(({ x, y }) => {
             localStorage.setItem('transit-editor-storage', JSON.stringify({ version: 1, state: {
-                activeTool: 'select', freeformMode: false,
-                stations: { a: { id: 'a', x: 200, y: 200, name: 'A' }, b: { id: 'b', x: 600, y: 200, name: 'B' } },
+                activeTool: 'select', freeformMode: false, gridCellSize: 20,
+                stations: { a: { id: 'a', x, y, name: 'A' }, b: { id: 'b', x: x + 100, y, name: 'B' } },
                 segments: { s: { id: 's', fromStationId: 'a', toStationId: 'b', lineIds: ['l'],
-                    points: [{ x: 200, y: 200 }, { x: 400, y: 200 }, { x: 600, y: 200 }] } },
+                    points: [{ x, y }, { x: x + 60, y }, { x: x + 100, y }] } },
                 lines: { l: { id: 'l', name: 'L1', color: '#ff0000' } }, shapes: {},
             } }))
-        })
+        }, { x, y })
         await page.goto('/editor')
         const canvas = page.getByTestId('editor-canvas')
         const station = canvas.locator('circle[fill="#fff"][stroke="#111"]').first()
         await expect(station).toBeVisible()
+        await station.click({ trial: true })
         const readPoints = () => page.evaluate((): { x: number; y: number }[] =>
             JSON.parse(localStorage.getItem('transit-editor-storage') ?? '{}').state.segments.s.points)
         const checkAngles = async () => {
@@ -43,7 +49,9 @@ test.describe('Editor interactions', () => {
         await page.mouse.down()
         for (const offset of [40, 80, 120]) {
             await page.mouse.move(box.x + box.width / 2 - offset, box.y + box.height / 2 - 80)
-            await expect.poll(async () => (await readPoints())[0].x).not.toBe(original[0].x)
+            await expect.poll(async () => (await readPoints())[0]).toEqual({
+                x: original[0].x - offset, y: original[0].y - 80,
+            })
             await checkAngles()
         }
         await page.mouse.up()
