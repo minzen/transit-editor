@@ -27,7 +27,7 @@ Update these files with the related work, commit and push the branch on the firs
 
 ### Segments and Lines
 - **Segment creation** - Create connections between stations in octolinear style (45° and 90° angles)
-- **Octolinear snapping** - Stations and bend points snap to octolinear angles
+- **Octolinear snapping** - Moving stations keeps connected sections at multiples of 45° by rerouting simple connections or adjusting adjoining bends. Freeform mode allows arbitrary angles.
 - **Bend point editing** - Double-click a segment path to add a bend point; double-click a bend point to remove it. Drag bend points to adjust the route
 - **Multiple lines** - Create multiple lines with different colors
 - **Line styles** - Choose solid, dashed, or double stroke per line

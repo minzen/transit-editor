@@ -12,6 +12,54 @@ test.describe('Editor interactions', () => {
     // Station creation
     // ---------------------------------------------------------------------------
 
+    test('station dragging and keyboard movement keep connected sections at 45-degree multiples', async ({ page }) => {
+        await page.addInitScript(() => {
+            localStorage.setItem('transit-editor-storage', JSON.stringify({ version: 1, state: {
+                activeTool: 'select', freeformMode: false,
+                stations: { a: { id: 'a', x: 200, y: 200, name: 'A' }, b: { id: 'b', x: 600, y: 200, name: 'B' } },
+                segments: { s: { id: 's', fromStationId: 'a', toStationId: 'b', lineIds: ['l'],
+                    points: [{ x: 200, y: 200 }, { x: 400, y: 200 }, { x: 600, y: 200 }] } },
+                lines: { l: { id: 'l', name: 'L1', color: '#ff0000' } }, shapes: {},
+            } }))
+        })
+        await page.goto('/editor')
+        const canvas = page.getByTestId('editor-canvas')
+        const station = canvas.locator('circle[fill="#fff"][stroke="#111"]').first()
+        await expect(station).toBeVisible()
+        const readPoints = () => page.evaluate((): { x: number; y: number }[] =>
+            JSON.parse(localStorage.getItem('transit-editor-storage') ?? '{}').state.segments.s.points)
+        const checkAngles = async () => {
+            const points = await readPoints()
+            for (let i = 1; i < points.length; i++) {
+                const dx = Math.abs(points[i].x - points[i - 1].x)
+                const dy = Math.abs(points[i].y - points[i - 1].y)
+                expect(Math.min(dx, dy, Math.abs(dx - dy))).toBeLessThan(1e-8)
+            }
+        }
+        const original = await readPoints()
+        const box = await station.boundingBox()
+        if (!box) throw new Error('Missing station')
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.down()
+        for (const offset of [40, 80, 120]) {
+            await page.mouse.move(box.x + box.width / 2 - offset, box.y + box.height / 2 - 80)
+            await expect.poll(async () => (await readPoints())[0].x).not.toBe(original[0].x)
+            await checkAngles()
+        }
+        await page.mouse.up()
+        const dragged = await readPoints()
+        await canvas.focus()
+        await page.keyboard.press('Escape')
+        await page.keyboard.press('Tab')
+        await page.keyboard.press('ArrowDown')
+        await expect.poll(async () => (await readPoints())[0].y).not.toBe(dragged[0].y)
+        await checkAngles()
+        await page.getByRole('button', { name: 'Undo', exact: true }).click()
+        expect(await readPoints()).toEqual(dragged)
+        await page.getByRole('button', { name: 'Undo', exact: true }).click()
+        expect(await readPoints()).toEqual(original)
+    })
+
     test('diagonal labels render and dragging recomputes placement in one undo step', async ({ page }) => {
         await page.goto('/editor')
         await addStation(page, 0.4, 0.5, 'Central')

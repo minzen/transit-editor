@@ -14,20 +14,20 @@ This is the short-lived handoff record for continuing work on another computer. 
 
 ## Active work
 
-Completed eight-position labels and incremental placement on `feature/eight-position-label-placement`, based on `develop`. Includes the roadmap retirement. Diagonal positions work in automatic placement, the context menu, rendering, and JSON validation. Station movement updates affected labels in the same undo transaction. Ready for review; pushing the branch still requires confirmation.
+Follow-up fix on `feature/eight-position-label-placement` for station movement producing invalid line angles. Pointer/keyboard translation and direct station movement now share routing: simple connections reroute, custom routes adjust the adjoining bend, and freeform mode remains unconstrained. Angle validation now accepts only multiples of 45° with floating-point tolerance. Route and label updates remain in the movement history transaction.
 
-The separately verified snapping fix remains on `fix/line-angle-snapping` at `c9c4b38`; it is not included in this feature branch.
+Eight-position labels and roadmap cleanup are committed at `012c870`. The verified station-movement fix is ready for review on the same feature branch. The separate bend-dragging fix remains on `fix/line-angle-snapping` at `c9c4b38`; its bend-snapping geometry is reused here, but its canvas handler change remains on that branch.
 
 ## Verification
 
 Verified on 2026-09-18 with Node.js 24:
 
-- `npm test -- --maxWorkers=2`: 37 files, 429 tests passed.
+- `npm test -- --maxWorkers=2`: 37 files, 432 tests passed.
 - `npm run typecheck`: passed.
 - `npm run lint`: passed.
 - `npm run build`: passed, with the existing bundle-size advisory.
-- `npm run e2e -- e2e/editor-interactions.spec.ts --project=chromium`: 14 passed, including diagonal labels, dragging, and undo.
-- `npm run benchmark`: 5 passed in isolation; an earlier run under concurrent build/browser load exceeded timing thresholds.
+- `npm run e2e -- e2e/editor-interactions.spec.ts --project=chromium`: 15 passed, including station routing during drag/keyboard movement and undo.
+- Prior label-placement benchmark verification: 5 passed in isolation.
 - `git diff --check`: passed; no stale links to the retired roadmap found.
 
 ## Blockers and handoff notes

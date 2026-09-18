@@ -11,7 +11,7 @@ Status markers:
 
 ## In progress
 
-Label placement is verified on `feature/eight-position-label-placement`; ready for review, with push confirmation pending.
+Station-movement routing fix is verified on `feature/eight-position-label-placement`; ready for review against `develop`.
 
 When starting an item, move it here and add its branch name and immediate next action. Reflect that same focus in `STATE.md`.
 
@@ -24,6 +24,8 @@ No prioritized items are currently recorded.
 - [ ] Include shapes as obstacles in segment auto-routing; current routing considers only other station centers (former roadmap 6.2).
 
 ## Recently completed
+
+- [x] Keep station connections at exact 45° multiples during dragging and keyboard movement, preserving freeform behavior and undo/redo (2026-09-18).
 
 - [x] Extend automatic station label placement from four cardinal positions to all eight compass positions (former roadmap 6.1).
 - [x] Recompute label placement incrementally for the affected neighborhood after station movement; retain the on-demand placement action (former roadmap 6.1).
