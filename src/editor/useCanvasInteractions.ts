@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useEditorStore } from '../store/editorStore'
 import { screenToWorld } from '../viewport/coordinates'
 import { snapPointToGrid } from '../geometry/snap'
-import { snapPointToOctolinear, findLineIntersection } from '../geometry/octolinear'
+import { snapBendToOctolinear } from '../geometry/octolinear'
 import { isPointInsideStation } from '../utils/stationUtils'
 import { distance } from '../geometry/vector'
 import type { Point } from '../types/geometry'
@@ -247,8 +247,8 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
         if (draggingBendPoint) {
             const segment = segments[draggingBendPoint.segmentId]
             if (segment) {
-                const fromStation = stations[segment.fromStationId]
-                const toStation = stations[segment.toStationId]
+                const previousPoint = segment.points[draggingBendPoint.pointIndex - 1]
+                const nextPoint = segment.points[draggingBendPoint.pointIndex + 1]
 
                 if (freeformMode) {
                     updateSegmentPoint(
@@ -263,26 +263,9 @@ export function useCanvasInteractions({ spacePressed, selectedStationIds, select
 
                 const gridSnapped = snapPointToGrid(point.x, point.y, gridCellSize)
 
-                let snappedPoint: { x: number; y: number }
-
-                if (fromStation && toStation) {
-                    // Snap to the intersection of octolinear directions from both stations
-                    // This ensures the bend point stays on valid octolinear paths (45°, 90°, etc.)
-                    // relative to both stations, creating proper L-shaped or diagonal paths
-                    const fromSnap = snapPointToOctolinear(fromStation, gridSnapped)
-                    const toSnap = snapPointToOctolinear(toStation, gridSnapped)
-
-                    // Find the intersection point of the two octolinear lines
-                    const intersection = findLineIntersection(fromStation, fromSnap, toStation, toSnap)
-                    if (intersection) {
-                        snappedPoint = intersection
-                    } else {
-                        // Fallback to grid snap if lines are parallel
-                        snappedPoint = gridSnapped
-                    }
-                } else {
-                    snappedPoint = gridSnapped
-                }
+                const snappedPoint = previousPoint && nextPoint
+                    ? snapBendToOctolinear(previousPoint, nextPoint, gridSnapped)
+                    : gridSnapped
 
                 updateSegmentPoint(
                     draggingBendPoint.segmentId,

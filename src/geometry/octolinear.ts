@@ -53,6 +53,39 @@ export function snapPointToOctolinear(
   }
 }
 
+/** Find the closest bend that keeps both adjoining edges at multiples of 45°. */
+export function snapBendToOctolinear(from: Point, to: Point, target: Point): Point {
+  const directions = [
+    { x: 1, y: 0 }, { x: 0, y: 1 },
+    { x: 1, y: 1 }, { x: 1, y: -1 },
+  ]
+  let closest = from
+  let closestDistance = Infinity
+
+  for (const a of directions) {
+    for (const b of directions) {
+      let candidate = findLineIntersection(
+        from, { x: from.x + a.x, y: from.y + a.y },
+        to, { x: to.x + b.x, y: to.y + b.y },
+      )
+      if (!candidate) {
+        // Coincident axes allow continuous movement; distinct parallel axes do not.
+        if (a.x * b.y !== a.y * b.x ||
+            Math.abs((to.x - from.x) * a.y - (to.y - from.y) * a.x) > 1e-8) continue
+        const t = ((target.x - from.x) * a.x + (target.y - from.y) * a.y) /
+          (a.x * a.x + a.y * a.y)
+        candidate = { x: from.x + t * a.x, y: from.y + t * a.y }
+      }
+      const candidateDistance = distance(candidate, target)
+      if (candidateDistance < closestDistance) {
+        closest = candidate
+        closestDistance = candidateDistance
+      }
+    }
+  }
+  return closest
+}
+
 export function isOctolinear(
   origin: Point,
   target: Point
