@@ -4,6 +4,21 @@ This file records choices that future contributors should not have to rediscover
 
 Statuses: `proposed`, `accepted`, `superseded`, or `rejected`.
 
+## DEC-002: Update label placement with station movement
+
+- Date: 2026-09-18
+- Status: accepted
+
+### Decision
+
+Support eight compass positions using the existing cardinal names plus `topRight`, `bottomRight`, `bottomLeft`, and `topLeft`. Existing maps keep their cardinal values and default to top when no position is stored.
+
+Re-score labels near old/new station locations and changed route edges when moving stations, including pointer dragging, keyboard movement, and group translation. Keep distant stations unchanged and include label changes in the same history transaction as movement. The on-demand action still places labels across the whole map.
+
+### Consequences
+
+Manual label positions are not locked: movement can re-place labels in the affected neighborhood. Collision scoring remains a heuristic using approximate text bounds; it does not guarantee an overlap-free layout. Persisted and imported maps accept the new positions without changing the document version.
+
 ## DEC-001: Keep cross-computer project context in the repository
 
 - Date: 2026-08-30

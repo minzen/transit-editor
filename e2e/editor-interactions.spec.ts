@@ -12,6 +12,95 @@ test.describe('Editor interactions', () => {
     // Station creation
     // ---------------------------------------------------------------------------
 
+    test('station dragging and keyboard movement keep connected sections at 45-degree multiples', async ({ page }) => {
+        const viewport = page.viewportSize()
+        if (!viewport) throw new Error('Missing test viewport')
+        // Keep the fixture and drag path below the wrapping mobile toolbar.
+        const x = Math.floor(viewport.width * 0.5 / 20) * 20
+        const y = Math.floor(viewport.height * 0.6 / 20) * 20
+        await page.addInitScript(({ x, y }) => {
+            localStorage.setItem('transit-editor-storage', JSON.stringify({ version: 1, state: {
+                activeTool: 'select', freeformMode: false, gridCellSize: 20,
+                stations: { a: { id: 'a', x, y, name: 'A' }, b: { id: 'b', x: x + 100, y, name: 'B' } },
+                segments: { s: { id: 's', fromStationId: 'a', toStationId: 'b', lineIds: ['l'],
+                    points: [{ x, y }, { x: x + 60, y }, { x: x + 100, y }] } },
+                lines: { l: { id: 'l', name: 'L1', color: '#ff0000' } }, shapes: {},
+            } }))
+        }, { x, y })
+        await page.goto('/editor')
+        const canvas = page.getByTestId('editor-canvas')
+        const station = canvas.locator('circle[fill="#fff"][stroke="#111"]').first()
+        await expect(station).toBeVisible()
+        await station.click({ trial: true })
+        const readPoints = () => page.evaluate((): { x: number; y: number }[] =>
+            JSON.parse(localStorage.getItem('transit-editor-storage') ?? '{}').state.segments.s.points)
+        const checkAngles = async () => {
+            const points = await readPoints()
+            for (let i = 1; i < points.length; i++) {
+                const dx = Math.abs(points[i].x - points[i - 1].x)
+                const dy = Math.abs(points[i].y - points[i - 1].y)
+                expect(Math.min(dx, dy, Math.abs(dx - dy))).toBeLessThan(1e-8)
+            }
+        }
+        const original = await readPoints()
+        const box = await station.boundingBox()
+        if (!box) throw new Error('Missing station')
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.down()
+        for (const offset of [40, 80, 120]) {
+            await page.mouse.move(box.x + box.width / 2 - offset, box.y + box.height / 2 - 80)
+            await expect.poll(async () => (await readPoints())[0]).toEqual({
+                x: original[0].x - offset, y: original[0].y - 80,
+            })
+            await checkAngles()
+        }
+        await page.mouse.up()
+        const dragged = await readPoints()
+        await canvas.focus()
+        await page.keyboard.press('Escape')
+        await page.keyboard.press('Tab')
+        await page.keyboard.press('ArrowDown')
+        await expect.poll(async () => (await readPoints())[0].y).not.toBe(dragged[0].y)
+        await checkAngles()
+        await page.getByRole('button', { name: 'Undo', exact: true }).click()
+        expect(await readPoints()).toEqual(dragged)
+        await page.getByRole('button', { name: 'Undo', exact: true }).click()
+        expect(await readPoints()).toEqual(original)
+    })
+
+    test('diagonal labels render and dragging recomputes placement in one undo step', async ({ page }) => {
+        await page.goto('/editor')
+        await addStation(page, 0.4, 0.5, 'Central')
+        await page.getByRole('button', { name: 'Select', exact: true }).click()
+        const canvas = page.getByTestId('editor-canvas')
+        const station = canvas.locator('circle[fill="#fff"][stroke="#111"]').first()
+        const label = canvas.locator('text').filter({ hasText: /^Central$/ })
+        for (const [name, anchor, baseline] of [
+            ['Top Right', 'start', 'auto'], ['Bottom Right', 'start', 'hanging'],
+            ['Bottom Left', 'end', 'hanging'], ['Top Left', 'end', 'auto'],
+        ]) {
+            await station.click({ button: 'right' })
+            await page.getByRole('menuitem', { name: `Label ${name}`, exact: true }).click()
+            await expect(label).toHaveAttribute('text-anchor', anchor)
+            await expect(label).toHaveAttribute('dominant-baseline', baseline)
+        }
+        // Wait for the menu's closing backdrop to stop intercepting pointer input.
+        await station.click({ trial: true })
+        const originalX = await station.getAttribute('cx')
+        if (originalX === null) throw new Error('Missing station coordinate')
+        const box = await station.boundingBox()
+        if (!box) throw new Error('Station is not visible')
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+        await page.mouse.down()
+        await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2, { steps: 5 })
+        await page.mouse.up()
+        await expect(station).not.toHaveAttribute('cx', originalX)
+        await expect(label).toHaveAttribute('text-anchor', 'middle')
+        await page.getByRole('button', { name: 'Undo', exact: true }).click()
+        await expect(station).toHaveAttribute('cx', originalX)
+        await expect(label).toHaveAttribute('text-anchor', 'end')
+    })
+
     test('station Create button is disabled when name is empty after whitespace-only input', async ({ page }) => {
         await page.goto('/editor')
         await page.getByRole('button', { name: 'Station', exact: true }).click()

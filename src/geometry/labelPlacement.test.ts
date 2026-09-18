@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chooseBestLabelPositions, labelBox } from './labelPlacement'
+import { chooseBestLabelPositions, labelBox, placeLabelsAfterMovement } from './labelPlacement'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
 
@@ -99,5 +99,51 @@ describe('chooseBestLabelPositions', () => {
         const first = chooseBestLabelPositions(stations, {})
         const second = chooseBestLabelPositions(stations, {})
         expect(first).toEqual(second)
+    })
+})
+
+
+describe('eight-position and incremental placement', () => {
+    it.each(['topRight', 'bottomRight', 'bottomLeft', 'topLeft'] as const)('places %s in its quadrant', (position) => {
+        const box = labelBox({ id: 's', x: 100, y: 100, name: 'Test' }, position)
+        if (position.endsWith('Right')) expect(box.x).toBeGreaterThan(100)
+        else expect(box.x + box.width).toBeLessThan(100)
+        if (position.startsWith('top')) expect(box.y + box.height).toBeLessThan(100)
+        else expect(box.y).toBeGreaterThan(100)
+    })
+
+    it('chooses a diagonal when unnamed station bodies block the cardinal positions', () => {
+        const stations: Record<string, Station> = {
+            a: { id: 'a', x: 0, y: 0, name: 'A' },
+            n: { id: 'n', x: 0, y: -23 }, s: { id: 's', x: 0, y: 23 },
+            e: { id: 'e', x: 18, y: 0 }, w: { id: 'w', x: -18, y: 0 },
+        }
+        expect(chooseBestLabelPositions(stations, {}).a).toBe('topRight')
+    })
+
+    it('updates old and new neighborhoods while preserving distant stations', () => {
+        const before: Record<string, Station> = {
+            moving: { id: 'moving', x: 0, y: -23 },
+            old: { id: 'old', x: 0, y: 0, name: 'Old', labelPosition: 'right' },
+            next: { id: 'next', x: 500, y: 0, name: 'Next' },
+            far: { id: 'far', x: 2000, y: 2000, name: 'Far', labelPosition: 'left' },
+        }
+        const after = { ...before, moving: { ...before.moving, x: 500 } }
+        const result = placeLabelsAfterMovement(before, after, {}, {})
+        expect(result.old.labelPosition).toBe('top')
+        expect(result.next.labelPosition).not.toBe('top')
+        expect(result.far).toBe(before.far)
+    })
+
+    it('includes labels near changed edges even far from moved endpoints', () => {
+        const before: Record<string, Station> = {
+            moving: { id: 'moving', x: 0, y: 0 },
+            other: { id: 'other', x: 1000, y: 0 },
+            middle: { id: 'middle', x: 500, y: 20, name: 'Middle', labelPosition: 'right' },
+        }
+        const oldSegment: Segment = { id: 's', fromStationId: 'moving', toStationId: 'other', lineIds: [], points: [{ x: 0, y: 0 }, { x: 1000, y: 0 }] }
+        const newSegment = { ...oldSegment, points: [{ x: 0, y: 1000 }, { x: 1000, y: 0 }] }
+        const result = placeLabelsAfterMovement(before, { ...before, moving: { ...before.moving, y: 1000 } }, { s: oldSegment }, { s: newSegment })
+        expect(result.middle.labelPosition).toBe('top')
     })
 })

@@ -90,16 +90,10 @@ export function isOctolinear(
   origin: Point,
   target: Point
 ) {
-  const snapped = snapPointToOctolinear(origin, target)
-  const dist = distance(origin, target)
-
-  if (dist === 0) {
-    return true
-  }
-
-  const deviation = distance(snapped, target)
-
-  return deviation / dist < 0.05
+  const dx = Math.abs(target.x - origin.x)
+  const dy = Math.abs(target.y - origin.y)
+  // Allow only floating-point noise, not a visible angular deviation.
+  return Math.min(dx, dy, Math.abs(dx - dy)) <= 1e-8
 }
 
 export function createOctolinearPath(

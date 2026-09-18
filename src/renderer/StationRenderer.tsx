@@ -1,3 +1,4 @@
+import { labelAttributes } from '../geometry/labelPlacement'
 import { useRef, memo } from 'react'
 import type { Station } from '../model/station'
 import type { Segment } from '../model/segment'
@@ -229,20 +230,7 @@ export const StationRenderer = memo(function StationRenderer({
                     : STATION_RADIUS + 6
 
                 const labelPos = s.labelPosition ?? 'top'
-                const labelAttrs = (() => {
-                    switch (labelPos) {
-                        case 'top':
-                            return { x: s.x, y: s.y - labelOffset, textAnchor: 'middle' as const, dominantBaseline: 'auto' as const }
-                        case 'bottom':
-                            return { x: s.x, y: s.y + labelOffset, textAnchor: 'middle' as const, dominantBaseline: 'hanging' as const }
-                        case 'left':
-                            return { x: s.x - labelOffset, y: s.y, textAnchor: 'end' as const, dominantBaseline: 'central' as const }
-                        case 'right':
-                            return { x: s.x + labelOffset, y: s.y, textAnchor: 'start' as const, dominantBaseline: 'central' as const }
-                        default:
-                            return { x: s.x, y: s.y - labelOffset, textAnchor: 'middle' as const, dominantBaseline: 'auto' as const }
-                    }
-                })()
+                const labelAttrs = labelAttributes(s, labelPos, labelOffset)
 
                 const isDimmed = selectedLineId ? !getConnectedLineIds(s.id).includes(selectedLineId) : false
 

@@ -1,3 +1,4 @@
+import { LABEL_POSITIONS } from '../model/station'
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 
 import { useEditorStore, type EditorTool } from '../store/editorStore'
@@ -871,7 +872,7 @@ export function EditorCanvas() {
                 <MenuItem onClick={handleRenameStation}>{t('common.rename')}</MenuItem>
                 <MenuItem onClick={handleDeleteStation}>{t('common.delete')}</MenuItem>
                 <Divider />
-                {(['top', 'bottom', 'left', 'right'] as const).map((pos) => (
+                {LABEL_POSITIONS.map((pos) => (
                     <MenuItem
                         key={pos}
                         onClick={() => {

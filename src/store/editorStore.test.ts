@@ -16,6 +16,62 @@ describe('editor store', () => {
     })
   })
 
+  it.each(['moveStation', 'translateSelection'] as const)('updates local labels atomically with %s and undo/redo', (action) => {
+    const stations = {
+      moving: { id: 'moving', x: 0, y: -23 },
+      old: { id: 'old', x: 0, y: 0, name: 'Old', labelPosition: 'right' as const },
+      next: { id: 'next', x: 500, y: 0, name: 'Next' },
+      far: { id: 'far', x: 2000, y: 2000, name: 'Far', labelPosition: 'left' as const },
+    }
+    useEditorStore.setState({ stations })
+    if (action === 'moveStation') useEditorStore.getState().moveStation('moving', 500, -23)
+    else useEditorStore.getState().translateSelection(['moving'], [], 500, 0)
+    const after = useEditorStore.getState().stations
+    expect(after.old.labelPosition).toBe('top')
+    expect(after.next.labelPosition).not.toBe('top')
+    expect(after.far).toBe(stations.far)
+    expect(useEditorStore.getState().pastStates).toHaveLength(1)
+    useEditorStore.getState().undo()
+    expect(useEditorStore.getState().stations).toEqual(stations)
+    useEditorStore.getState().redo()
+    expect(useEditorStore.getState().stations).toEqual(after)
+  })
+
+  it.each(['moveStation', 'translateSelection'] as const)('%s keeps station connections at exact 45-degree multiples', (action) => {
+    for (const endpoint of ['a', 'b']) {
+      for (const points of [
+        [{ x: 0, y: 0 }, { x: 400, y: 0 }],
+        [{ x: 0, y: 0 }, { x: 200, y: 0 }, { x: 400, y: 0 }],
+        [{ x: 0, y: 0 }, { x: 100, y: 100 }, { x: 200, y: 100 }, { x: 300, y: 0 }, { x: 400, y: 0 }],
+      ]) {
+        useEditorStore.setState({
+          stations: { a: { id: 'a', x: 0, y: 0 }, b: { id: 'b', x: 400, y: 0 } },
+          segments: { s: { id: 's', fromStationId: 'a', toStationId: 'b', lineIds: [], points } },
+          pastStates: [], futureStates: [],
+        })
+        for (const [dx, dy] of [[40, 80], [-80, 20], [60, -120], [0, 40]]) {
+          const before = useEditorStore.getState().segments.s.points
+          const station = useEditorStore.getState().stations[endpoint]
+          if (action === 'moveStation') useEditorStore.getState().moveStation(endpoint, station.x + dx, station.y + dy)
+          else useEditorStore.getState().translateSelection([endpoint], [], dx, dy)
+          const after = useEditorStore.getState().segments.s.points
+          for (let i = 1; i < after.length; i++) {
+            const x = Math.abs(after[i].x - after[i - 1].x)
+            const y = Math.abs(after[i].y - after[i - 1].y)
+            expect(Math.min(x, y, Math.abs(x - y))).toBeLessThan(1e-8)
+          }
+          expect(after[0]).toEqual({ x: useEditorStore.getState().stations.a.x, y: useEditorStore.getState().stations.a.y })
+          expect(after.at(-1)).toEqual({ x: useEditorStore.getState().stations.b.x, y: useEditorStore.getState().stations.b.y })
+          expect(after.length).toBeLessThanOrEqual(Math.max(3, points.length))
+          useEditorStore.getState().undo()
+          expect(useEditorStore.getState().segments.s.points).toEqual(before)
+          useEditorStore.getState().redo()
+          expect(useEditorStore.getState().segments.s.points).toEqual(after)
+        }
+      }
+    }
+  })
+
   it('starts with empty state', () => {
     const state = useEditorStore.getState()
 
@@ -592,7 +648,8 @@ describe('editor store', () => {
     ])
   })
 
-  it('moves only the selected segment endpoint when one station is selected', () => {
+  it('moves only the selected segment endpoint in freeform mode', () => {
+    useEditorStore.setState({ freeformMode: true })
     useEditorStore.getState().addStation(100, 100)
     useEditorStore.getState().addStation(300, 100)
     useEditorStore.getState().addLine('Line 1', '#00ff00')

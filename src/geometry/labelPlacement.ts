@@ -1,4 +1,4 @@
-import type { Station, LabelPosition } from '../model/station'
+import { LABEL_POSITIONS, type Station, type LabelPosition } from '../model/station'
 import type { Segment } from '../model/segment'
 import type { Point } from '../types/geometry'
 import { pointToLineSegmentDistance } from './distance'
@@ -11,7 +11,19 @@ const APPROX_CHAR_WIDTH = 8
 const APPROX_LABEL_HEIGHT = 18
 const LABEL_OFFSET = 14
 
-const POSITIONS: readonly LabelPosition[] = ['top', 'right', 'bottom', 'left']
+/** Shared SVG anchors keep rendered labels and collision estimates aligned. */
+export function labelAttributes(station: Station, position: LabelPosition, offset = LABEL_OFFSET) {
+    const left = position === 'left' || position.endsWith('Left')
+    const right = position === 'right' || position.endsWith('Right')
+    const top = position.startsWith('top')
+    const bottom = position.startsWith('bottom')
+    return {
+        x: station.x + (left ? -offset : right ? offset : 0),
+        y: station.y + (top ? -offset : bottom ? offset : 0),
+        textAnchor: left ? 'end' as const : right ? 'start' as const : 'middle' as const,
+        dominantBaseline: top ? 'auto' as const : bottom ? 'hanging' as const : 'central' as const,
+    }
+}
 
 type Rect = { x: number; y: number; width: number; height: number }
 
@@ -62,37 +74,9 @@ export function labelBox(station: Station, position: LabelPosition): Rect {
     const width = Math.max(APPROX_CHAR_WIDTH * text.length, APPROX_CHAR_WIDTH)
     const height = APPROX_LABEL_HEIGHT
 
-    let anchorX: number
-    let anchorY: number
-    let centerX: number
-    let centerY: number
-
-    switch (position) {
-        case 'top':
-            anchorX = station.x
-            anchorY = station.y - LABEL_OFFSET
-            centerX = anchorX
-            centerY = anchorY - height / 2
-            break
-        case 'bottom':
-            anchorX = station.x
-            anchorY = station.y + LABEL_OFFSET
-            centerX = anchorX
-            centerY = anchorY + height / 2
-            break
-        case 'left':
-            anchorX = station.x - LABEL_OFFSET
-            anchorY = station.y
-            centerX = anchorX - width / 2
-            centerY = anchorY
-            break
-        case 'right':
-            anchorX = station.x + LABEL_OFFSET
-            anchorY = station.y
-            centerX = anchorX + width / 2
-            centerY = anchorY
-            break
-    }
+    const anchor = labelAttributes(station, position)
+    const centerX = anchor.x + (anchor.textAnchor === 'end' ? -width / 2 : anchor.textAnchor === 'start' ? width / 2 : 0)
+    const centerY = anchor.y + (anchor.dominantBaseline === 'auto' ? -height / 2 : anchor.dominantBaseline === 'hanging' ? height / 2 : 0)
 
     const rotation = station.labelRotation ?? 0
     if (rotation === 0) {
@@ -104,7 +88,15 @@ export function labelBox(station: Station, position: LabelPosition): Rect {
         }
     }
 
-    return rotatedRectAABB(centerX, centerY, width, height, rotation)
+    // SVG rotates around the text anchor, not the box center.
+    const radians = rotation * Math.PI / 180
+    const dx = centerX - anchor.x
+    const dy = centerY - anchor.y
+    return rotatedRectAABB(
+        anchor.x + dx * Math.cos(radians) - dy * Math.sin(radians),
+        anchor.y + dx * Math.sin(radians) + dy * Math.cos(radians),
+        width, height, rotation,
+    )
 }
 
 function rectsOverlap(a: Rect, b: Rect): boolean {
@@ -176,14 +168,8 @@ export function scoreLabelPosition(
     const box = labelBox(station, position)
     let score = 0
 
-    // Slight bias: prefer top, then right, then bottom, then left
-    const positionBias: Record<LabelPosition, number> = {
-        top: 0,
-        right: 1,
-        bottom: 2,
-        left: 3,
-    }
-    score += positionBias[position] * 0.1
+    // Stable tie-break keeps cardinal positions preferred when equally clear.
+    score += LABEL_POSITIONS.indexOf(position) * 0.1
 
     // Penalize overlap with other station bodies
     for (const other of otherStations) {
@@ -237,7 +223,8 @@ export function scoreLabelPosition(
  */
 export function chooseBestLabelPositions(
     stations: Record<string, Station>,
-    segments: Record<string, Segment>
+    segments: Record<string, Segment>,
+    affectedIds?: ReadonlySet<string>,
 ): Record<string, LabelPosition> {
     const stationList = Object.values(stations)
         .filter((s) => s.name && s.name.trim().length > 0)
@@ -248,10 +235,11 @@ export function chooseBestLabelPositions(
     const placed: Record<string, LabelPosition> = {}
 
     for (const station of stationList) {
-        const others = stationList.filter((s) => s.id !== station.id)
+        if (affectedIds && !affectedIds.has(station.id)) continue
+        const others = Object.values(stations).filter((s) => s.id !== station.id)
         let bestPosition: LabelPosition = 'top'
         let bestScore = Infinity
-        for (const pos of POSITIONS) {
+        for (const pos of LABEL_POSITIONS) {
             const score = scoreLabelPosition(station, pos, others, segmentList, placed)
             if (score < bestScore) {
                 bestScore = score
@@ -262,4 +250,62 @@ export function chooseBestLabelPositions(
     }
 
     return placed
+}
+
+
+function stationEnvelope(station: Station): Rect {
+    const boxes = LABEL_POSITIONS.map((position) => labelBox(station, position))
+    const x = Math.min(station.x - 10, ...boxes.map((box) => box.x))
+    const y = Math.min(station.y - 10, ...boxes.map((box) => box.y))
+    return {
+        x, y,
+        width: Math.max(station.x + 10, ...boxes.map((box) => box.x + box.width)) - x,
+        height: Math.max(station.y + 10, ...boxes.map((box) => box.y + box.height)) - y,
+    }
+}
+
+/** Re-score only labels near old/new station positions or changed route edges. */
+export function placeLabelsAfterMovement(
+    beforeStations: Record<string, Station>,
+    stations: Record<string, Station>,
+    beforeSegments: Record<string, Segment>,
+    segments: Record<string, Segment>,
+): Record<string, Station> {
+    const regions: Rect[] = []
+    const affected = new Set<string>()
+    for (const station of Object.values(stations)) {
+        const old = beforeStations[station.id]
+        if (old && (old.x !== station.x || old.y !== station.y)) {
+            affected.add(station.id)
+            regions.push(stationEnvelope(old), stationEnvelope(station))
+        }
+    }
+    if (!affected.size) return stations
+    for (const segment of Object.values(segments)) {
+        const old = beforeSegments[segment.id]
+        if (segment === old) continue
+        for (const route of [old, segment]) {
+            if (!route) continue
+            for (let i = 1; i < route.points.length; i++) {
+                const a = route.points[i - 1]
+                const b = route.points[i]
+                regions.push({
+                    x: Math.min(a.x, b.x) - 4, y: Math.min(a.y, b.y) - 4,
+                    width: Math.abs(a.x - b.x) + 8, height: Math.abs(a.y - b.y) + 8,
+                })
+            }
+        }
+    }
+    for (const station of Object.values(stations)) {
+        const envelope = stationEnvelope(station)
+        if (regions.some((region) => rectsOverlap(envelope, region))) affected.add(station.id)
+    }
+    const positions = chooseBestLabelPositions(stations, segments, affected)
+    const result = { ...stations }
+    for (const [id, position] of Object.entries(positions)) {
+        if ((stations[id].labelPosition ?? 'top') !== position) {
+            result[id] = { ...stations[id], labelPosition: position }
+        }
+    }
+    return result
 }

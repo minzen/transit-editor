@@ -19,6 +19,17 @@ describe('octolinear geometry', () => {
     expect(snapped.y).toBeCloseTo(0)
   })
 
+  it('rejects near-axis and near-diagonal lines instead of allowing angular slack', () => {
+    const from = { x: 0, y: 0 }
+    for (const to of [{ x: 1000, y: 20 }, { x: 20, y: 1000 }, { x: 1000, y: 980 }]) {
+      expect(isOctolinear(from, to)).toBe(false)
+      for (const path of [createOctolinearPath(from, to), createSmartOctolinearPath(from, to)]) {
+        expect(path).toHaveLength(3)
+        for (let i = 1; i < path.length; i++) expect(isOctolinear(path[i - 1], path[i])).toBe(true)
+      }
+    }
+  })
+
   it('detects horizontal, vertical, and diagonal directions as octolinear', () => {
     expect(isOctolinear({ x: 0, y: 0 }, { x: 100, y: 0 })).toBe(true)
     expect(isOctolinear({ x: 0, y: 0 }, { x: 0, y: 100 })).toBe(true)
