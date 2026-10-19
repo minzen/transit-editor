@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24-alpine AS builder
+FROM node:24-slim AS builder
 
 WORKDIR /app
 
@@ -9,6 +9,8 @@ RUN npm ci
 ARG VITE_PLAUSIBLE_DOMAIN
 ARG VITE_PLAUSIBLE_URL
 COPY . .
+ENV VITE_PLAUSIBLE_DOMAIN=$VITE_PLAUSIBLE_DOMAIN \
+    VITE_PLAUSIBLE_URL=$VITE_PLAUSIBLE_URL
 RUN npm run build
 
 # Production stage
