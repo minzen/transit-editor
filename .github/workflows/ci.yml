@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
  
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
@@ -33,7 +33,7 @@ jobs:
         run: npm run check:node
  
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Type check
         run: npm run typecheck
@@ -59,18 +59,18 @@ jobs:
     needs: lint-test-build
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
  
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
  
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
  
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -80,7 +80,7 @@ jobs:
  
       - name: Upload Playwright report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
@@ -88,7 +88,7 @@ jobs:
  
       - name: Upload snapshot diffs on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: snapshot-diffs
           path: e2e/**/*.png
@@ -191,18 +191,18 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
  
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
  
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
  
       - name: Build
         run: npm run build
@@ -211,7 +211,7 @@ jobs:
           VITE_PLAUSIBLE_URL: ${{ vars.PLAUSIBLE_URL }}
  
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-preview
           path: dist/
@@ -247,7 +247,7 @@ jobs:
       statuses: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
  
@@ -364,7 +364,7 @@ jobs:
  
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ci-artifacts
           path: |
