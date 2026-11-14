@@ -10,3 +10,6 @@ updates:
         patterns:
           - "*"
     open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
